@@ -1,60 +1,75 @@
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { useToast } from "@/hooks/use-toast";
-import { Users, Plus } from "lucide-react";
+import { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import { useToast } from '@/hooks/use-toast';
+import { Users, Plus } from 'lucide-react';
+import { createGroup } from '@/api/groups';
 
 interface GroupCreationProps {
-  onGroupCreated: (groupId: string, groupName: string, participantName: string) => void;
+  onGroupCreated: (
+    groupId: string,
+    groupName: string,
+    participantName: string
+  ) => void;
 }
 
 export function GroupCreation({ onGroupCreated }: GroupCreationProps) {
-  const [groupName, setGroupName] = useState("");
-  const [participantName, setParticipantName] = useState("");
+  const [groupName, setGroupName] = useState('');
+  const [participantName, setParticipantName] = useState('');
   const [isCreating, setIsCreating] = useState(false);
   const { toast } = useToast();
-
-  const generateGroupId = () => {
-    return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
-  };
 
   const handleCreateGroup = async () => {
     if (!groupName.trim()) {
       toast({
-        title: "Group name required",
-        description: "Please enter a name for your group",
-        variant: "destructive",
+        title: 'Group name required',
+        description: 'Please enter a name for your group',
+        variant: 'destructive',
       });
       return;
     }
 
     if (!participantName.trim()) {
       toast({
-        title: "Your name required",
-        description: "Please enter your name",
-        variant: "destructive",
+        title: 'Your name required',
+        description: 'Please enter your name',
+        variant: 'destructive',
       });
       return;
     }
 
     setIsCreating(true);
-    
-    // Simulate brief loading for better UX
-    setTimeout(() => {
-      const groupId = generateGroupId();
-      onGroupCreated(groupId, groupName.trim(), participantName.trim());
-      setIsCreating(false);
-      
+
+    const { data, error } = await createGroup(groupName.trim());
+
+    if (error) {
       toast({
-        title: "Group created!",
-        description: `${groupName} is ready for expense tracking`,
+        title: 'Error creating group',
+        description: error.message,
+        variant: 'destructive',
       });
-    }, 500);
+      setIsCreating(false);
+
+      return;
+    }
+    onGroupCreated(data.id, groupName.trim(), participantName.trim());
+    setIsCreating(false);
+
+    toast({
+      title: 'Group created!',
+      description: `${groupName} is ready for expense tracking`,
+    });
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter") {
+    if (e.key === 'Enter') {
       handleCreateGroup();
     }
   };
@@ -68,7 +83,9 @@ export function GroupCreation({ onGroupCreated }: GroupCreationProps) {
               <Users className="w-8 h-8 text-primary-foreground" />
             </div>
             <div>
-              <CardTitle className="text-2xl font-bold">Split Expenses</CardTitle>
+              <CardTitle className="text-2xl font-bold">
+                Split Expenses
+              </CardTitle>
               <CardDescription className="text-base mt-2">
                 Create a group to start splitting expenses with friends
               </CardDescription>
@@ -113,7 +130,7 @@ export function GroupCreation({ onGroupCreated }: GroupCreationProps) {
               size="lg"
             >
               {isCreating ? (
-                "Creating..."
+                'Creating...'
               ) : (
                 <>
                   <Plus className="w-4 h-4" />

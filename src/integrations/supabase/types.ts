@@ -7,96 +7,169 @@ export type Json =
   | Json[]
 
 export type Database = {
+  graphql_public: {
+    Tables: {
+      [_ in never]: never
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      graphql: {
+        Args: {
+          operationName?: string
+          query?: string
+          variables?: Json
+          extensions?: Json
+        }
+        Returns: Json
+      }
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
+  }
   public: {
     Tables: {
-      people: {
+      expense_splits: {
         Row: {
-          added_by: string
-          approved: boolean
-          birthday: string | null
-          category: string | null
+          amount: number
           created_at: string
-          email: string | null
+          expense_id: string | null
           id: string
-          is_user: boolean
-          name: string
-          parent_id: string | null
-          relationship: string
-          target_user_id: string | null
-          updated_at: string
-          x_position: number
-          y_position: number
+          participant_id: string | null
         }
         Insert: {
-          added_by: string
-          approved?: boolean
-          birthday?: string | null
-          category?: string | null
+          amount: number
           created_at?: string
-          email?: string | null
+          expense_id?: string | null
           id?: string
-          is_user?: boolean
-          name: string
-          parent_id?: string | null
-          relationship: string
-          target_user_id?: string | null
-          updated_at?: string
-          x_position?: number
-          y_position?: number
+          participant_id?: string | null
         }
         Update: {
-          added_by?: string
-          approved?: boolean
-          birthday?: string | null
-          category?: string | null
+          amount?: number
           created_at?: string
-          email?: string | null
+          expense_id?: string | null
           id?: string
-          is_user?: boolean
-          name?: string
-          parent_id?: string | null
-          relationship?: string
-          target_user_id?: string | null
-          updated_at?: string
-          x_position?: number
-          y_position?: number
+          participant_id?: string | null
         }
         Relationships: [
           {
-            foreignKeyName: "people_parent_id_fkey"
-            columns: ["parent_id"]
+            foreignKeyName: "expense_splits_expense_id_fkey"
+            columns: ["expense_id"]
             isOneToOne: false
-            referencedRelation: "people"
+            referencedRelation: "expenses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "expense_splits_participant_id_fkey"
+            columns: ["participant_id"]
+            isOneToOne: false
+            referencedRelation: "participants"
             referencedColumns: ["id"]
           },
         ]
       }
-      profiles: {
+      expenses: {
         Row: {
-          birthday: string | null
-          created_at: string
-          email: string
+          amount: number
+          category: string | null
+          created_at: string | null
+          description: string | null
+          group_id: string | null
           id: string
-          name: string
-          updated_at: string
+          paid_by: string
+          split_type: string | null
         }
         Insert: {
-          birthday?: string | null
-          created_at?: string
-          email: string
-          id: string
-          name: string
-          updated_at?: string
+          amount: number
+          category?: string | null
+          created_at?: string | null
+          description?: string | null
+          group_id?: string | null
+          id?: string
+          paid_by: string
+          split_type?: string | null
         }
         Update: {
-          birthday?: string | null
+          amount?: number
+          category?: string | null
+          created_at?: string | null
+          description?: string | null
+          group_id?: string | null
+          id?: string
+          paid_by?: string
+          split_type?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "expenses_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "group"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "expenses_paid_by_fkey"
+            columns: ["paid_by"]
+            isOneToOne: false
+            referencedRelation: "participants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      group: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+        }
+        Insert: {
           created_at?: string
-          email?: string
+          description?: string | null
+          id?: string
+          name: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
           id?: string
           name?: string
-          updated_at?: string
         }
         Relationships: []
+      }
+      participants: {
+        Row: {
+          created_at: string
+          group_id: string | null
+          id: string
+          name: string | null
+        }
+        Insert: {
+          created_at?: string
+          group_id?: string | null
+          id?: string
+          name?: string | null
+        }
+        Update: {
+          created_at?: string
+          group_id?: string | null
+          id?: string
+          name?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "participants_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "group"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
@@ -220,6 +293,9 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
+  graphql_public: {
+    Enums: {},
+  },
   public: {
     Enums: {},
   },
