@@ -1,4 +1,4 @@
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from '@/integrations/supabase/client';
 
 export async function createGroup(name: string, description?: string) {
   return await supabase
@@ -6,5 +6,12 @@ export async function createGroup(name: string, description?: string) {
     .insert([{ name, description }])
     .select()
     .single();
+}
 
+export async function getGroupById(groupId: string) {
+  return await supabase
+    .from('group')
+    .select('id, name, participants(id, name, group_id)')
+    .eq('id', groupId)
+    .single();
 }

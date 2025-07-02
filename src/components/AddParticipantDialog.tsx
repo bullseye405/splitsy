@@ -1,8 +1,17 @@
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { useToast } from "@/hooks/use-toast";
+import { createParticipant } from '@/api/participants';
+import { Button } from '@/components/ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { useToast } from '@/hooks/use-toast';
+import { useState } from 'react';
+import { useParams } from 'react-router-dom';
 
 interface Participant {
   id: string;
@@ -13,48 +22,36 @@ interface AddParticipantDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onAddParticipant: (name: string) => void;
-  existingParticipants: Participant[];
 }
 
-export function AddParticipantDialog({ 
-  open, 
-  onOpenChange, 
-  onAddParticipant, 
-  existingParticipants 
+export function AddParticipantDialog({
+  open,
+  onOpenChange,
+  onAddParticipant,
 }: AddParticipantDialogProps) {
-  const [name, setName] = useState("");
+  const { groupId } = useParams<{ groupId: string }>();
+
+  const [name, setName] = useState('');
   const { toast } = useToast();
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!name.trim()) {
       toast({
-        title: "Name required",
-        description: "Please enter a participant name",
-        variant: "destructive",
+        title: 'Name required',
+        description: 'Please enter a participant name',
+        variant: 'destructive',
       });
       return;
     }
 
-    // Check for duplicate names
-    const nameExists = existingParticipants.some(
-      p => p.name.toLowerCase() === name.trim().toLowerCase()
-    );
+    const participant = await createParticipant(name.trim(), groupId);
 
-    if (nameExists) {
-      toast({
-        title: "Name already exists",
-        description: "A participant with this name already exists",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    onAddParticipant(name);
-    setName("");
+    onAddParticipant(participant.data.name);
+    setName('');
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter") {
+    if (e.key === 'Enter') {
       handleSubmit();
     }
   };
@@ -87,7 +84,11 @@ export function AddParticipantDialog({
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             Cancel
           </Button>
-          <Button onClick={handleSubmit} variant="gradient">
+          <Button
+            onClick={handleSubmit}
+            variant="gradient"
+            disabled={!name.trim()}
+          >
             Add Participant
           </Button>
         </DialogFooter>

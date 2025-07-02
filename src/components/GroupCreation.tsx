@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { createGroup } from '@/api/groups';
+import { createParticipant } from '@/api/participants';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import {
   Card,
   CardContent,
@@ -8,23 +8,18 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { Users, Plus } from 'lucide-react';
-import { createGroup } from '@/api/groups';
+import { Plus, Users } from 'lucide-react';
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
-interface GroupCreationProps {
-  onGroupCreated: (
-    groupId: string,
-    groupName: string,
-    participantName: string
-  ) => void;
-}
-
-export function GroupCreation({ onGroupCreated }: GroupCreationProps) {
+export function GroupCreation() {
   const [groupName, setGroupName] = useState('');
   const [participantName, setParticipantName] = useState('');
   const [isCreating, setIsCreating] = useState(false);
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   const handleCreateGroup = async () => {
     if (!groupName.trim()) {
@@ -55,17 +50,26 @@ export function GroupCreation({ onGroupCreated }: GroupCreationProps) {
         description: error.message,
         variant: 'destructive',
       });
-      setIsCreating(false);
-
-      return;
+    } else if (data.id) {
+      const { error: createParticipantError } = await createParticipant(
+        participantName.trim(),
+        data.id
+      );
+      if (createParticipantError) {
+        toast({
+          title: 'Error adding participant',
+          description: (createParticipantError as Error).message,
+          variant: 'destructive',
+        });
+      } else {
+        toast({
+          title: 'Group created!',
+          description: `${groupName} is ready for expense tracking`,
+        });
+        navigate(`/${data.id}`);
+      }
     }
-    onGroupCreated(data.id, groupName.trim(), participantName.trim());
     setIsCreating(false);
-
-    toast({
-      title: 'Group created!',
-      description: `${groupName} is ready for expense tracking`,
-    });
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {

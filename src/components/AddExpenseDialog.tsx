@@ -1,11 +1,25 @@
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useToast } from "@/hooks/use-toast";
+import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useToast } from '@/hooks/use-toast';
+import { useState } from 'react';
+import { useParams } from 'react-router-dom';
 
 interface Participant {
   id: string;
@@ -24,27 +38,33 @@ interface AddExpenseDialogProps {
   participants: Participant[];
 }
 
-export function AddExpenseDialog({ 
-  open, 
-  onOpenChange, 
-  onAddExpense, 
-  participants 
+export function AddExpenseDialog({
+  open,
+  onOpenChange,
+  onAddExpense,
+  participants,
 }: AddExpenseDialogProps) {
-  const [description, setDescription] = useState("");
-  const [amount, setAmount] = useState("");
-  const [paidBy, setPaidBy] = useState("");
+  const { groupId } = useParams<{ groupId: string }>();
+
+  const [description, setDescription] = useState('');
+  const [amount, setAmount] = useState('');
+  const [paidBy, setPaidBy] = useState('');
   const [splitBetween, setSplitBetween] = useState<string[]>([]);
-  const [splitMode, setSplitMode] = useState<"equal" | "amount" | "weight">("equal");
-  const [customAmounts, setCustomAmounts] = useState<{ [key: string]: number }>({});
+  const [splitMode, setSplitMode] = useState<'equal' | 'amount' | 'weight'>(
+    'equal'
+  );
+  const [customAmounts, setCustomAmounts] = useState<{ [key: string]: number }>(
+    {}
+  );
   const [weights, setWeights] = useState<{ [key: string]: number }>({});
   const { toast } = useToast();
 
   const handleSubmit = () => {
     if (!description.trim()) {
       toast({
-        title: "Description required",
-        description: "Please enter a description for the expense",
-        variant: "destructive",
+        title: 'Description required',
+        description: 'Please enter a description for the expense',
+        variant: 'destructive',
       });
       return;
     }
@@ -52,27 +72,28 @@ export function AddExpenseDialog({
     const amountNumber = parseFloat(amount);
     if (!amount || isNaN(amountNumber) || amountNumber <= 0) {
       toast({
-        title: "Invalid amount",
-        description: "Please enter a valid amount greater than 0",
-        variant: "destructive",
+        title: 'Invalid amount',
+        description: 'Please enter a valid amount greater than 0',
+        variant: 'destructive',
       });
       return;
     }
 
     if (!paidBy) {
       toast({
-        title: "Who paid?",
-        description: "Please select who paid for this expense",
-        variant: "destructive",
+        title: 'Who paid?',
+        description: 'Please select who paid for this expense',
+        variant: 'destructive',
       });
       return;
     }
 
     if (splitBetween.length === 0) {
       toast({
-        title: "Split between who?",
-        description: "Please select at least one person to split the expense with",
-        variant: "destructive",
+        title: 'Split between who?',
+        description:
+          'Please select at least one person to split the expense with',
+        variant: 'destructive',
       });
       return;
     }
@@ -85,11 +106,11 @@ export function AddExpenseDialog({
     });
 
     // Reset form
-    setDescription("");
-    setAmount("");
-    setPaidBy("");
+    setDescription('');
+    setAmount('');
+    setPaidBy('');
     setSplitBetween([]);
-    setSplitMode("equal");
+    setSplitMode('equal');
     setCustomAmounts({});
     setWeights({});
   };
@@ -98,22 +119,22 @@ export function AddExpenseDialog({
     if (checked) {
       setSplitBetween([...splitBetween, participantId]);
       // Initialize default values
-      if (splitMode === "amount") {
+      if (splitMode === 'amount') {
         const equalAmount = parseFloat(amount) / (splitBetween.length + 1) || 0;
-        setCustomAmounts(prev => ({ ...prev, [participantId]: equalAmount }));
+        setCustomAmounts((prev) => ({ ...prev, [participantId]: equalAmount }));
       }
-      if (splitMode === "weight") {
-        setWeights(prev => ({ ...prev, [participantId]: 1 }));
+      if (splitMode === 'weight') {
+        setWeights((prev) => ({ ...prev, [participantId]: 1 }));
       }
     } else {
-      setSplitBetween(splitBetween.filter(id => id !== participantId));
+      setSplitBetween(splitBetween.filter((id) => id !== participantId));
       // Clean up values
-      setCustomAmounts(prev => {
+      setCustomAmounts((prev) => {
         const newAmounts = { ...prev };
         delete newAmounts[participantId];
         return newAmounts;
       });
-      setWeights(prev => {
+      setWeights((prev) => {
         const newWeights = { ...prev };
         delete newWeights[participantId];
         return newWeights;
@@ -122,18 +143,18 @@ export function AddExpenseDialog({
   };
 
   const selectAllParticipants = () => {
-    const allIds = participants.map(p => p.id);
+    const allIds = participants.map((p) => p.id);
     setSplitBetween(allIds);
-    
-    if (splitMode === "amount") {
+
+    if (splitMode === 'amount') {
       const equalAmount = parseFloat(amount) / allIds.length || 0;
       const newAmounts: { [key: string]: number } = {};
-      allIds.forEach(id => newAmounts[id] = equalAmount);
+      allIds.forEach((id) => (newAmounts[id] = equalAmount));
       setCustomAmounts(newAmounts);
     }
-    if (splitMode === "weight") {
+    if (splitMode === 'weight') {
       const newWeights: { [key: string]: number } = {};
-      allIds.forEach(id => newWeights[id] = 1);
+      allIds.forEach((id) => (newWeights[id] = 1));
       setWeights(newWeights);
     }
   };
@@ -146,16 +167,16 @@ export function AddExpenseDialog({
 
   const handleCustomAmountChange = (participantId: string, value: string) => {
     const numValue = parseFloat(value) || 0;
-    setCustomAmounts(prev => ({ ...prev, [participantId]: numValue }));
-    
+    setCustomAmounts((prev) => ({ ...prev, [participantId]: numValue }));
+
     // Update other amounts to balance
     const totalAmount = parseFloat(amount) || 0;
-    const otherParticipants = splitBetween.filter(id => id !== participantId);
+    const otherParticipants = splitBetween.filter((id) => id !== participantId);
     if (otherParticipants.length > 0) {
       const remainingAmount = totalAmount - numValue;
       const equalSplit = remainingAmount / otherParticipants.length;
       const newAmounts = { ...customAmounts, [participantId]: numValue };
-      otherParticipants.forEach(id => {
+      otherParticipants.forEach((id) => {
         newAmounts[id] = equalSplit;
       });
       setCustomAmounts(newAmounts);
@@ -164,20 +185,25 @@ export function AddExpenseDialog({
 
   const handleWeightChange = (participantId: string, value: string) => {
     const numValue = parseFloat(value) || 0;
-    setWeights(prev => ({ ...prev, [participantId]: numValue }));
+    setWeights((prev) => ({ ...prev, [participantId]: numValue }));
   };
 
   const calculateWeightedAmount = (participantId: string) => {
     const totalAmount = parseFloat(amount) || 0;
     const participantWeight = weights[participantId] || 1;
-    const totalWeight = splitBetween.reduce((sum, id) => sum + (weights[id] || 1), 0);
-    return totalWeight > 0 ? (totalAmount * participantWeight) / totalWeight : 0;
+    const totalWeight = splitBetween.reduce(
+      (sum, id) => sum + (weights[id] || 1),
+      0
+    );
+    return totalWeight > 0
+      ? (totalAmount * participantWeight) / totalWeight
+      : 0;
   };
 
   const getDisplayAmount = (participantId: string) => {
-    if (splitMode === "equal") {
+    if (splitMode === 'equal') {
       return (parseFloat(amount) || 0) / splitBetween.length;
-    } else if (splitMode === "amount") {
+    } else if (splitMode === 'amount') {
       return customAmounts[participantId] || 0;
     } else {
       return calculateWeightedAmount(participantId);
@@ -230,7 +256,7 @@ export function AddExpenseDialog({
                 <SelectValue placeholder="Select who paid" />
               </SelectTrigger>
               <SelectContent>
-                {participants.map(participant => (
+                {participants.map((participant) => (
                   <SelectItem key={participant.id} value={participant.id}>
                     {participant.name}
                   </SelectItem>
@@ -262,21 +288,32 @@ export function AddExpenseDialog({
               </div>
             </div>
 
-            <Tabs value={splitMode} onValueChange={(value) => setSplitMode(value as "equal" | "amount" | "weight")}>
+            <Tabs
+              value={splitMode}
+              onValueChange={(value) =>
+                setSplitMode(value as 'equal' | 'amount' | 'weight')
+              }
+            >
               <TabsList className="grid w-full grid-cols-3">
                 <TabsTrigger value="equal">Split Equally</TabsTrigger>
                 <TabsTrigger value="amount">Split Amount</TabsTrigger>
                 <TabsTrigger value="weight">Split by Weight</TabsTrigger>
               </TabsList>
 
-              <TabsContent value="equal" className="space-y-2 max-h-48 overflow-y-auto">
-                {participants.map(participant => (
-                  <div key={participant.id} className="flex items-center justify-between">
+              <TabsContent
+                value="equal"
+                className="space-y-2 max-h-48 overflow-y-auto"
+              >
+                {participants.map((participant) => (
+                  <div
+                    key={participant.id}
+                    className="flex items-center justify-between"
+                  >
                     <div className="flex items-center space-x-2">
                       <Checkbox
                         id={`split-${participant.id}`}
                         checked={splitBetween.includes(participant.id)}
-                        onCheckedChange={(checked) => 
+                        onCheckedChange={(checked) =>
                           handleSplitToggle(participant.id, checked as boolean)
                         }
                       />
@@ -296,14 +333,20 @@ export function AddExpenseDialog({
                 ))}
               </TabsContent>
 
-              <TabsContent value="amount" className="space-y-2 max-h-48 overflow-y-auto">
-                {participants.map(participant => (
-                  <div key={participant.id} className="flex items-center justify-between gap-2">
+              <TabsContent
+                value="amount"
+                className="space-y-2 max-h-48 overflow-y-auto"
+              >
+                {participants.map((participant) => (
+                  <div
+                    key={participant.id}
+                    className="flex items-center justify-between gap-2"
+                  >
                     <div className="flex items-center space-x-2">
                       <Checkbox
                         id={`split-amount-${participant.id}`}
                         checked={splitBetween.includes(participant.id)}
-                        onCheckedChange={(checked) => 
+                        onCheckedChange={(checked) =>
                           handleSplitToggle(participant.id, checked as boolean)
                         }
                       />
@@ -320,7 +363,12 @@ export function AddExpenseDialog({
                         step="0.01"
                         min="0"
                         value={customAmounts[participant.id] || 0}
-                        onChange={(e) => handleCustomAmountChange(participant.id, e.target.value)}
+                        onChange={(e) =>
+                          handleCustomAmountChange(
+                            participant.id,
+                            e.target.value
+                          )
+                        }
                         className="w-20 h-8 text-sm"
                       />
                     )}
@@ -328,14 +376,20 @@ export function AddExpenseDialog({
                 ))}
               </TabsContent>
 
-              <TabsContent value="weight" className="space-y-2 max-h-48 overflow-y-auto">
-                {participants.map(participant => (
-                  <div key={participant.id} className="flex items-center justify-between gap-2">
+              <TabsContent
+                value="weight"
+                className="space-y-2 max-h-48 overflow-y-auto"
+              >
+                {participants.map((participant) => (
+                  <div
+                    key={participant.id}
+                    className="flex items-center justify-between gap-2"
+                  >
                     <div className="flex items-center space-x-2">
                       <Checkbox
                         id={`split-weight-${participant.id}`}
                         checked={splitBetween.includes(participant.id)}
-                        onCheckedChange={(checked) => 
+                        onCheckedChange={(checked) =>
                           handleSplitToggle(participant.id, checked as boolean)
                         }
                       />
@@ -353,7 +407,9 @@ export function AddExpenseDialog({
                           step="0.1"
                           min="0.1"
                           value={weights[participant.id] || 1}
-                          onChange={(e) => handleWeightChange(participant.id, e.target.value)}
+                          onChange={(e) =>
+                            handleWeightChange(participant.id, e.target.value)
+                          }
                           className="w-16 h-8 text-sm"
                         />
                         <span className="text-sm font-medium text-primary w-16 text-right">
