@@ -18,12 +18,19 @@ const Index = () => {
     }
   }, [groupParam, navigate]);
 
-  const handleGroupCreated = (groupId: string, groupName: string) => {
+  const [firstParticipantName, setFirstParticipantName] = useState<string>("");
+
+  const handleGroupCreated = (groupId: string, groupName: string, participantName: string) => {
     setActiveGroupId(groupId);
     setActiveGroupName(groupName);
+    setFirstParticipantName(participantName);
     
     // Store in localStorage for persistence
-    localStorage.setItem("currentGroup", JSON.stringify({ id: groupId, name: groupName }));
+    localStorage.setItem("currentGroup", JSON.stringify({ 
+      id: groupId, 
+      name: groupName, 
+      firstParticipantName: participantName 
+    }));
   };
 
   // Check for existing group on load
@@ -31,9 +38,10 @@ const Index = () => {
     const savedGroup = localStorage.getItem("currentGroup");
     if (savedGroup) {
       try {
-        const { id, name } = JSON.parse(savedGroup);
+        const { id, name, firstParticipantName } = JSON.parse(savedGroup);
         setActiveGroupId(id);
         setActiveGroupName(name);
+        setFirstParticipantName(firstParticipantName || "");
       } catch (error) {
         // Invalid saved data, ignore
         localStorage.removeItem("currentGroup");
@@ -42,7 +50,7 @@ const Index = () => {
   }, []);
 
   if (activeGroupId) {
-    return <GroupDashboard groupId={activeGroupId} groupName={activeGroupName} />;
+    return <GroupDashboard groupId={activeGroupId} groupName={activeGroupName} firstParticipantName={firstParticipantName} />;
   }
 
   return <GroupCreation onGroupCreated={handleGroupCreated} />;

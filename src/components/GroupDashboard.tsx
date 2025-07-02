@@ -24,12 +24,13 @@ interface Expense {
 interface GroupDashboardProps {
   groupId: string;
   groupName: string;
+  firstParticipantName?: string;
 }
 
-export function GroupDashboard({ groupId, groupName }: GroupDashboardProps) {
-  const [participants, setParticipants] = useState<Participant[]>([
-    { id: "1", name: "You" }
-  ]);
+export function GroupDashboard({ groupId, groupName, firstParticipantName }: GroupDashboardProps) {
+  const [participants, setParticipants] = useState<Participant[]>(
+    firstParticipantName ? [{ id: "1", name: firstParticipantName }] : []
+  );
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [showAddParticipant, setShowAddParticipant] = useState(false);
   const [showAddExpense, setShowAddExpense] = useState(false);
@@ -150,23 +151,25 @@ export function GroupDashboard({ groupId, groupName }: GroupDashboardProps) {
         </div>
 
         {/* Participants */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Users className="w-5 h-5" />
-              Participants
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex flex-wrap gap-2">
-              {participants.map(participant => (
-                <Badge key={participant.id} variant="secondary" className="px-3 py-1">
-                  {participant.name}
-                </Badge>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+        {participants.length > 0 && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Users className="w-5 h-5" />
+                Participants
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex flex-wrap gap-2">
+                {participants.map((participant, index) => (
+                  <Badge key={participant.id} variant="secondary" className="px-3 py-1">
+                    {participant.name}{index === 0 ? " (me)" : ""}
+                  </Badge>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Add Expense Button */}
         <Card className="border-dashed border-2 border-muted">
@@ -175,14 +178,14 @@ export function GroupDashboard({ groupId, groupName }: GroupDashboardProps) {
               onClick={() => setShowAddExpense(true)}
               className="w-full h-12"
               variant="gradient"
-              disabled={participants.length < 2}
+              disabled={participants.length < 1}
             >
               <Plus className="w-4 h-4" />
               Add Expense
             </Button>
-            {participants.length < 2 && (
+            {participants.length < 1 && (
               <p className="text-sm text-muted-foreground text-center mt-2">
-                Add at least 2 participants to start tracking expenses
+                Add participants to start tracking expenses
               </p>
             )}
           </CardContent>

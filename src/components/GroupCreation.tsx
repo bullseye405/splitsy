@@ -6,11 +6,12 @@ import { useToast } from "@/hooks/use-toast";
 import { Users, Plus } from "lucide-react";
 
 interface GroupCreationProps {
-  onGroupCreated: (groupId: string, groupName: string) => void;
+  onGroupCreated: (groupId: string, groupName: string, participantName: string) => void;
 }
 
 export function GroupCreation({ onGroupCreated }: GroupCreationProps) {
   const [groupName, setGroupName] = useState("");
+  const [participantName, setParticipantName] = useState("");
   const [isCreating, setIsCreating] = useState(false);
   const { toast } = useToast();
 
@@ -28,13 +29,27 @@ export function GroupCreation({ onGroupCreated }: GroupCreationProps) {
       return;
     }
 
+    if (!participantName.trim()) {
+      toast({
+        title: "Your name required",
+        description: "Please enter your name",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsCreating(true);
     
     // Simulate brief loading for better UX
     setTimeout(() => {
       const groupId = generateGroupId();
-      onGroupCreated(groupId, groupName.trim());
+      onGroupCreated(groupId, groupName.trim(), participantName.trim());
       setIsCreating(false);
+      
+      toast({
+        title: "Group created!",
+        description: `${groupName} is ready for expense tracking`,
+      });
     }, 500);
   };
 
@@ -74,6 +89,22 @@ export function GroupCreation({ onGroupCreated }: GroupCreationProps) {
                 disabled={isCreating}
               />
             </div>
+
+            <div className="space-y-2">
+              <label htmlFor="participantName" className="text-sm font-medium">
+                Your Name
+              </label>
+              <Input
+                id="participantName"
+                value={participantName}
+                onChange={(e) => setParticipantName(e.target.value)}
+                onKeyPress={handleKeyPress}
+                placeholder="Enter your name"
+                className="h-12"
+                disabled={isCreating}
+              />
+            </div>
+
             <Button
               onClick={handleCreateGroup}
               disabled={isCreating}
