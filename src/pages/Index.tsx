@@ -1,14 +1,51 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+import { useEffect, useState } from "react";
+import { useSearchParams, useNavigate } from "react-router-dom";
+import { GroupCreation } from "@/components/GroupCreation";
+import { GroupDashboard } from "@/components/GroupDashboard";
 
 const Index = () => {
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-background">
-      <div className="text-center">
-        <h1 className="text-4xl font-bold mb-4">Welcome to Your Blank App</h1>
-        <p className="text-xl text-muted-foreground">Start building your amazing project here!</p>
-      </div>
-    </div>
-  );
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const [activeGroupId, setActiveGroupId] = useState<string | null>(null);
+  const [activeGroupName, setActiveGroupName] = useState<string>("");
+
+  const groupParam = searchParams.get("group");
+
+  useEffect(() => {
+    if (groupParam) {
+      // Handle group joining via URL
+      navigate(`/group?group=${groupParam}`);
+    }
+  }, [groupParam, navigate]);
+
+  const handleGroupCreated = (groupId: string, groupName: string) => {
+    setActiveGroupId(groupId);
+    setActiveGroupName(groupName);
+    
+    // Store in localStorage for persistence
+    localStorage.setItem("currentGroup", JSON.stringify({ id: groupId, name: groupName }));
+  };
+
+  // Check for existing group on load
+  useEffect(() => {
+    const savedGroup = localStorage.getItem("currentGroup");
+    if (savedGroup) {
+      try {
+        const { id, name } = JSON.parse(savedGroup);
+        setActiveGroupId(id);
+        setActiveGroupName(name);
+      } catch (error) {
+        // Invalid saved data, ignore
+        localStorage.removeItem("currentGroup");
+      }
+    }
+  }, []);
+
+  if (activeGroupId) {
+    return <GroupDashboard groupId={activeGroupId} groupName={activeGroupName} />;
+  }
+
+  return <GroupCreation onGroupCreated={handleGroupCreated} />;
 };
 
 export default Index;
