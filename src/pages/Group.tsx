@@ -75,7 +75,7 @@ const Group = () => {
   }
 
   if (hasJoined) {
-    return <GroupDashboard groupId={groupId} groupName={mockGroupData.name} />;
+    return <GroupDashboard />;
   }
 
   return (
