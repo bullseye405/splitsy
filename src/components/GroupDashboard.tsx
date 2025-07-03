@@ -179,117 +179,144 @@ export function GroupDashboard() {
     switch (expenseType) {
       case 'transfer': return 'text-blue-600';
       case 'income': return 'text-green-600';
-      default: return 'text-primary';
+      default: return 'text-red-600';
     }
   };
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background p-4 flex items-center justify-center">
-        <div className="text-center">Loading...</div>
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-4 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-slate-600 font-medium">Loading your group...</p>
+        </div>
       </div>
     );
   }
 
   if (!group) {
     return (
-      <div className="min-h-screen bg-background p-4 flex items-center justify-center">
-        <div className="text-center">Group not found</div>
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-4 flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-6xl mb-4">🤔</div>
+          <h2 className="text-2xl font-bold text-slate-800 mb-2">Group not found</h2>
+          <p className="text-slate-600">The group you're looking for doesn't exist or has been removed.</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background p-4">
-      <div className="max-w-4xl mx-auto space-y-6">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-4">
+      <div className="max-w-4xl mx-auto space-y-8">
         {/* Header */}
         <div className="flex items-center justify-between">
-          <h1 className="text-3xl font-bold">{group.name}</h1>
-          <div className="flex items-center gap-2">
-            <Button onClick={handleShare} variant="ghost" size="sm">
-              <Share className="w-4 h-4" />
+          <div>
+            <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+              {group.name}
+            </h1>
+            <p className="text-slate-600 mt-1">Track expenses and settle debts with your group</p>
+          </div>
+          <div className="flex items-center gap-3">
+            <Button 
+              onClick={handleShare} 
+              variant="outline" 
+              size="sm"
+              className="border-blue-200 hover:bg-blue-50 hover:border-blue-300 text-blue-600"
+            >
+              <Share className="w-4 h-4 mr-2" />
+              Share
             </Button>
             <Button
               onClick={() => setShowParticipantsModal(true)}
-              variant="ghost"
+              variant="outline"
               size="sm"
+              className="border-purple-200 hover:bg-purple-50 hover:border-purple-300 text-purple-600"
             >
-              <Users className="w-4 h-4 mr-1" />
+              <Users className="w-4 h-4 mr-2" />
               Manage Participants
             </Button>
           </div>
         </div>
 
         {/* Top Dashboard Card */}
-        <Card>
-          <CardContent className="p-6">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 items-center">
+        <Card className="shadow-lg border-0 bg-white/80 backdrop-blur-sm">
+          <CardContent className="p-8">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
               {/* Stats */}
-              <div className="text-center">
-                <div className="text-2xl font-bold text-primary">
+              <div className="text-center p-4 rounded-xl bg-gradient-to-br from-red-50 to-red-100 border border-red-200">
+                <div className="text-3xl font-bold text-red-600 mb-1">
                   ${totalExpenses.toFixed(2)}
                 </div>
-                <div className="text-sm text-muted-foreground">Expenses</div>
+                <div className="text-sm font-medium text-red-700">Total Expenses</div>
               </div>
               
-              <div className="text-center">
-                <div className="text-2xl font-bold text-green-600">
+              <div className="text-center p-4 rounded-xl bg-gradient-to-br from-green-50 to-green-100 border border-green-200">
+                <div className="text-3xl font-bold text-green-600 mb-1">
                   ${totalIncome.toFixed(2)}
                 </div>
-                <div className="text-sm text-muted-foreground">Income</div>
+                <div className="text-sm font-medium text-green-700">Total Income</div>
               </div>
 
               {/* Action Buttons */}
               <Button
                 onClick={() => handleOpenDialog('expense')}
-                size="sm"
-                variant="outline"
+                size="lg"
+                className="h-auto py-4 px-6 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105"
                 disabled={!group.participants || group.participants.length < 2}
               >
-                <Plus className="w-4 h-4 mr-1" />
-                Expense
+                <Plus className="w-5 h-5 mr-2" />
+                Add Expense
               </Button>
               
-              <div className="flex gap-1">
+              <div className="flex flex-col gap-2">
                 <Button
                   onClick={() => handleOpenDialog('income')}
                   size="sm"
-                  variant="outline"
+                  className="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white shadow-md hover:shadow-lg transition-all duration-200"
                   disabled={!group.participants || group.participants.length < 2}
                 >
-                  <TrendingUp className="w-4 h-4 mr-1" />
+                  <TrendingUp className="w-4 h-4 mr-2" />
                   Income
                 </Button>
                 <Button
                   onClick={() => handleOpenDialog('transfer')}
                   size="sm"
-                  variant="outline"
+                  className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white shadow-md hover:shadow-lg transition-all duration-200"
                   disabled={!group.participants || group.participants.length < 2}
                 >
-                  <ArrowRightLeft className="w-4 h-4 mr-1" />
+                  <ArrowRightLeft className="w-4 h-4 mr-2" />
                   Transfer
                 </Button>
               </div>
             </div>
             
             {(!group.participants || group.participants.length < 2) && (
-              <p className="text-sm text-muted-foreground text-center mt-2">
-                Add at least 2 participants to start tracking
-              </p>
+              <div className="mt-6 p-4 bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-xl">
+                <p className="text-sm text-amber-700 text-center font-medium">
+                  <Users className="w-4 h-4 inline mr-2" />
+                  Add at least 2 participants to start tracking expenses
+                </p>
+              </div>
             )}
           </CardContent>
         </Card>
 
         {/* Debt Settlement */}
         {expenses.length > 0 && group.participants && groupId && (
-          <DebtSettlement expenses={expenses} participants={group.participants} groupId={groupId} />
+          <div className="bg-white/80 backdrop-blur-sm rounded-xl shadow-lg border-0 p-6">
+            <DebtSettlement expenses={expenses} participants={group.participants} groupId={groupId} />
+          </div>
         )}
 
         {/* Recent Transactions */}
         {expenses.length > 0 && (
-          <Card>
-            <CardHeader>
-              <CardTitle>Recent Transactions</CardTitle>
+          <Card className="shadow-lg border-0 bg-white/80 backdrop-blur-sm">
+            <CardHeader className="pb-4">
+              <CardTitle className="text-2xl font-bold bg-gradient-to-r from-slate-700 to-slate-800 bg-clip-text text-transparent flex items-center">
+                <DollarSign className="w-6 h-6 mr-2 text-slate-600" />
+                Recent Transactions
+              </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
               {expenses.map((expense) => {
@@ -300,22 +327,29 @@ export function GroupDashboard() {
                 return (
                   <div
                     key={expense.id}
-                    className="flex justify-between items-center p-3 rounded-lg bg-muted/50"
+                    className="flex justify-between items-center p-5 rounded-xl bg-gradient-to-r from-white to-slate-50 border border-slate-200 hover:shadow-md transition-all duration-200 hover:border-slate-300"
                   >
                     <div className="flex-1">
-                      <div className="flex items-center gap-2">
-                        <span className={getExpenseTypeColor(expenseType)}>
-                          {getExpenseTypeIcon(expenseType)}
-                        </span>
-                        <span className="font-medium">{expense.description}</span>
-                      </div>
-                      <div className="text-sm text-muted-foreground">
-                        {expenseType === 'transfer' ? 'Transferred' : expenseType === 'income' ? 'Received' : 'Paid'} by {paidByName}
-                        {expenseType !== 'transfer' && ` • Split ${expense.expense_splits.length} ways`}
+                      <div className="flex items-center gap-3">
+                        <div className={`p-2 rounded-full ${
+                          expenseType === 'transfer' ? 'bg-blue-100' : 
+                          expenseType === 'income' ? 'bg-green-100' : 'bg-red-100'
+                        }`}>
+                          <span className={getExpenseTypeColor(expenseType)}>
+                            {getExpenseTypeIcon(expenseType)}
+                          </span>
+                        </div>
+                        <div>
+                          <span className="font-semibold text-slate-800 text-lg">{expense.description}</span>
+                          <div className="text-sm text-slate-600 mt-1">
+                            {expenseType === 'transfer' ? 'Transferred' : expenseType === 'income' ? 'Received' : 'Paid'} by <span className="font-medium">{paidByName}</span>
+                            {expenseType !== 'transfer' && ` • Split ${expense.expense_splits.length} ways`}
+                          </div>
+                        </div>
                       </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <div className={`text-lg font-semibold ${getExpenseTypeColor(expenseType)}`}>
+                    <div className="flex items-center gap-4">
+                      <div className={`text-xl font-bold ${getExpenseTypeColor(expenseType)}`}>
                         ${expense.amount.toFixed(2)}
                       </div>
                       <div className="flex gap-1">
@@ -323,6 +357,7 @@ export function GroupDashboard() {
                           size="sm"
                           variant="ghost"
                           onClick={() => handleEditExpense(expense)}
+                          className="hover:bg-blue-50 hover:text-blue-600 transition-colors"
                         >
                           <Edit className="w-4 h-4" />
                         </Button>
@@ -330,6 +365,7 @@ export function GroupDashboard() {
                           size="sm"
                           variant="ghost"
                           onClick={() => handleDeleteExpense(expense.id)}
+                          className="hover:bg-red-50 hover:text-red-600 transition-colors"
                         >
                           <Trash2 className="w-4 h-4" />
                         </Button>
