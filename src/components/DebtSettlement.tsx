@@ -75,6 +75,10 @@ export function DebtSettlement({
 
         const settleAmount = Math.min(remainingDebt, creditAmount);
 
+        console.log(
+          `Settling ${settleAmount} from ${debtorId} to ${creditorId}`
+        );
+
         // Check if this debt has been settled
         const isSettled = settlements.some(
           (s) =>
