@@ -1,7 +1,6 @@
 
 import { getGroupById } from '@/api/groups';
 import { createExpense, deleteExpense, getExpensesByGroupId, updateExpense, ExpenseWithSplits } from '@/api/expenses';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
@@ -10,6 +9,8 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { AddParticipantDialog } from './AddParticipantDialog';
 import { ExpenseDialog } from './ExpenseDialog';
+import { ParticipantsModal } from './ParticipantsModal';
+import { DebtSettlement } from './DebtSettlement';
 import { Group } from '@/types/group';
 
 export function GroupDashboard() {
@@ -18,6 +19,7 @@ export function GroupDashboard() {
   const [expenses, setExpenses] = useState<ExpenseWithSplits[]>([]);
   const [showAddParticipant, setShowAddParticipant] = useState(false);
   const [showExpenseDialog, setShowExpenseDialog] = useState(false);
+  const [showParticipantsModal, setShowParticipantsModal] = useState(false);
   const [editingExpense, setEditingExpense] = useState<ExpenseWithSplits | null>(null);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
@@ -158,32 +160,6 @@ export function GroupDashboard() {
     }
   };
 
-  const calculateBalances = () => {
-    const balances: { [key: string]: number } = {};
-    if (!group) return balances;
-
-    // Initialize balances
-    group.participants?.forEach((p) => {
-      balances[p.id] = 0;
-    });
-
-    // Calculate balances from expenses
-    expenses.forEach((expense) => {
-      // Person who paid gets credited
-      balances[expense.paid_by] += expense.amount;
-
-      // People in the split get debited
-      expense.expense_splits.forEach((split) => {
-        if (split.participant_id) {
-          balances[split.participant_id] -= split.amount;
-        }
-      });
-    });
-
-    return balances;
-  };
-
-  const balances = calculateBalances();
   const totalExpenses = expenses.reduce((sum, expense) => sum + expense.amount, 0);
 
   if (loading) {
@@ -234,36 +210,23 @@ export function GroupDashboard() {
               <div className="text-sm text-muted-foreground">Total Expenses</div>
             </CardContent>
           </Card>
-          <Card>
+          <Card 
+            className="cursor-pointer hover:bg-muted/50 transition-colors"
+            onClick={() => setShowParticipantsModal(true)}
+          >
             <CardContent className="p-4 text-center">
               <div className="text-2xl font-bold text-primary">
                 {group.participants?.length || 0}
               </div>
               <div className="text-sm text-muted-foreground">Participants</div>
+              <div className="text-xs text-muted-foreground mt-1">Click to manage</div>
             </CardContent>
           </Card>
         </div>
 
-        {/* Participants */}
-        {group.participants && group.participants.length > 0 && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Users className="w-5 h-5" />
-                Participants
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex flex-wrap gap-2">
-                {group.participants.map((participant, index) => (
-                  <Badge key={participant.id} variant="secondary" className="px-3 py-1">
-                    {participant.name}
-                    {index === 0 ? ' (me)' : ''}
-                  </Badge>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
+        {/* Debt Settlement */}
+        {expenses.length > 0 && group.participants && (
+          <DebtSettlement expenses={expenses} participants={group.participants} />
         )}
 
         {/* Add Expense Button */}
@@ -337,49 +300,19 @@ export function GroupDashboard() {
             </CardContent>
           </Card>
         )}
-
-        {/* Balances */}
-        {expenses.length > 0 && group.participants && (
-          <Card>
-            <CardHeader>
-              <CardTitle>Balances</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {group.participants.map((participant) => {
-                const balance = balances[participant.id] || 0;
-                const isPositive = balance > 0;
-                const isNeutral = Math.abs(balance) < 0.01;
-
-                return (
-                  <div key={participant.id} className="flex justify-between items-center">
-                    <span className="font-medium">{participant.name}</span>
-                    <span
-                      className={`font-semibold ${
-                        isNeutral
-                          ? 'text-muted-foreground'
-                          : isPositive
-                          ? 'text-success'
-                          : 'text-destructive'
-                      }`}
-                    >
-                      {isNeutral
-                        ? 'Settled'
-                        : isPositive
-                        ? `Gets $${balance.toFixed(2)}`
-                        : `Owes $${Math.abs(balance).toFixed(2)}`}
-                    </span>
-                  </div>
-                );
-              })}
-            </CardContent>
-          </Card>
-        )}
       </div>
 
       <AddParticipantDialog
         open={showAddParticipant}
         onOpenChange={setShowAddParticipant}
         onAddParticipant={addParticipant}
+      />
+
+      <ParticipantsModal
+        open={showParticipantsModal}
+        onOpenChange={setShowParticipantsModal}
+        participants={group.participants || []}
+        onParticipantChange={fetchGroupData}
       />
 
       <ExpenseDialog
