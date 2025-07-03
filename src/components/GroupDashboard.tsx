@@ -40,7 +40,7 @@ export function GroupDashboard() {
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
-  const shareUrl = `${window.location.origin}?group=${groupId}`;
+  const shareUrl = `${window.location.origin}/${groupId}`;
 
   const fetchGroupData = useCallback(async () => {
     if (!groupId) return;
