@@ -60,6 +60,7 @@ export type Database = {
           category: string | null
           created_at: string | null
           description: string | null
+          expense_type: string | null
           group_id: string | null
           id: string
           paid_by: string
@@ -70,6 +71,7 @@ export type Database = {
           category?: string | null
           created_at?: string | null
           description?: string | null
+          expense_type?: string | null
           group_id?: string | null
           id?: string
           paid_by: string
@@ -80,6 +82,7 @@ export type Database = {
           category?: string | null
           created_at?: string | null
           description?: string | null
+          expense_type?: string | null
           group_id?: string | null
           id?: string
           paid_by?: string
@@ -148,6 +151,61 @@ export type Database = {
             columns: ["group_id"]
             isOneToOne: false
             referencedRelation: "group"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      settlements: {
+        Row: {
+          amount: number
+          created_at: string
+          description: string | null
+          from_participant_id: string
+          group_id: string
+          id: string
+          settlement_date: string
+          to_participant_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          description?: string | null
+          from_participant_id: string
+          group_id: string
+          id?: string
+          settlement_date?: string
+          to_participant_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          description?: string | null
+          from_participant_id?: string
+          group_id?: string
+          id?: string
+          settlement_date?: string
+          to_participant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "settlements_from_participant_id_fkey"
+            columns: ["from_participant_id"]
+            isOneToOne: false
+            referencedRelation: "participants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "settlements_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "group"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "settlements_to_participant_id_fkey"
+            columns: ["to_participant_id"]
+            isOneToOne: false
+            referencedRelation: "participants"
             referencedColumns: ["id"]
           },
         ]
