@@ -7,54 +7,35 @@ export type Json =
   | Json[]
 
 export type Database = {
-  graphql_public: {
-    Tables: {
-      [_ in never]: never
-    }
-    Views: {
-      [_ in never]: never
-    }
-    Functions: {
-      graphql: {
-        Args: {
-          operationName?: string
-          query?: string
-          variables?: Json
-          extensions?: Json
-        }
-        Returns: Json
-      }
-    }
-    Enums: {
-      [_ in never]: never
-    }
-    CompositeTypes: {
-      [_ in never]: never
-    }
-  }
   public: {
     Tables: {
       expense_splits: {
         Row: {
           amount: number
           created_at: string
+          custom_amount: number | null
           expense_id: string | null
           id: string
           participant_id: string | null
+          weight: number | null
         }
         Insert: {
           amount: number
           created_at?: string
+          custom_amount?: number | null
           expense_id?: string | null
           id?: string
           participant_id?: string | null
+          weight?: number | null
         }
         Update: {
           amount?: number
           created_at?: string
+          custom_amount?: number | null
           expense_id?: string | null
           id?: string
           participant_id?: string | null
+          weight?: number | null
         }
         Relationships: [
           {
@@ -82,7 +63,7 @@ export type Database = {
           group_id: string | null
           id: string
           paid_by: string
-          split_type: string | null
+          split_type: Database["public"]["Enums"]["split_type"] | null
         }
         Insert: {
           amount: number
@@ -92,7 +73,7 @@ export type Database = {
           group_id?: string | null
           id?: string
           paid_by: string
-          split_type?: string | null
+          split_type?: Database["public"]["Enums"]["split_type"] | null
         }
         Update: {
           amount?: number
@@ -102,7 +83,7 @@ export type Database = {
           group_id?: string | null
           id?: string
           paid_by?: string
-          split_type?: string | null
+          split_type?: Database["public"]["Enums"]["split_type"] | null
         }
         Relationships: [
           {
@@ -179,7 +160,7 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      split_type: "equal" | "amount" | "weight"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -293,10 +274,9 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
-  graphql_public: {
-    Enums: {},
-  },
   public: {
-    Enums: {},
+    Enums: {
+      split_type: ["equal", "amount", "weight"],
+    },
   },
 } as const
