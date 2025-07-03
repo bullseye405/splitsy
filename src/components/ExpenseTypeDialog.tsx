@@ -59,8 +59,12 @@ export function ExpenseTypeDialog({
   const [paidBy, setPaidBy] = useState('');
   const [transferTo, setTransferTo] = useState('');
   const [splitBetween, setSplitBetween] = useState<string[]>([]);
-  const [splitMode, setSplitMode] = useState<'equal' | 'amount' | 'weight'>('equal');
-  const [customAmounts, setCustomAmounts] = useState<{ [key: string]: number }>({});
+  const [splitMode, setSplitMode] = useState<'equal' | 'amount' | 'weight'>(
+    'equal'
+  );
+  const [customAmounts, setCustomAmounts] = useState<{ [key: string]: number }>(
+    {}
+  );
   const [weights, setWeights] = useState<{ [key: string]: number }>({});
   const { toast } = useToast();
 
@@ -69,14 +73,18 @@ export function ExpenseTypeDialog({
       setDescription(expense.description || '');
       setAmount(expense.amount.toString());
       setPaidBy(expense.paid_by);
-      setSplitMode((expense.split_type as 'equal' | 'amount' | 'weight') || 'equal');
-      
-      const participantIds = expense.expense_splits.map(split => split.participant_id).filter(Boolean) as string[];
+      setSplitMode(
+        (expense.split_type as 'equal' | 'amount' | 'weight') || 'equal'
+      );
+
+      const participantIds = expense.expense_splits
+        .map((split) => split.participant_id)
+        .filter(Boolean) as string[];
       setSplitBetween(participantIds);
-      
+
       const amounts: { [key: string]: number } = {};
       const weightValues: { [key: string]: number } = {};
-      expense.expense_splits.forEach(split => {
+      expense.expense_splits.forEach((split) => {
         if (split.participant_id) {
           amounts[split.participant_id] = split.amount;
           weightValues[split.participant_id] = split.weight || 1;
@@ -90,7 +98,7 @@ export function ExpenseTypeDialog({
       setAmount('');
       setPaidBy('');
       setTransferTo('');
-      setSplitBetween(type === 'transfer' ? [] : participants.map(p => p.id));
+      setSplitBetween(type === 'transfer' ? [] : participants.map((p) => p.id));
       setSplitMode('equal');
       setCustomAmounts({});
       setWeights({});
@@ -98,16 +106,21 @@ export function ExpenseTypeDialog({
   }, [expense, isEditing, participants, type, open]);
 
   const getTitle = () => {
-    if (isEditing) return `Edit ${type.charAt(0).toUpperCase() + type.slice(1)}`;
+    if (isEditing)
+      return `Edit ${type.charAt(0).toUpperCase() + type.slice(1)}`;
     return `Add ${type.charAt(0).toUpperCase() + type.slice(1)}`;
   };
 
   const getDescription = () => {
     switch (type) {
-      case 'expense': return 'Record a new expense for the group';
-      case 'transfer': return 'Record a direct transfer between participants';
-      case 'income': return 'Record income for the group';
-      default: return '';
+      case 'expense':
+        return 'Record a new expense for the group';
+      case 'transfer':
+        return 'Record a direct transfer between participants';
+      case 'income':
+        return 'Record income for the group';
+      default:
+        return '';
     }
   };
 
@@ -134,7 +147,9 @@ export function ExpenseTypeDialog({
     if (!paidBy) {
       toast({
         title: type === 'transfer' ? 'Who transferred?' : 'Who paid?',
-        description: `Please select who ${type === 'transfer' ? 'sent the money' : 'paid'}`,
+        description: `Please select who ${
+          type === 'transfer' ? 'sent the money' : 'paid'
+        }`,
         variant: 'destructive',
       });
       return;
@@ -166,26 +181,34 @@ export function ExpenseTypeDialog({
       return;
     }
 
-    const splits = type === 'transfer' ? [
-      { participant_id: transferTo, amount: amountNumber }
-    ] : splitBetween.map(participantId => {
-      let splitAmount = amountNumber / splitBetween.length;
-      
-      if (splitMode === 'amount') {
-        splitAmount = customAmounts[participantId] || 0;
-      } else if (splitMode === 'weight') {
-        const totalWeight = splitBetween.reduce((sum, id) => sum + (weights[id] || 1), 0);
-        const participantWeight = weights[participantId] || 1;
-        splitAmount = (amountNumber * participantWeight) / totalWeight;
-      }
+    const splits =
+      type === 'transfer'
+        ? [{ participant_id: transferTo, amount: amountNumber }]
+        : splitBetween.map((participantId) => {
+            let splitAmount = amountNumber / splitBetween.length;
 
-      return {
-        participant_id: participantId,
-        amount: splitAmount,
-        custom_amount: splitMode === 'amount' ? customAmounts[participantId] : undefined,
-        weight: splitMode === 'weight' ? weights[participantId] : undefined,
-      };
-    });
+            if (splitMode === 'amount') {
+              splitAmount = customAmounts[participantId] || 0;
+            } else if (splitMode === 'weight') {
+              const totalWeight = splitBetween.reduce(
+                (sum, id) => sum + (weights[id] || 1),
+                0
+              );
+              const participantWeight = weights[participantId] || 1;
+              splitAmount = (amountNumber * participantWeight) / totalWeight;
+            }
+
+            return {
+              participant_id: participantId,
+              amount: splitAmount,
+              custom_amount:
+                splitMode === 'amount'
+                  ? customAmounts[participantId]
+                  : undefined,
+              weight:
+                splitMode === 'weight' ? weights[participantId] : undefined,
+            };
+          });
 
     onSave({
       description: description.trim(),
@@ -202,7 +225,7 @@ export function ExpenseTypeDialog({
     setAmount('');
     setPaidBy('');
     setTransferTo('');
-    setSplitBetween(type === 'transfer' ? [] : participants.map(p => p.id));
+    setSplitBetween(type === 'transfer' ? [] : participants.map((p) => p.id));
     setSplitMode('equal');
     setCustomAmounts({});
     setWeights({});
@@ -310,7 +333,7 @@ export function ExpenseTypeDialog({
           <DialogTitle>{getTitle()}</DialogTitle>
           <DialogDescription>{getDescription()}</DialogDescription>
         </DialogHeader>
-        
+
         <div className="space-y-4">
           <div className="space-y-2">
             <label htmlFor="description" className="text-sm font-medium">
@@ -320,7 +343,13 @@ export function ExpenseTypeDialog({
               id="description"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              placeholder={type === 'transfer' ? 'Cash repayment, loan...' : type === 'income' ? 'Refund, returned deposit...' : 'Dinner, taxi, groceries...'}
+              placeholder={
+                type === 'transfer'
+                  ? 'Cash repayment, loan...'
+                  : type === 'income'
+                  ? 'Refund, returned deposit...'
+                  : 'Dinner, taxi, groceries...'
+              }
               className="h-10"
             />
           </div>
@@ -343,11 +372,23 @@ export function ExpenseTypeDialog({
 
           <div className="space-y-2">
             <label className="text-sm font-medium">
-              {type === 'transfer' ? 'From' : type === 'income' ? 'Received by' : 'Paid by'}
+              {type === 'transfer'
+                ? 'From'
+                : type === 'income'
+                ? 'Received by'
+                : 'Paid by'}
             </label>
             <Select value={paidBy} onValueChange={setPaidBy}>
               <SelectTrigger className="h-10">
-                <SelectValue placeholder={`Select who ${type === 'transfer' ? 'sent' : type === 'income' ? 'received' : 'paid'}`} />
+                <SelectValue
+                  placeholder={`Select who ${
+                    type === 'transfer'
+                      ? 'sent'
+                      : type === 'income'
+                      ? 'received'
+                      : 'paid'
+                  }`}
+                />
               </SelectTrigger>
               <SelectContent>
                 {participants.map((participant) => (
@@ -367,11 +408,13 @@ export function ExpenseTypeDialog({
                   <SelectValue placeholder="Select who received" />
                 </SelectTrigger>
                 <SelectContent>
-                  {participants.filter(p => p.id !== paidBy).map((participant) => (
-                    <SelectItem key={participant.id} value={participant.id}>
-                      {participant.name}
-                    </SelectItem>
-                  ))}
+                  {participants
+                    .filter((p) => p.id !== paidBy)
+                    .map((participant) => (
+                      <SelectItem key={participant.id} value={participant.id}>
+                        {participant.name}
+                      </SelectItem>
+                    ))}
                 </SelectContent>
               </Select>
             </div>
@@ -388,7 +431,9 @@ export function ExpenseTypeDialog({
                     type="button"
                     variant="outline"
                     size="sm"
-                    onClick={() => setSplitBetween(participants.map(p => p.id))}
+                    onClick={() =>
+                      setSplitBetween(participants.map((p) => p.id))
+                    }
                   >
                     All
                   </Button>
@@ -403,39 +448,175 @@ export function ExpenseTypeDialog({
                 </div>
               </div>
 
-              <Tabs value={splitMode} onValueChange={(value) => setSplitMode(value as 'equal' | 'amount' | 'weight')}>
+              <Tabs
+                value={splitMode}
+                onValueChange={(value) =>
+                  setSplitMode(value as 'equal' | 'amount' | 'weight')
+                }
+              >
                 <TabsList className="grid w-full grid-cols-3">
                   <TabsTrigger value="equal">Split Equally</TabsTrigger>
                   <TabsTrigger value="amount">Split Amount</TabsTrigger>
                   <TabsTrigger value="weight">Split by Weight</TabsTrigger>
                 </TabsList>
 
-                <TabsContent value="equal" className="space-y-2 max-h-48 overflow-y-auto">
+                <TabsContent
+                  value="equal"
+                  className="space-y-2 max-h-48 overflow-y-auto"
+                >
                   {participants.map((participant) => (
-                    <div key={participant.id} className="flex items-center justify-between">
+                    <div
+                      key={participant.id}
+                      className="flex items-center justify-between"
+                    >
                       <div className="flex items-center space-x-2">
                         <Checkbox
                           id={`split-${participant.id}`}
                           checked={splitBetween.includes(participant.id)}
                           onCheckedChange={(checked) => {
                             if (checked) {
-                              setSplitBetween([...splitBetween, participant.id]);
+                              setSplitBetween([
+                                ...splitBetween,
+                                participant.id,
+                              ]);
                             } else {
-                              setSplitBetween(splitBetween.filter(id => id !== participant.id));
+                              setSplitBetween(
+                                splitBetween.filter(
+                                  (id) => id !== participant.id
+                                )
+                              );
                             }
                           }}
                         />
-                        <label htmlFor={`split-${participant.id}`} className="text-sm font-medium">
+                        <label
+                          htmlFor={`split-${participant.id}`}
+                          className="text-sm font-medium"
+                        >
                           {participant.name}
                         </label>
                       </div>
                       {splitBetween.includes(participant.id) && (
                         <span className="text-sm font-medium text-primary">
-                          ${((parseFloat(amount) || 0) / splitBetween.length).toFixed(2)}
+                          $
+                          {(
+                            (parseFloat(amount) || 0) / splitBetween.length
+                          ).toFixed(2)}
                         </span>
                       )}
                     </div>
                   ))}
+                </TabsContent>
+
+                <TabsContent
+                  value="amount"
+                  className="space-y-2 max-h-48 overflow-y-auto"
+                >
+                  {participants.map((participant) => (
+                    <div
+                      key={participant.id}
+                      className="flex items-center justify-between gap-2"
+                    >
+                      <div className="flex items-center space-x-2">
+                        <Checkbox
+                          id={`amount-${participant.id}`}
+                          checked={splitBetween.includes(participant.id)}
+                          onCheckedChange={(checked) =>
+                            handleSplitToggle(participant.id, !!checked)
+                          }
+                        />
+                        <label
+                          htmlFor={`amount-${participant.id}`}
+                          className="text-sm font-medium"
+                        >
+                          {participant.name}
+                        </label>
+                      </div>
+                      {splitBetween.includes(participant.id) && (
+                        <div className="flex items-center gap-1">
+                          <span className="text-sm">$</span>
+                          <Input
+                            type="number"
+                            step="0.01"
+                            min="0"
+                            value={customAmounts[participant.id] || ''}
+                            onChange={(e) =>
+                              handleCustomAmountChange(
+                                participant.id,
+                                e.target.value
+                              )
+                            }
+                            className="w-20 h-8 text-sm"
+                            placeholder="0.00"
+                          />
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                  <div className="text-xs text-muted-foreground">
+                    Total: $
+                    {Object.values(customAmounts)
+                      .reduce((sum, amt) => sum + (amt || 0), 0)
+                      .toFixed(2)}{' '}
+                    / ${amount || '0.00'}
+                  </div>
+                </TabsContent>
+
+                <TabsContent
+                  value="weight"
+                  className="space-y-2 max-h-48 overflow-y-auto"
+                >
+                  {participants.map((participant) => (
+                    <div
+                      key={participant.id}
+                      className="flex items-center justify-between gap-2"
+                    >
+                      <div className="flex items-center space-x-2">
+                        <Checkbox
+                          id={`weight-${participant.id}`}
+                          checked={splitBetween.includes(participant.id)}
+                          onCheckedChange={(checked) =>
+                            handleSplitToggle(participant.id, !!checked)
+                          }
+                        />
+                        <label
+                          htmlFor={`weight-${participant.id}`}
+                          className="text-sm font-medium"
+                        >
+                          {participant.name}
+                        </label>
+                      </div>
+                      {splitBetween.includes(participant.id) && (
+                        <div className="flex items-center gap-2">
+                          <Input
+                            type="number"
+                            step="0.1"
+                            min="0.1"
+                            value={weights[participant.id] || ''}
+                            onChange={(e) =>
+                              handleWeightChange(participant.id, e.target.value)
+                            }
+                            className="w-16 h-8 text-sm"
+                            placeholder="1"
+                          />
+                          <span className="text-sm font-medium text-primary">
+                            $
+                            {calculateWeightedAmount(participant.id).toFixed(2)}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                  <div className="text-xs text-muted-foreground">
+                    Total weight:{' '}
+                    {splitBetween.reduce(
+                      (sum, id) => sum + (weights[id] || 1),
+                      0
+                    )}{' '}
+                    • Total: $
+                    {splitBetween
+                      .reduce((sum, id) => sum + calculateWeightedAmount(id), 0)
+                      .toFixed(2)}
+                  </div>
                 </TabsContent>
               </Tabs>
             </div>
@@ -447,7 +628,8 @@ export function ExpenseTypeDialog({
             Cancel
           </Button>
           <Button onClick={handleSubmit} variant="gradient">
-            {isEditing ? 'Update' : 'Add'} {type.charAt(0).toUpperCase() + type.slice(1)}
+            {isEditing ? 'Update' : 'Add'}{' '}
+            {type.charAt(0).toUpperCase() + type.slice(1)}
           </Button>
         </DialogFooter>
       </DialogContent>

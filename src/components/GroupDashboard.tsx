@@ -1,10 +1,24 @@
-
 import { getGroupById } from '@/api/groups';
-import { createExpense, deleteExpense, getExpensesByGroupId, updateExpense, ExpenseWithSplits } from '@/api/expenses';
+import {
+  createExpense,
+  deleteExpense,
+  getExpensesByGroupId,
+  updateExpense,
+  ExpenseWithSplits,
+} from '@/api/expenses';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { Edit, Plus, Share, Trash2, Users, ArrowRightLeft, TrendingUp, DollarSign } from 'lucide-react';
+import {
+  Edit,
+  Plus,
+  Share,
+  Trash2,
+  Users,
+  ArrowRightLeft,
+  TrendingUp,
+  DollarSign,
+} from 'lucide-react';
 import { useEffect, useState, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import { ExpenseTypeDialog } from './ExpenseTypeDialog';
@@ -18,8 +32,11 @@ export function GroupDashboard() {
   const [expenses, setExpenses] = useState<ExpenseWithSplits[]>([]);
   const [showExpenseDialog, setShowExpenseDialog] = useState(false);
   const [showParticipantsModal, setShowParticipantsModal] = useState(false);
-  const [dialogType, setDialogType] = useState<'expense' | 'transfer' | 'income'>('expense');
-  const [editingExpense, setEditingExpense] = useState<ExpenseWithSplits | null>(null);
+  const [dialogType, setDialogType] = useState<
+    'expense' | 'transfer' | 'income'
+  >('expense');
+  const [editingExpense, setEditingExpense] =
+    useState<ExpenseWithSplits | null>(null);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
@@ -70,7 +87,8 @@ export function GroupDashboard() {
       await navigator.clipboard.writeText(shareUrl);
       toast({
         title: 'Link copied!',
-        description: 'Share this link with your friends to add them to the group',
+        description:
+          'Share this link with your friends to add them to the group',
       });
     } catch (error) {
       toast({
@@ -116,14 +134,24 @@ export function GroupDashboard() {
       if (editingExpense) {
         await updateExpense(editingExpense.id, expense, expenseData.splits);
         toast({
-          title: `${expenseData.expenseType.charAt(0).toUpperCase() + expenseData.expenseType.slice(1)} updated`,
-          description: `$${expenseData.amount.toFixed(2)} ${expenseData.expenseType} has been updated`,
+          title: `${
+            expenseData.expenseType.charAt(0).toUpperCase() +
+            expenseData.expenseType.slice(1)
+          } updated`,
+          description: `$${expenseData.amount.toFixed(2)} ${
+            expenseData.expenseType
+          } has been updated`,
         });
       } else {
         await createExpense(expense, expenseData.splits);
         toast({
-          title: `${expenseData.expenseType.charAt(0).toUpperCase() + expenseData.expenseType.slice(1)} added`,
-          description: `$${expenseData.amount.toFixed(2)} ${expenseData.expenseType} has been recorded`,
+          title: `${
+            expenseData.expenseType.charAt(0).toUpperCase() +
+            expenseData.expenseType.slice(1)
+          } added`,
+          description: `$${expenseData.amount.toFixed(2)} ${
+            expenseData.expenseType
+          } has been recorded`,
         });
       }
 
@@ -142,7 +170,9 @@ export function GroupDashboard() {
 
   const handleEditExpense = (expense: ExpenseWithSplits) => {
     setEditingExpense(expense);
-    setDialogType((expense.expense_type as 'expense' | 'transfer' | 'income') || 'expense');
+    setDialogType(
+      (expense.expense_type as 'expense' | 'transfer' | 'income') || 'expense'
+    );
     setShowExpenseDialog(true);
   };
 
@@ -164,22 +194,32 @@ export function GroupDashboard() {
     }
   };
 
-  const totalExpenses = expenses.filter(e => e.expense_type === 'expense' || !e.expense_type).reduce((sum, expense) => sum + expense.amount, 0);
-  const totalIncome = expenses.filter(e => e.expense_type === 'income').reduce((sum, expense) => sum + expense.amount, 0);
+  const totalExpenses = expenses
+    .filter((e) => e.expense_type === 'expense' || !e.expense_type)
+    .reduce((sum, expense) => sum + expense.amount, 0);
+  const totalIncome = expenses
+    .filter((e) => e.expense_type === 'income')
+    .reduce((sum, expense) => sum + expense.amount, 0);
 
   const getExpenseTypeIcon = (expenseType: string) => {
     switch (expenseType) {
-      case 'transfer': return <ArrowRightLeft className="w-4 h-4" />;
-      case 'income': return <TrendingUp className="w-4 h-4" />;
-      default: return <DollarSign className="w-4 h-4" />;
+      case 'transfer':
+        return <ArrowRightLeft className="w-4 h-4" />;
+      case 'income':
+        return <TrendingUp className="w-4 h-4" />;
+      default:
+        return <DollarSign className="w-4 h-4" />;
     }
   };
 
   const getExpenseTypeColor = (expenseType: string) => {
     switch (expenseType) {
-      case 'transfer': return 'text-blue-600';
-      case 'income': return 'text-green-600';
-      default: return 'text-red-600';
+      case 'transfer':
+        return 'text-blue-600';
+      case 'income':
+        return 'text-green-600';
+      default:
+        return 'text-red-600';
     }
   };
 
@@ -199,8 +239,12 @@ export function GroupDashboard() {
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-4 flex items-center justify-center">
         <div className="text-center">
           <div className="text-6xl mb-4">🤔</div>
-          <h2 className="text-2xl font-bold text-slate-800 mb-2">Group not found</h2>
-          <p className="text-slate-600">The group you're looking for doesn't exist or has been removed.</p>
+          <h2 className="text-2xl font-bold text-slate-800 mb-2">
+            Group not found
+          </h2>
+          <p className="text-slate-600">
+            The group you're looking for doesn't exist or has been removed.
+          </p>
         </div>
       </div>
     );
@@ -215,12 +259,14 @@ export function GroupDashboard() {
             <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
               {group.name}
             </h1>
-            <p className="text-slate-600 mt-1">Track expenses and settle debts with your group</p>
+            <p className="text-slate-600 mt-1">
+              Track expenses and settle debts with your group
+            </p>
           </div>
           <div className="flex items-center gap-3">
-            <Button 
-              onClick={handleShare} 
-              variant="outline" 
+            <Button
+              onClick={handleShare}
+              variant="outline"
               size="sm"
               className="border-blue-200 hover:bg-blue-50 hover:border-blue-300 text-blue-600"
             >
@@ -248,33 +294,39 @@ export function GroupDashboard() {
                 <div className="text-3xl font-bold text-red-600 mb-1">
                   ${totalExpenses.toFixed(2)}
                 </div>
-                <div className="text-sm font-medium text-red-700">Total Expenses</div>
+                <div className="text-sm font-medium text-red-700">
+                  Total Expenses
+                </div>
               </div>
-              
+
               <div className="text-center p-4 rounded-xl bg-gradient-to-br from-green-50 to-green-100 border border-green-200">
                 <div className="text-3xl font-bold text-green-600 mb-1">
                   ${totalIncome.toFixed(2)}
                 </div>
-                <div className="text-sm font-medium text-green-700">Total Income</div>
+                <div className="text-sm font-medium text-green-700">
+                  Total Income
+                </div>
               </div>
 
               {/* Action Buttons */}
               <Button
                 onClick={() => handleOpenDialog('expense')}
-                size="lg"
-                className="h-auto py-4 px-6 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105"
+                size="sm"
+                className="h-auto py-3 px-4 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white shadow-md hover:shadow-lg transition-all duration-200"
                 disabled={!group.participants || group.participants.length < 2}
               >
-                <Plus className="w-5 h-5 mr-2" />
+                <Plus className="w-4 h-4 mr-2" />
                 Add Expense
               </Button>
-              
+
               <div className="flex flex-col gap-2">
                 <Button
                   onClick={() => handleOpenDialog('income')}
                   size="sm"
                   className="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white shadow-md hover:shadow-lg transition-all duration-200"
-                  disabled={!group.participants || group.participants.length < 2}
+                  disabled={
+                    !group.participants || group.participants.length < 2
+                  }
                 >
                   <TrendingUp className="w-4 h-4 mr-2" />
                   Income
@@ -283,14 +335,16 @@ export function GroupDashboard() {
                   onClick={() => handleOpenDialog('transfer')}
                   size="sm"
                   className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white shadow-md hover:shadow-lg transition-all duration-200"
-                  disabled={!group.participants || group.participants.length < 2}
+                  disabled={
+                    !group.participants || group.participants.length < 2
+                  }
                 >
                   <ArrowRightLeft className="w-4 h-4 mr-2" />
                   Transfer
                 </Button>
               </div>
             </div>
-            
+
             {(!group.participants || group.participants.length < 2) && (
               <div className="mt-6 p-4 bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-xl">
                 <p className="text-sm text-amber-700 text-center font-medium">
@@ -305,7 +359,11 @@ export function GroupDashboard() {
         {/* Debt Settlement */}
         {expenses.length > 0 && group.participants && groupId && (
           <div className="bg-white/80 backdrop-blur-sm rounded-xl shadow-lg border-0 p-6">
-            <DebtSettlement expenses={expenses} participants={group.participants} groupId={groupId} />
+            <DebtSettlement
+              expenses={expenses}
+              participants={group.participants}
+              groupId={groupId}
+            />
           </div>
         )}
 
@@ -321,9 +379,10 @@ export function GroupDashboard() {
             <CardContent className="space-y-3">
               {expenses.map((expense) => {
                 const paidByName =
-                  group.participants?.find((p) => p.id === expense.paid_by)?.name || 'Unknown';
+                  group.participants?.find((p) => p.id === expense.paid_by)
+                    ?.name || 'Unknown';
                 const expenseType = expense.expense_type || 'expense';
-                
+
                 return (
                   <div
                     key={expense.id}
@@ -331,25 +390,42 @@ export function GroupDashboard() {
                   >
                     <div className="flex-1">
                       <div className="flex items-center gap-3">
-                        <div className={`p-2 rounded-full ${
-                          expenseType === 'transfer' ? 'bg-blue-100' : 
-                          expenseType === 'income' ? 'bg-green-100' : 'bg-red-100'
-                        }`}>
+                        <div
+                          className={`p-2 rounded-full ${
+                            expenseType === 'transfer'
+                              ? 'bg-blue-100'
+                              : expenseType === 'income'
+                              ? 'bg-green-100'
+                              : 'bg-red-100'
+                          }`}
+                        >
                           <span className={getExpenseTypeColor(expenseType)}>
                             {getExpenseTypeIcon(expenseType)}
                           </span>
                         </div>
                         <div>
-                          <span className="font-semibold text-slate-800 text-lg">{expense.description}</span>
+                          <span className="font-semibold text-slate-800 text-lg">
+                            {expense.description}
+                          </span>
                           <div className="text-sm text-slate-600 mt-1">
-                            {expenseType === 'transfer' ? 'Transferred' : expenseType === 'income' ? 'Received' : 'Paid'} by <span className="font-medium">{paidByName}</span>
-                            {expenseType !== 'transfer' && ` • Split ${expense.expense_splits.length} ways`}
+                            {expenseType === 'transfer'
+                              ? 'Transferred'
+                              : expenseType === 'income'
+                              ? 'Received'
+                              : 'Paid'}{' '}
+                            by <span className="font-medium">{paidByName}</span>
+                            {expenseType !== 'transfer' &&
+                              ` • Split ${expense.expense_splits.length} ways`}
                           </div>
                         </div>
                       </div>
                     </div>
                     <div className="flex items-center gap-4">
-                      <div className={`text-xl font-bold ${getExpenseTypeColor(expenseType)}`}>
+                      <div
+                        className={`text-xl font-bold ${getExpenseTypeColor(
+                          expenseType
+                        )}`}
+                      >
                         ${expense.amount.toFixed(2)}
                       </div>
                       <div className="flex gap-1">
