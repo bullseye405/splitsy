@@ -5,9 +5,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { Edit, Plus, Share, Trash2, Users, ArrowRightLeft, TrendingUp, DollarSign } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
-import { AddParticipantDialog } from './AddParticipantDialog';
 import { ExpenseTypeDialog } from './ExpenseTypeDialog';
 import { ParticipantsModal } from './ParticipantsModal';
 import { DebtSettlement } from './DebtSettlement';
@@ -17,7 +16,6 @@ export function GroupDashboard() {
   const { groupId } = useParams<{ groupId: string }>();
   const [group, setGroup] = useState<Group>();
   const [expenses, setExpenses] = useState<ExpenseWithSplits[]>([]);
-  const [showAddParticipant, setShowAddParticipant] = useState(false);
   const [showExpenseDialog, setShowExpenseDialog] = useState(false);
   const [showParticipantsModal, setShowParticipantsModal] = useState(false);
   const [dialogType, setDialogType] = useState<'expense' | 'transfer' | 'income'>('expense');
@@ -27,7 +25,7 @@ export function GroupDashboard() {
 
   const shareUrl = `${window.location.origin}?group=${groupId}`;
 
-  const fetchGroupData = async () => {
+  const fetchGroupData = useCallback(async () => {
     if (!groupId) return;
     try {
       const { data, error } = await getGroupById(groupId);
@@ -43,9 +41,9 @@ export function GroupDashboard() {
     } catch (error) {
       console.error('Error fetching group:', error);
     }
-  };
+  }, [groupId, toast]);
 
-  const fetchExpenses = async () => {
+  const fetchExpenses = useCallback(async () => {
     if (!groupId) return;
     try {
       const data = await getExpensesByGroupId(groupId);
@@ -60,12 +58,12 @@ export function GroupDashboard() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [groupId, toast]);
 
   useEffect(() => {
     fetchGroupData();
     fetchExpenses();
-  }, [groupId]);
+  }, [fetchGroupData, fetchExpenses]);
 
   const handleShare = async () => {
     try {
@@ -81,11 +79,6 @@ export function GroupDashboard() {
         variant: 'destructive',
       });
     }
-  };
-
-  const addParticipant = (name: string) => {
-    fetchGroupData();
-    setShowAddParticipant(false);
   };
 
   const handleOpenDialog = (type: 'expense' | 'transfer' | 'income') => {
@@ -217,11 +210,12 @@ export function GroupDashboard() {
               <Share className="w-4 h-4" />
             </Button>
             <Button
-              onClick={() => setShowAddParticipant(true)}
+              onClick={() => setShowParticipantsModal(true)}
               variant="ghost"
               size="sm"
             >
-              <Users className="w-4 h-4" />
+              <Users className="w-4 h-4 mr-1" />
+              Manage Participants
             </Button>
           </div>
         </div>
@@ -229,7 +223,7 @@ export function GroupDashboard() {
         {/* Top Dashboard Card */}
         <Card>
           <CardContent className="p-6">
-            <div className="grid grid-cols-2 md:grid-cols-5 gap-4 items-center">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 items-center">
               {/* Stats */}
               <div className="text-center">
                 <div className="text-2xl font-bold text-primary">
@@ -243,16 +237,6 @@ export function GroupDashboard() {
                   ${totalIncome.toFixed(2)}
                 </div>
                 <div className="text-sm text-muted-foreground">Income</div>
-              </div>
-              
-              <div 
-                className="text-center cursor-pointer hover:bg-muted/50 p-2 rounded transition-colors"
-                onClick={() => setShowParticipantsModal(true)}
-              >
-                <div className="text-2xl font-bold text-primary">
-                  {group.participants?.length || 0}
-                </div>
-                <div className="text-sm text-muted-foreground">Participants</div>
               </div>
 
               {/* Action Buttons */}
@@ -358,12 +342,6 @@ export function GroupDashboard() {
           </Card>
         )}
       </div>
-
-      <AddParticipantDialog
-        open={showAddParticipant}
-        onOpenChange={setShowAddParticipant}
-        onAddParticipant={addParticipant}
-      />
 
       <ParticipantsModal
         open={showParticipantsModal}

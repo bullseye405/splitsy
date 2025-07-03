@@ -1,13 +1,12 @@
-
-import { useState, useEffect } from 'react';
+import { ExpenseWithSplits } from '@/api/expenses';
+import { createSettlement, getSettlementsByGroupId } from '@/api/settlements';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { CheckCircle, DollarSign } from 'lucide-react';
-import { ExpenseWithSplits } from '@/api/expenses';
-import { Participant } from '@/types/participants';
-import { createSettlement, getSettlementsByGroupId } from '@/api/settlements';
 import { useToast } from '@/hooks/use-toast';
+import { Participant } from '@/types/participants';
+import { Settlement } from '@/types/settlements';
+import { CheckCircle, DollarSign } from 'lucide-react';
+import { useEffect, useState } from 'react';
 
 interface Debt {
   from: string;
@@ -28,11 +27,12 @@ export function DebtSettlement({
   participants,
   groupId,
 }: DebtSettlementProps) {
-  const [settlements, setSettlements] = useState<any[]>([]);
+  const [settlements, setSettlements] = useState<Settlement[]>([]);
   const { toast } = useToast();
 
   useEffect(() => {
     fetchSettlements();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [groupId]);
 
   const fetchSettlements = async () => {
@@ -126,7 +126,9 @@ export function DebtSettlement({
 
       toast({
         title: 'Debt settled',
-        description: `${debt.fromName} paid $${debt.amount.toFixed(2)} to ${debt.toName}`,
+        description: `${debt.fromName} paid $${debt.amount.toFixed(2)} to ${
+          debt.toName
+        }`,
       });
 
       fetchSettlements();
