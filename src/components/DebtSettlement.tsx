@@ -69,8 +69,10 @@ export function DebtSettlement({
 
     for (const [debtorId, debtAmount] of debtors) {
       let remainingDebt = Math.abs(debtAmount);
+      console.log({ remainingDebt, debtAmount });
 
       for (const [creditorId, creditAmount] of creditors) {
+        console.log({ remainingDebt, creditAmount });
         if (remainingDebt <= 0 || creditAmount <= 0) continue;
 
         const settleAmount = Math.min(remainingDebt, creditAmount);
