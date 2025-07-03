@@ -54,15 +54,29 @@ export function DebtSettlement({
 
     // Calculate net balances from expenses
     expenses.forEach((expense) => {
-      // Person who paid gets credited
-      balances[expense.paid_by] += expense.amount;
+      const expenseType = expense.expense_type || 'expense';
 
-      // People in the split get debited
-      expense.expense_splits.forEach((split) => {
-        if (split.participant_id) {
-          balances[split.participant_id] -= split.amount;
-        }
-      });
+      if (expenseType === 'income') {
+        // For income: person who received it owes less (gets debited)
+        balances[expense.paid_by] -= expense.amount;
+
+        // People who benefit from income are owed more (get credited)
+        expense.expense_splits.forEach((split) => {
+          if (split.participant_id) {
+            balances[split.participant_id] += split.amount;
+          }
+        });
+      } else {
+        // For expenses and transfers: person who paid gets credited
+        balances[expense.paid_by] += expense.amount;
+
+        // People in the split get debited
+        expense.expense_splits.forEach((split) => {
+          if (split.participant_id) {
+            balances[split.participant_id] -= split.amount;
+          }
+        });
+      }
     });
 
     // Subtract settled amounts
