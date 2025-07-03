@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -26,16 +25,21 @@ interface DebtSettlementProps {
   participants: Participant[];
 }
 
-export function DebtSettlement({ expenses, participants }: DebtSettlementProps) {
+export function DebtSettlement({
+  expenses,
+  participants,
+}: DebtSettlementProps) {
   const [settlements, setSettlements] = useState<Settlement[]>([]);
 
   const calculateDebts = (): Debt[] => {
     const balances: { [key: string]: number } = {};
-    
+
     // Initialize balances
     participants.forEach((p) => {
       balances[p.id] = 0;
     });
+
+    console.log('INITIALIZED', { balances });
 
     // Calculate net balances
     expenses.forEach((expense) => {
@@ -50,28 +54,41 @@ export function DebtSettlement({ expenses, participants }: DebtSettlementProps) 
       });
     });
 
+    console.log('Calculate Net Balance', { balances });
+
     // Calculate who owes whom
     const debts: Debt[] = [];
-    const creditors = Object.entries(balances).filter(([_, balance]) => balance > 0);
-    const debtors = Object.entries(balances).filter(([_, balance]) => balance < 0);
+    const creditors = Object.entries(balances).filter(
+      ([_, balance]) => balance > 0
+    );
+    const debtors = Object.entries(balances).filter(
+      ([_, balance]) => balance < 0
+    );
+
+    console.log({ creditors, debtors });
 
     for (const [debtorId, debtAmount] of debtors) {
       let remainingDebt = Math.abs(debtAmount);
-      
+
       for (const [creditorId, creditAmount] of creditors) {
         if (remainingDebt <= 0 || creditAmount <= 0) continue;
-        
+
         const settleAmount = Math.min(remainingDebt, creditAmount);
-        
+
         // Check if this debt has been settled
         const isSettled = settlements.some(
-          s => s.from === debtorId && s.to === creditorId && s.amount >= settleAmount
+          (s) =>
+            s.from === debtorId &&
+            s.to === creditorId &&
+            s.amount >= settleAmount
         );
 
         if (!isSettled && settleAmount > 0.01) {
-          const debtorName = participants.find(p => p.id === debtorId)?.name || 'Unknown';
-          const creditorName = participants.find(p => p.id === creditorId)?.name || 'Unknown';
-          
+          const debtorName =
+            participants.find((p) => p.id === debtorId)?.name || 'Unknown';
+          const creditorName =
+            participants.find((p) => p.id === creditorId)?.name || 'Unknown';
+
           debts.push({
             from: debtorId,
             to: creditorId,
@@ -80,7 +97,9 @@ export function DebtSettlement({ expenses, participants }: DebtSettlementProps) 
             toName: creditorName,
           });
         }
-        
+
+        console.log({ debts });
+
         remainingDebt -= settleAmount;
         // Update the creditor's remaining credit
         const creditorIndex = creditors.findIndex(([id]) => id === creditorId);
@@ -99,20 +118,25 @@ export function DebtSettlement({ expenses, participants }: DebtSettlementProps) 
       to: debt.to,
       amount: debt.amount,
     };
-    
-    setSettlements(prev => [...prev, newSettlement]);
+
+    setSettlements((prev) => [...prev, newSettlement]);
   };
 
   const debts = calculateDebts();
-  const remainingDebts = debts.filter(debt => 
-    !settlements.some(s => 
-      s.from === debt.from && s.to === debt.to && s.amount >= debt.amount
-    )
+  console.log('Calculated Debts:', debts);
+  const remainingDebts = debts.filter(
+    (debt) =>
+      !settlements.some(
+        (s) =>
+          s.from === debt.from && s.to === debt.to && s.amount >= debt.amount
+      )
   );
 
-  const settledDebts = debts.filter(debt => 
-    settlements.some(s => 
-      s.from === debt.from && s.to === debt.to && s.amount >= debt.amount
+  console.log({ remainingDebts });
+
+  const settledDebts = debts.filter((debt) =>
+    settlements.some(
+      (s) => s.from === debt.from && s.to === debt.to && s.amount >= debt.amount
     )
   );
 
@@ -126,7 +150,9 @@ export function DebtSettlement({ expenses, participants }: DebtSettlementProps) 
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-muted-foreground">Everyone is even - no debts to settle!</p>
+          <p className="text-muted-foreground">
+            Everyone is even - no debts to settle!
+          </p>
         </CardContent>
       </Card>
     );
