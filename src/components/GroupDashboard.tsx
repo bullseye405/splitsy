@@ -1,16 +1,15 @@
-
-import { getGroupById } from '@/api/groups';
-import { recordGroupView } from '@/api/groupViews';
+import { getGroupById } from "@/api/groups";
+import { recordGroupView } from "@/api/groupViews";
 import {
   createExpense,
   deleteExpense,
   getExpensesByGroupId,
   updateExpense,
   ExpenseWithSplits,
-} from '@/api/expenses';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { useToast } from '@/hooks/use-toast';
+} from "@/api/expenses";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useToast } from "@/hooks/use-toast";
 import {
   Edit,
   Plus,
@@ -20,14 +19,14 @@ import {
   ArrowRightLeft,
   TrendingUp,
   DollarSign,
-} from 'lucide-react';
-import { useEffect, useState, useCallback } from 'react';
-import { useParams } from 'react-router-dom';
-import { ExpenseTypeDialog } from './ExpenseTypeDialog';
-import { ParticipantsModal } from './ParticipantsModal';
-import { ParticipantSelectionModal } from './ParticipantSelectionModal';
-import { DebtSettlement } from './DebtSettlement';
-import { Group } from '@/types/group';
+} from "lucide-react";
+import { useEffect, useState, useCallback } from "react";
+import { useParams } from "react-router-dom";
+import { ExpenseTypeDialog } from "./ExpenseTypeDialog";
+import { ParticipantsModal } from "./ParticipantsModal";
+import { ParticipantSelectionModal } from "./ParticipantSelectionModal";
+import { DebtSettlement } from "./DebtSettlement";
+import { Group } from "@/types/group";
 
 export function GroupDashboard() {
   const { groupId } = useParams<{ groupId: string }>();
@@ -35,11 +34,14 @@ export function GroupDashboard() {
   const [expenses, setExpenses] = useState<ExpenseWithSplits[]>([]);
   const [showExpenseDialog, setShowExpenseDialog] = useState(false);
   const [showParticipantsModal, setShowParticipantsModal] = useState(false);
-  const [showParticipantSelection, setShowParticipantSelection] = useState(false);
-  const [currentParticipant, setCurrentParticipant] = useState<string | null>(null);
+  const [showParticipantSelection, setShowParticipantSelection] =
+    useState(false);
+  const [currentParticipant, setCurrentParticipant] = useState<string | null>(
+    null
+  );
   const [dialogType, setDialogType] = useState<
-    'expense' | 'transfer' | 'income'
-  >('expense');
+    "expense" | "transfer" | "income"
+  >("expense");
   const [editingExpense, setEditingExpense] =
     useState<ExpenseWithSplits | null>(null);
   const [loading, setLoading] = useState(true);
@@ -50,7 +52,9 @@ export function GroupDashboard() {
   // Check for existing participant selection in session storage
   useEffect(() => {
     if (groupId) {
-      const storedParticipant = sessionStorage.getItem(`participant_${groupId}`);
+      const storedParticipant = sessionStorage.getItem(
+        `participant_${groupId}`
+      );
       if (storedParticipant) {
         setCurrentParticipant(storedParticipant);
       }
@@ -63,20 +67,24 @@ export function GroupDashboard() {
       const { data, error } = await getGroupById(groupId);
       if (error || !data) {
         toast({
-          title: 'Error loading group',
-          description: error?.message || 'Group not found.',
-          variant: 'destructive',
+          title: "Error loading group",
+          description: error?.message || "Group not found.",
+          variant: "destructive",
         });
         return;
       }
       setGroup(data);
-      
+
       // Show participant selection modal if no participant is selected and participants exist
-      if (!currentParticipant && data.participants && data.participants.length > 0) {
+      if (
+        !currentParticipant &&
+        data.participants &&
+        data.participants.length > 0
+      ) {
         setShowParticipantSelection(true);
       }
     } catch (error) {
-      console.error('Error fetching group:', error);
+      console.error("Error fetching group:", error);
     }
   }, [groupId, toast, currentParticipant]);
 
@@ -86,11 +94,11 @@ export function GroupDashboard() {
       const data = await getExpensesByGroupId(groupId);
       setExpenses(data);
     } catch (error) {
-      console.error('Error fetching expenses:', error);
+      console.error("Error fetching expenses:", error);
       toast({
-        title: 'Error loading expenses',
-        description: 'Could not load expenses for this group.',
-        variant: 'destructive',
+        title: "Error loading expenses",
+        description: "Could not load expenses for this group.",
+        variant: "destructive",
       });
     } finally {
       setLoading(false);
@@ -104,15 +112,15 @@ export function GroupDashboard() {
 
   const handleParticipantSelect = async (participantId: string) => {
     if (!groupId) return;
-    
+
     setCurrentParticipant(participantId);
     sessionStorage.setItem(`participant_${groupId}`, participantId);
-    
+
     // Record group view
     try {
       await recordGroupView(groupId, participantId);
     } catch (error) {
-      console.error('Error recording group view:', error);
+      console.error("Error recording group view:", error);
     }
   };
 
@@ -120,20 +128,20 @@ export function GroupDashboard() {
     try {
       await navigator.clipboard.writeText(shareUrl);
       toast({
-        title: 'Link copied!',
+        title: "Link copied!",
         description:
-          'Share this link with your friends to add them to the group',
+          "Share this link with your friends to add them to the group",
       });
     } catch (error) {
       toast({
-        title: 'Could not copy link',
-        description: 'Please copy the URL manually',
-        variant: 'destructive',
+        title: "Could not copy link",
+        description: "Please copy the URL manually",
+        variant: "destructive",
       });
     }
   };
 
-  const handleOpenDialog = (type: 'expense' | 'transfer' | 'income') => {
+  const handleOpenDialog = (type: "expense" | "transfer" | "income") => {
     setDialogType(type);
     setEditingExpense(null);
     setShowExpenseDialog(true);
@@ -143,14 +151,14 @@ export function GroupDashboard() {
     description: string;
     amount: number;
     paidBy: string;
-    splitMode: 'equal' | 'amount' | 'weight';
+    splitMode: "equal" | "amount" | "weight";
     splits: Array<{
       participant_id: string;
       amount: number;
       custom_amount?: number;
       weight?: number;
     }>;
-    expenseType: 'expense' | 'transfer' | 'income';
+    expenseType: "expense" | "transfer" | "income";
     transferTo?: string;
   }) => {
     if (!groupId || !group) return;
@@ -193,11 +201,11 @@ export function GroupDashboard() {
       setEditingExpense(null);
       fetchExpenses();
     } catch (error) {
-      console.error('Error saving expense:', error);
+      console.error("Error saving expense:", error);
       toast({
-        title: 'Error saving',
-        description: 'Could not save. Please try again.',
-        variant: 'destructive',
+        title: "Error saving",
+        description: "Could not save. Please try again.",
+        variant: "destructive",
       });
     }
   };
@@ -205,7 +213,7 @@ export function GroupDashboard() {
   const handleEditExpense = (expense: ExpenseWithSplits) => {
     setEditingExpense(expense);
     setDialogType(
-      (expense.expense_type as 'expense' | 'transfer' | 'income') || 'expense'
+      (expense.expense_type as "expense" | "transfer" | "income") || "expense"
     );
     setShowExpenseDialog(true);
   };
@@ -214,32 +222,32 @@ export function GroupDashboard() {
     try {
       await deleteExpense(expenseId);
       toast({
-        title: 'Deleted',
-        description: 'The item has been removed',
+        title: "Deleted",
+        description: "The item has been removed",
       });
       fetchExpenses();
     } catch (error) {
-      console.error('Error deleting:', error);
+      console.error("Error deleting:", error);
       toast({
-        title: 'Error deleting',
-        description: 'Could not delete. Please try again.',
-        variant: 'destructive',
+        title: "Error deleting",
+        description: "Could not delete. Please try again.",
+        variant: "destructive",
       });
     }
   };
 
   const totalExpenses = expenses
-    .filter((e) => e.expense_type === 'expense' || !e.expense_type)
+    .filter((e) => e.expense_type === "expense" || !e.expense_type)
     .reduce((sum, expense) => sum + expense.amount, 0);
   const totalIncome = expenses
-    .filter((e) => e.expense_type === 'income')
+    .filter((e) => e.expense_type === "income")
     .reduce((sum, expense) => sum + expense.amount, 0);
 
   const getExpenseTypeIcon = (expenseType: string) => {
     switch (expenseType) {
-      case 'transfer':
+      case "transfer":
         return <ArrowRightLeft className="w-4 h-4" />;
-      case 'income':
+      case "income":
         return <TrendingUp className="w-4 h-4" />;
       default:
         return <DollarSign className="w-4 h-4" />;
@@ -248,20 +256,23 @@ export function GroupDashboard() {
 
   const getExpenseTypeColor = (expenseType: string) => {
     switch (expenseType) {
-      case 'transfer':
-        return 'text-blue-600';
-      case 'income':
-        return 'text-green-600';
+      case "transfer":
+        return "text-blue-600";
+      case "income":
+        return "text-green-600";
       default:
-        return 'text-red-600';
+        return "text-red-600";
     }
   };
 
   const getParticipantDisplayName = (participantId: string) => {
     if (participantId === currentParticipant) {
-      return 'me';
+      return "me";
     }
-    return group?.participants?.find((p) => p.id === participantId)?.name || 'Unknown';
+    return (
+      group?.participants?.find((p) => p.id === participantId)?.name ||
+      "Unknown"
+    );
   };
 
   if (loading) {
@@ -304,94 +315,90 @@ export function GroupDashboard() {
               Track expenses and settle debts with your group
             </p>
           </div>
-          <Button
-            onClick={handleShare}
-            variant="outline"
-            size="sm"
-            className="border-blue-200 hover:bg-blue-50 hover:border-blue-300 text-blue-600"
-          >
-            <Share className="w-4 h-4 mr-2" />
-            Share
-          </Button>
+          <div className="flex items-center gap-3">
+            <Button
+              onClick={handleShare}
+              variant="outline"
+              size="sm"
+              className="border-blue-200 hover:bg-blue-50 hover:border-blue-300 text-blue-600"
+            >
+              <Share className="w-4 h-4 mr-2" />
+              Share
+            </Button>
+            <Button
+              onClick={() => setShowParticipantsModal(true)}
+              variant="outline"
+              size="sm"
+              className="border-purple-200 hover:bg-purple-50 hover:border-purple-300 text-purple-600"
+            >
+              <Users className="w-4 h-4 mr-2" />
+              Manage Participants
+            </Button>
+            <Button
+              onClick={() => handleOpenDialog("expense")}
+              size="sm"
+              className="bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white"
+              disabled={!group.participants || group.participants.length < 2}
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Add Expense
+            </Button>
+            <Button
+              onClick={() => handleOpenDialog("income")}
+              size="sm"
+              className="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white"
+              disabled={!group.participants || group.participants.length < 2}
+            >
+              <TrendingUp className="w-4 h-4 mr-2" />
+              Add Income
+            </Button>
+            <Button
+              onClick={() => handleOpenDialog("transfer")}
+              size="sm"
+              className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white"
+              disabled={!group.participants || group.participants.length < 2}
+            >
+              <ArrowRightLeft className="w-4 h-4 mr-2" />
+              Add Transfer
+            </Button>
+          </div>
         </div>
 
         {/* Top Dashboard Card */}
         <Card className="shadow-lg border-0 bg-white/80 backdrop-blur-sm">
           <CardContent className="p-6">
-            <div className="grid grid-cols-1 md:grid-cols-6 gap-4 items-center">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {/* Stats */}
-              <div className="text-center p-3 rounded-lg bg-gradient-to-br from-red-50 to-red-100 border border-red-200">
-                <div className="text-2xl font-bold text-red-600 mb-1">
+              <div className="text-center p-4 rounded-xl bg-gradient-to-br from-red-50 to-red-100 border border-red-200">
+                <div className="text-3xl font-bold text-red-600 mb-1">
                   ${totalExpenses.toFixed(2)}
                 </div>
-                <div className="text-xs font-medium text-red-700">
+                <div className="text-sm font-medium text-red-700">
                   Total Expenses
                 </div>
               </div>
 
-              <div className="text-center p-3 rounded-lg bg-gradient-to-br from-green-50 to-green-100 border border-green-200">
-                <div className="text-2xl font-bold text-green-600 mb-1">
+              <div className="text-center p-4 rounded-xl bg-gradient-to-br from-green-50 to-green-100 border border-green-200">
+                <div className="text-3xl font-bold text-green-600 mb-1">
                   ${totalIncome.toFixed(2)}
                 </div>
-                <div className="text-xs font-medium text-green-700">
+                <div className="text-sm font-medium text-green-700">
                   Total Income
                 </div>
               </div>
 
-              <div className="text-center p-3 rounded-lg bg-gradient-to-br from-blue-50 to-blue-100 border border-blue-200">
-                <div className="text-2xl font-bold text-blue-600 mb-1">
+              <div className="text-center p-4 rounded-xl bg-gradient-to-br from-blue-50 to-blue-100 border border-blue-200">
+                <div className="text-3xl font-bold text-blue-600 mb-1">
                   {group.participants?.length || 0}
                 </div>
-                <div className="text-xs font-medium text-blue-700">
+                <div className="text-sm font-medium text-blue-700">
                   Participants
                 </div>
-              </div>
-
-              {/* Action Buttons */}
-              <Button
-                onClick={() => setShowParticipantsModal(true)}
-                size="sm"
-                variant="outline"
-                className="border-purple-200 hover:bg-purple-50 hover:border-purple-300 text-purple-600"
-              >
-                <Users className="w-4 h-4 mr-1" />
-                Manage
-              </Button>
-
-              <Button
-                onClick={() => handleOpenDialog('expense')}
-                size="sm"
-                className="bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white"
-                disabled={!group.participants || group.participants.length < 2}
-              >
-                <Plus className="w-4 h-4 mr-1" />
-                Expense
-              </Button>
-
-              <div className="flex gap-1">
-                <Button
-                  onClick={() => handleOpenDialog('income')}
-                  size="sm"
-                  className="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white text-xs px-2"
-                  disabled={!group.participants || group.participants.length < 2}
-                >
-                  <TrendingUp className="w-3 h-3 mr-1" />
-                  Income
-                </Button>
-                <Button
-                  onClick={() => handleOpenDialog('transfer')}
-                  size="sm"
-                  className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white text-xs px-2"
-                  disabled={!group.participants || group.participants.length < 2}
-                >
-                  <ArrowRightLeft className="w-3 h-3 mr-1" />
-                  Transfer
-                </Button>
               </div>
             </div>
 
             {(!group.participants || group.participants.length < 2) && (
-              <div className="mt-4 p-3 bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-lg">
+              <div className="mt-6 p-4 bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-xl">
                 <p className="text-sm text-amber-700 text-center font-medium">
                   <Users className="w-4 h-4 inline mr-2" />
                   Add at least 2 participants to start tracking expenses
@@ -425,7 +432,7 @@ export function GroupDashboard() {
             <CardContent className="space-y-3">
               {expenses.map((expense) => {
                 const paidByName = getParticipantDisplayName(expense.paid_by);
-                const expenseType = expense.expense_type || 'expense';
+                const expenseType = expense.expense_type || "expense";
 
                 return (
                   <div
@@ -436,11 +443,11 @@ export function GroupDashboard() {
                       <div className="flex items-center gap-3">
                         <div
                           className={`p-2 rounded-full ${
-                            expenseType === 'transfer'
-                              ? 'bg-blue-100'
-                              : expenseType === 'income'
-                              ? 'bg-green-100'
-                              : 'bg-red-100'
+                            expenseType === "transfer"
+                              ? "bg-blue-100"
+                              : expenseType === "income"
+                              ? "bg-green-100"
+                              : "bg-red-100"
                           }`}
                         >
                           <span className={getExpenseTypeColor(expenseType)}>
@@ -452,13 +459,13 @@ export function GroupDashboard() {
                             {expense.description}
                           </span>
                           <div className="text-sm text-slate-600 mt-1">
-                            {expenseType === 'transfer'
-                              ? 'Transferred'
-                              : expenseType === 'income'
-                              ? 'Received'
-                              : 'Paid'}{' '}
+                            {expenseType === "transfer"
+                              ? "Transferred"
+                              : expenseType === "income"
+                              ? "Received"
+                              : "Paid"}{" "}
                             by <span className="font-medium">{paidByName}</span>
-                            {expenseType !== 'transfer' &&
+                            {expenseType !== "transfer" &&
                               ` • Split ${expense.expense_splits.length} ways`}
                           </div>
                         </div>
