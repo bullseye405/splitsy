@@ -1,7 +1,3 @@
-export interface Participant {
-  id: string;
-  name: string;
-  group_id: string;
-  created_at?: string;
-  updated_at?: string;
-}
+import { Database } from '@/integrations/supabase/types';
+
+export type Participant = Database['public']['Tables']['participants']['Row'];

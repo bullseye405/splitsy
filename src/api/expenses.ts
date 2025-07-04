@@ -1,12 +1,11 @@
-
 import { supabase } from '@/integrations/supabase/client';
-import { Database } from '@/integrations/supabase/types';
-
-type Expense = Database['public']['Tables']['expenses']['Row'];
-type ExpenseInsert = Database['public']['Tables']['expenses']['Insert'];
-type ExpenseUpdate = Database['public']['Tables']['expenses']['Update'];
-type ExpenseSplit = Database['public']['Tables']['expense_splits']['Row'];
-type ExpenseSplitInsert = Database['public']['Tables']['expense_splits']['Insert'];
+import {
+  Expense,
+  ExpenseInsert,
+  ExpenseSplit,
+  ExpenseSplitInsert,
+  ExpenseUpdate,
+} from '@/types/expense';
 
 export interface ExpenseWithSplits extends Expense {
   expense_splits: ExpenseSplit[];
@@ -17,7 +16,7 @@ export async function createExpense(
   splits: Omit<ExpenseSplitInsert, 'expense_id'>[]
 ) {
   console.log('Creating expense:', expense);
-  
+
   const { data: expenseData, error: expenseError } = await supabase
     .from('expenses')
     .insert(expense)
@@ -32,7 +31,7 @@ export async function createExpense(
   console.log('Expense created:', expenseData);
 
   // Create splits
-  const splitsWithExpenseId = splits.map(split => ({
+  const splitsWithExpenseId = splits.map((split) => ({
     ...split,
     expense_id: expenseData.id,
   }));
@@ -52,13 +51,15 @@ export async function createExpense(
 
 export async function getExpensesByGroupId(groupId: string) {
   console.log('Fetching expenses for group:', groupId);
-  
+
   const { data, error } = await supabase
     .from('expenses')
-    .select(`
+    .select(
+      `
       *,
       expense_splits (*)
-    `)
+    `
+    )
     .eq('group_id', groupId)
     .order('created_at', { ascending: false });
 
@@ -77,7 +78,7 @@ export async function updateExpense(
   splits: Omit<ExpenseSplitInsert, 'expense_id'>[]
 ) {
   console.log('Updating expense:', expenseId, expense);
-  
+
   const { data: expenseData, error: expenseError } = await supabase
     .from('expenses')
     .update(expense)
@@ -102,7 +103,7 @@ export async function updateExpense(
   }
 
   // Create new splits
-  const splitsWithExpenseId = splits.map(split => ({
+  const splitsWithExpenseId = splits.map((split) => ({
     ...split,
     expense_id: expenseId,
   }));
@@ -122,7 +123,7 @@ export async function updateExpense(
 
 export async function deleteExpense(expenseId: string) {
   console.log('Deleting expense:', expenseId);
-  
+
   const { error } = await supabase
     .from('expenses')
     .delete()

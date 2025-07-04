@@ -1,9 +1,3 @@
-import { Participant } from './participants';
+import { Database } from '@/integrations/supabase/types';
 
-export interface Group {
-  id: string;
-  name: string;
-  description?: string | null;
-  created_at?: string;
-  participants?: Participant[];
-}
+export type Group = Database['public']['Tables']['group']['Row'];
