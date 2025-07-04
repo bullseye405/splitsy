@@ -436,6 +436,13 @@ export function GroupDashboard() {
                 const paidByName = getParticipantDisplayName(expense.paid_by);
                 const expenseType = expense.expense_type || 'expense';
 
+                // Calculate current participant's share
+                const myShare = currentParticipant
+                  ? expense.expense_splits.find(
+                      (split) => split.participant_id === currentParticipant
+                    )?.amount || 0
+                  : 0;
+
                 return (
                   <div
                     key={expense.id}
@@ -456,7 +463,7 @@ export function GroupDashboard() {
                             {getExpenseTypeIcon(expenseType)}
                           </span>
                         </div>
-                        <div>
+                        <div className="flex-1">
                           <span className="font-semibold text-slate-800 text-lg">
                             {expense.description}
                           </span>
@@ -469,17 +476,39 @@ export function GroupDashboard() {
                             by <span className="font-medium">{paidByName}</span>
                             {expenseType !== 'transfer' &&
                               ` • Split ${expense.expense_splits.length} ways`}
+                            {myShare > 0 &&
+                              expenseType !== 'transfer' &&
+                              ` • ${myShare.toFixed(2)}`}
                           </div>
+                          {/* {currentParticipant &&
+                            myShare > 0 &&
+                            expenseType !== 'transfer' && (
+                              <div className="text-xs text-slate-500 mt-1">
+                                My share:{' '}
+                                <span className="font-medium text-slate-700">
+                                  ${myShare.toFixed(2)}
+                                </span>
+                              </div>
+                            )} */}
                         </div>
                       </div>
                     </div>
                     <div className="flex items-center gap-4">
-                      <div
-                        className={`text-xl font-bold ${getExpenseTypeColor(
-                          expenseType
-                        )}`}
-                      >
-                        ${expense.amount.toFixed(2)}
+                      <div className="text-right">
+                        <div
+                          className={`text-xl font-bold ${getExpenseTypeColor(
+                            expenseType
+                          )}`}
+                        >
+                          ${expense.amount.toFixed(2)}
+                        </div>
+                        {/* {currentParticipant &&
+                          myShare > 0 &&
+                          expenseType !== 'transfer' && (
+                            <div className="text-sm text-slate-600">
+                              You: ${myShare.toFixed(2)}
+                            </div>
+                          )} */}
                       </div>
                       <div className="flex gap-1">
                         <Button
