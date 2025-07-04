@@ -126,6 +126,45 @@ export type Database = {
         }
         Relationships: []
       }
+      group_views: {
+        Row: {
+          created_at: string
+          group_id: string
+          id: string
+          participant_id: string
+          viewed_at: string
+        }
+        Insert: {
+          created_at?: string
+          group_id: string
+          id?: string
+          participant_id: string
+          viewed_at?: string
+        }
+        Update: {
+          created_at?: string
+          group_id?: string
+          id?: string
+          participant_id?: string
+          viewed_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "group_views_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "group"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "group_views_participant_id_fkey"
+            columns: ["participant_id"]
+            isOneToOne: false
+            referencedRelation: "participants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       participants: {
         Row: {
           created_at: string

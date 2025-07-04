@@ -1,14 +1,18 @@
-import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
+import {
+  ArrowRightLeft,
+  DollarSign,
+  TrendingUp,
+} from 'lucide-react';
+import { useEffect, useState } from 'react';
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import {
   Select,
   SelectContent,
@@ -16,16 +20,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useToast } from '@/hooks/use-toast';
-import { useState, useEffect } from 'react';
-import { Participant } from '@/types/participants';
+import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import { ExpenseWithSplits } from '@/api/expenses';
+import { Participant } from '@/types/participants';
 
 interface ExpenseTypeDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSave: (data: {
+  onSave: (expenseData: {
     description: string;
     amount: number;
     paidBy: string;
@@ -43,6 +46,7 @@ interface ExpenseTypeDialogProps {
   expense?: ExpenseWithSplits | null;
   isEditing?: boolean;
   type: 'expense' | 'transfer' | 'income';
+  currentParticipant?: string | null;
 }
 
 export function ExpenseTypeDialog({
@@ -53,311 +57,188 @@ export function ExpenseTypeDialog({
   expense,
   isEditing = false,
   type,
+  currentParticipant,
 }: ExpenseTypeDialogProps) {
   const [description, setDescription] = useState('');
   const [amount, setAmount] = useState('');
   const [paidBy, setPaidBy] = useState('');
   const [transferTo, setTransferTo] = useState('');
-  const [splitBetween, setSplitBetween] = useState<string[]>([]);
   const [splitMode, setSplitMode] = useState<'equal' | 'amount' | 'weight'>(
     'equal'
   );
-  const [customAmounts, setCustomAmounts] = useState<{ [key: string]: number }>(
-    {}
-  );
-  const [weights, setWeights] = useState<{ [key: string]: number }>({});
-  const { toast } = useToast();
+  const [splits, setSplits] = useState<
+    Array<{
+      participant_id: string;
+      amount: number;
+      custom_amount?: string;
+      weight?: string;
+    }>
+  >([]);
 
   useEffect(() => {
-    if (expense && isEditing) {
+    if (expense) {
       setDescription(expense.description || '');
       setAmount(expense.amount.toString());
       setPaidBy(expense.paid_by);
-      setSplitMode(
-        (expense.split_type as 'equal' | 'amount' | 'weight') || 'equal'
-      );
+      setSplitMode(expense.split_type || 'equal');
+      setTransferTo('');
 
-      const participantIds = expense.expense_splits
-        .map((split) => split.participant_id)
-        .filter(Boolean) as string[];
-      setSplitBetween(participantIds);
+      const initialSplits = participants.map((participant) => {
+        const expenseSplit = expense.expense_splits.find(
+          (es) => es.participant_id === participant.id
+        );
 
-      const amounts: { [key: string]: number } = {};
-      const weightValues: { [key: string]: number } = {};
-      expense.expense_splits.forEach((split) => {
-        if (split.participant_id) {
-          amounts[split.participant_id] = split.amount;
-          weightValues[split.participant_id] = split.weight || 1;
-        }
+        return {
+          participant_id: participant.id,
+          amount: expense.amount,
+          custom_amount: expenseSplit?.custom_amount?.toString() || '',
+          weight: expenseSplit?.weight?.toString() || '',
+        };
       });
-      setCustomAmounts(amounts);
-      setWeights(weightValues);
+      setSplits(initialSplits);
     } else {
-      // Reset form
       setDescription('');
       setAmount('');
       setPaidBy('');
-      setTransferTo('');
-      setSplitBetween(type === 'transfer' ? [] : participants.map((p) => p.id));
       setSplitMode('equal');
-      setCustomAmounts({});
-      setWeights({});
+      setTransferTo('');
+      setSplits([]);
     }
-  }, [expense, isEditing, participants, type, open]);
+  }, [expense, participants]);
 
-  const getTitle = () => {
-    if (isEditing)
-      return `Edit ${type.charAt(0).toUpperCase() + type.slice(1)}`;
-    return `Add ${type.charAt(0).toUpperCase() + type.slice(1)}`;
-  };
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
 
-  const getDescription = () => {
-    switch (type) {
-      case 'expense':
-        return 'Record a new expense for the group';
-      case 'transfer':
-        return 'Record a direct transfer between participants';
-      case 'income':
-        return 'Record income for the group';
-      default:
-        return '';
-    }
-  };
+    const parsedAmount = parseFloat(amount);
 
-  const handleSubmit = () => {
-    if (!description.trim()) {
-      toast({
-        title: 'Description required',
-        description: 'Please enter a description',
-        variant: 'destructive',
-      });
-      return;
-    }
-
-    const amountNumber = parseFloat(amount);
-    if (!amount || isNaN(amountNumber) || amountNumber <= 0) {
-      toast({
-        title: 'Invalid amount',
-        description: 'Please enter a valid amount greater than 0',
-        variant: 'destructive',
-      });
-      return;
-    }
-
-    if (!paidBy) {
-      toast({
-        title: type === 'transfer' ? 'Who transferred?' : 'Who paid?',
-        description: `Please select who ${
-          type === 'transfer' ? 'sent the money' : 'paid'
-        }`,
-        variant: 'destructive',
-      });
-      return;
-    }
-
-    if (type === 'transfer') {
-      if (!transferTo) {
-        toast({
-          title: 'Transfer to whom?',
-          description: 'Please select who received the transfer',
-          variant: 'destructive',
-        });
-        return;
-      }
-      if (paidBy === transferTo) {
-        toast({
-          title: 'Invalid transfer',
-          description: 'Cannot transfer to the same person',
-          variant: 'destructive',
-        });
-        return;
-      }
-    } else if (splitBetween.length === 0) {
-      toast({
-        title: 'Split between who?',
-        description: 'Please select at least one person to split with',
-        variant: 'destructive',
-      });
-      return;
-    }
-
-    const splits =
-      type === 'transfer'
-        ? [{ participant_id: transferTo, amount: amountNumber }]
-        : splitBetween.map((participantId) => {
-            let splitAmount = amountNumber / splitBetween.length;
-
-            if (splitMode === 'amount') {
-              splitAmount = customAmounts[participantId] || 0;
-            } else if (splitMode === 'weight') {
-              const totalWeight = splitBetween.reduce(
-                (sum, id) => sum + (weights[id] || 1),
-                0
-              );
-              const participantWeight = weights[participantId] || 1;
-              splitAmount = (amountNumber * participantWeight) / totalWeight;
-            }
-
-            return {
-              participant_id: participantId,
-              amount: splitAmount,
-              custom_amount:
-                splitMode === 'amount'
-                  ? customAmounts[participantId]
-                  : undefined,
-              weight:
-                splitMode === 'weight' ? weights[participantId] : undefined,
-            };
-          });
-
-    onSave({
-      description: description.trim(),
-      amount: amountNumber,
+    const expenseData = {
+      description,
+      amount: parsedAmount,
       paidBy,
       splitMode,
-      splits,
+      splits: splits
+        .filter((split) =>
+          participants.find((p) => p.id === split.participant_id)
+        )
+        .map((split) => {
+          const baseSplit = {
+            participant_id: split.participant_id,
+            amount: parsedAmount,
+          };
+
+          if (splitMode === 'amount' && split.custom_amount) {
+            return {
+              ...baseSplit,
+              custom_amount: parseFloat(split.custom_amount),
+            };
+          }
+
+          if (splitMode === 'weight' && split.weight) {
+            return {
+              ...baseSplit,
+              weight: parseFloat(split.weight),
+            };
+          }
+
+          return baseSplit;
+        }),
       expenseType: type,
-      transferTo: type === 'transfer' ? transferTo : undefined,
+      transferTo,
+    };
+
+    onSave(expenseData);
+  };
+
+  const handleSplitChange = (participantId: string, checked: boolean) => {
+    setSplits((prevSplits) => {
+      if (checked) {
+        return [
+          ...prevSplits,
+          { participant_id: participantId, amount: parseFloat(amount) },
+        ];
+      } else {
+        return prevSplits.filter((split) => split.participant_id !== participantId);
+      }
     });
-
-    // Reset form
-    setDescription('');
-    setAmount('');
-    setPaidBy('');
-    setTransferTo('');
-    setSplitBetween(type === 'transfer' ? [] : participants.map((p) => p.id));
-    setSplitMode('equal');
-    setCustomAmounts({});
-    setWeights({});
   };
 
-  const handleSplitToggle = (participantId: string, checked: boolean) => {
-    if (checked) {
-      setSplitBetween([...splitBetween, participantId]);
-      // Initialize default values
-      if (splitMode === 'amount') {
-        const equalAmount = parseFloat(amount) / (splitBetween.length + 1) || 0;
-        setCustomAmounts((prev) => ({ ...prev, [participantId]: equalAmount }));
-      }
-      if (splitMode === 'weight') {
-        setWeights((prev) => ({ ...prev, [participantId]: 1 }));
-      }
-    } else {
-      setSplitBetween(splitBetween.filter((id) => id !== participantId));
-      // Clean up values
-      setCustomAmounts((prev) => {
-        const newAmounts = { ...prev };
-        delete newAmounts[participantId];
-        return newAmounts;
-      });
-      setWeights((prev) => {
-        const newWeights = { ...prev };
-        delete newWeights[participantId];
-        return newWeights;
-      });
-    }
-  };
-
-  const selectAllParticipants = () => {
-    const allIds = participants.map((p) => p.id);
-    setSplitBetween(allIds);
-
-    if (splitMode === 'amount') {
-      const equalAmount = parseFloat(amount) / allIds.length || 0;
-      const newAmounts: { [key: string]: number } = {};
-      allIds.forEach((id) => (newAmounts[id] = equalAmount));
-      setCustomAmounts(newAmounts);
-    }
-    if (splitMode === 'weight') {
-      const newWeights: { [key: string]: number } = {};
-      allIds.forEach((id) => (newWeights[id] = 1));
-      setWeights(newWeights);
-    }
-  };
-
-  const clearAllParticipants = () => {
-    setSplitBetween([]);
-    setCustomAmounts({});
-    setWeights({});
-  };
-
-  const handleCustomAmountChange = (participantId: string, value: string) => {
-    const numValue = parseFloat(value) || 0;
-    setCustomAmounts((prev) => ({ ...prev, [participantId]: numValue }));
-
-    // Update other amounts to balance
-    const totalAmount = parseFloat(amount) || 0;
-    const otherParticipants = splitBetween.filter((id) => id !== participantId);
-    if (otherParticipants.length > 0) {
-      const remainingAmount = totalAmount - numValue;
-      const equalSplit = remainingAmount / otherParticipants.length;
-      const newAmounts = { ...customAmounts, [participantId]: numValue };
-      otherParticipants.forEach((id) => {
-        newAmounts[id] = equalSplit;
-      });
-      setCustomAmounts(newAmounts);
-    }
-  };
-
-  const handleWeightChange = (participantId: string, value: string) => {
-    const numValue = parseFloat(value) || 0;
-    setWeights((prev) => ({ ...prev, [participantId]: numValue }));
-  };
-
-  const calculateWeightedAmount = (participantId: string) => {
-    const totalAmount = parseFloat(amount) || 0;
-    const participantWeight = weights[participantId] || 1;
-    const totalWeight = splitBetween.reduce(
-      (sum, id) => sum + (weights[id] || 1),
-      0
+  const handleCustomAmountChange = (participantId: string, customAmount: string) => {
+    setSplits((prevSplits) =>
+      prevSplits.map((split) =>
+        split.participant_id === participantId
+          ? { ...split, custom_amount: customAmount }
+          : split
+      )
     );
-    return totalWeight > 0
-      ? (totalAmount * participantWeight) / totalWeight
-      : 0;
   };
 
-  const getDisplayAmount = (participantId: string) => {
-    if (splitMode === 'equal') {
-      return (parseFloat(amount) || 0) / splitBetween.length;
-    } else if (splitMode === 'amount') {
-      return customAmounts[participantId] || 0;
-    } else {
-      return calculateWeightedAmount(participantId);
+  const handleWeightChange = (participantId: string, weight: string) => {
+    setSplits((prevSplits) =>
+      prevSplits.map((split) =>
+        split.participant_id === participantId ? { ...split, weight } : split
+      )
+    );
+  };
+
+  const isFormValid = () => {
+    if (!description || !amount || !paidBy) return false;
+
+    if (type === 'transfer' && !transferTo) return false;
+
+    if (type !== 'transfer') {
+      if (splits.length === 0) return false;
+
+      if (splitMode === 'amount') {
+        const totalCustomAmount = splits.reduce((sum, split) => {
+          const customAmountValue = split.custom_amount ? parseFloat(split.custom_amount) : 0;
+          return sum + customAmountValue;
+        }, 0);
+
+        if (Math.abs(totalCustomAmount - parseFloat(amount)) > 0.01) {
+          return false;
+        }
+      }
     }
+
+    return true;
+  };
+
+  const getParticipantDisplayName = (participantId: string) => {
+    if (participantId === currentParticipant) {
+      return 'me';
+    }
+    return participants.find((p) => p.id === participantId)?.name || 'Unknown';
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md max-h-[80vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>{getTitle()}</DialogTitle>
-          <DialogDescription>{getDescription()}</DialogDescription>
+          <DialogTitle className="flex items-center gap-2">
+            {type === 'transfer' && <ArrowRightLeft className="w-5 h-5" />}
+            {type === 'income' && <TrendingUp className="w-5 h-5" />}
+            {type === 'expense' && <DollarSign className="w-5 h-5" />}
+            {isEditing ? 'Edit' : 'Add'}{' '}
+            {type.charAt(0).toUpperCase() + type.slice(1)}
+          </DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Description Input */}
           <div className="space-y-2">
-            <label htmlFor="description" className="text-sm font-medium">
-              Description
-            </label>
+            <Label htmlFor="description">Description</Label>
             <Input
               id="description"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              placeholder={
-                type === 'transfer'
-                  ? 'Cash repayment, loan...'
-                  : type === 'income'
-                  ? 'Refund, returned deposit...'
-                  : 'Dinner, taxi, groceries...'
-              }
-              className="h-10"
+              placeholder={`Enter ${type} description`}
+              required
             />
           </div>
 
+          {/* Amount Input */}
           <div className="space-y-2">
-            <label htmlFor="amount" className="text-sm font-medium">
-              Amount ($)
-            </label>
+            <Label htmlFor="amount">Amount ($)</Label>
             <Input
               id="amount"
               type="number"
@@ -366,53 +247,44 @@ export function ExpenseTypeDialog({
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
               placeholder="0.00"
-              className="h-10"
+              required
             />
           </div>
 
+          {/* Paid By Selection */}
           <div className="space-y-2">
-            <label className="text-sm font-medium">
-              {type === 'transfer'
-                ? 'From'
-                : type === 'income'
-                ? 'Received by'
-                : 'Paid by'}
-            </label>
+            <Label>
+              {type === 'transfer' ? 'Transfer from' : 
+               type === 'income' ? 'Received by' : 'Paid by'}
+            </Label>
             <Select value={paidBy} onValueChange={setPaidBy}>
-              <SelectTrigger className="h-10">
-                <SelectValue
-                  placeholder={`Select who ${
-                    type === 'transfer'
-                      ? 'sent'
-                      : type === 'income'
-                      ? 'received'
-                      : 'paid'
-                  }`}
-                />
+              <SelectTrigger>
+                <SelectValue placeholder="Select participant" />
               </SelectTrigger>
               <SelectContent>
                 {participants.map((participant) => (
                   <SelectItem key={participant.id} value={participant.id}>
-                    {participant.name}
+                    {getParticipantDisplayName(participant.id)}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
 
+          {/* Transfer To Selection (for transfers only) */}
           {type === 'transfer' && (
             <div className="space-y-2">
-              <label className="text-sm font-medium">To</label>
+              <Label>Transfer to</Label>
               <Select value={transferTo} onValueChange={setTransferTo}>
-                <SelectTrigger className="h-10">
-                  <SelectValue placeholder="Select who received" />
+                <SelectTrigger>
+                  <SelectValue placeholder="Select recipient" />
                 </SelectTrigger>
                 <SelectContent>
                   {participants
                     .filter((p) => p.id !== paidBy)
                     .map((participant) => (
                       <SelectItem key={participant.id} value={participant.id}>
-                        {participant.name}
+                        {getParticipantDisplayName(participant.id)}
                       </SelectItem>
                     ))}
                 </SelectContent>
@@ -420,218 +292,81 @@ export function ExpenseTypeDialog({
             </div>
           )}
 
+          {/* Split Configuration (for expenses and income only) */}
           {type !== 'transfer' && (
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <label className="text-sm font-medium">
-                  {type === 'income' ? 'Benefited' : 'Split between'}
-                </label>
-                <div className="flex gap-2">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() =>
-                      setSplitBetween(participants.map((p) => p.id))
-                    }
-                  >
-                    All
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setSplitBetween([])}
-                  >
-                    None
-                  </Button>
-                </div>
+            <>
+              <div className="space-y-2">
+                <Label>Split method</Label>
+                <Select value={splitMode} onValueChange={(value: 'equal' | 'amount' | 'weight') => setSplitMode(value)}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="equal">Split equally</SelectItem>
+                    <SelectItem value="amount">Custom amounts</SelectItem>
+                    <SelectItem value="weight">By weight/percentage</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
 
-              <Tabs
-                value={splitMode}
-                onValueChange={(value) =>
-                  setSplitMode(value as 'equal' | 'amount' | 'weight')
-                }
-              >
-                <TabsList className="grid w-full grid-cols-3">
-                  <TabsTrigger value="equal">Split Equally</TabsTrigger>
-                  <TabsTrigger value="amount">Split Amount</TabsTrigger>
-                  <TabsTrigger value="weight">Split by Weight</TabsTrigger>
-                </TabsList>
+              {/* Participants Split Configuration */}
+              <div className="space-y-3">
+                <Label>Split between participants</Label>
+                <div className="space-y-2 max-h-48 overflow-y-auto">
+                  {participants.map((participant) => {
+                    const split = splits.find((s) => s.participant_id === participant.id);
+                    const isIncluded = !!split;
 
-                <TabsContent
-                  value="equal"
-                  className="space-y-2 max-h-48 overflow-y-auto"
-                >
-                  {participants.map((participant) => (
-                    <div
-                      key={participant.id}
-                      className="flex items-center justify-between"
-                    >
-                      <div className="flex items-center space-x-2">
+                    return (
+                      <div key={participant.id} className="flex items-center gap-3 p-2 border rounded-lg">
                         <Checkbox
-                          id={`split-${participant.id}`}
-                          checked={splitBetween.includes(participant.id)}
-                          onCheckedChange={(checked) => {
-                            if (checked) {
-                              setSplitBetween([
-                                ...splitBetween,
-                                participant.id,
-                              ]);
-                            } else {
-                              setSplitBetween(
-                                splitBetween.filter(
-                                  (id) => id !== participant.id
-                                )
-                              );
-                            }
-                          }}
+                          checked={isIncluded}
+                          onCheckedChange={(checked) => handleSplitChange(participant.id, checked as boolean)}
                         />
-                        <label
-                          htmlFor={`split-${participant.id}`}
-                          className="text-sm font-medium"
-                        >
-                          {participant.name}
-                        </label>
-                      </div>
-                      {splitBetween.includes(participant.id) && (
-                        <span className="text-sm font-medium text-primary">
-                          $
-                          {(
-                            (parseFloat(amount) || 0) / splitBetween.length
-                          ).toFixed(2)}
+                        <span className="flex-1 font-medium">
+                          {getParticipantDisplayName(participant.id)}
                         </span>
-                      )}
-                    </div>
-                  ))}
-                </TabsContent>
-
-                <TabsContent
-                  value="amount"
-                  className="space-y-2 max-h-48 overflow-y-auto"
-                >
-                  {participants.map((participant) => (
-                    <div
-                      key={participant.id}
-                      className="flex items-center justify-between gap-2"
-                    >
-                      <div className="flex items-center space-x-2">
-                        <Checkbox
-                          id={`amount-${participant.id}`}
-                          checked={splitBetween.includes(participant.id)}
-                          onCheckedChange={(checked) =>
-                            handleSplitToggle(participant.id, !!checked)
-                          }
-                        />
-                        <label
-                          htmlFor={`amount-${participant.id}`}
-                          className="text-sm font-medium"
-                        >
-                          {participant.name}
-                        </label>
-                      </div>
-                      {splitBetween.includes(participant.id) && (
-                        <div className="flex items-center gap-1">
-                          <span className="text-sm">$</span>
+                        
+                        {isIncluded && splitMode === 'amount' && (
                           <Input
                             type="number"
                             step="0.01"
                             min="0"
-                            value={customAmounts[participant.id] || ''}
-                            onChange={(e) =>
-                              handleCustomAmountChange(
-                                participant.id,
-                                e.target.value
-                              )
-                            }
-                            className="w-20 h-8 text-sm"
+                            className="w-24"
                             placeholder="0.00"
+                            value={split?.custom_amount || ''}
+                            onChange={(e) => handleCustomAmountChange(participant.id, e.target.value)}
                           />
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                  <div className="text-xs text-muted-foreground">
-                    Total: $
-                    {Object.values(customAmounts)
-                      .reduce((sum, amt) => sum + (amt || 0), 0)
-                      .toFixed(2)}{' '}
-                    / ${amount || '0.00'}
-                  </div>
-                </TabsContent>
-
-                <TabsContent
-                  value="weight"
-                  className="space-y-2 max-h-48 overflow-y-auto"
-                >
-                  {participants.map((participant) => (
-                    <div
-                      key={participant.id}
-                      className="flex items-center justify-between gap-2"
-                    >
-                      <div className="flex items-center space-x-2">
-                        <Checkbox
-                          id={`weight-${participant.id}`}
-                          checked={splitBetween.includes(participant.id)}
-                          onCheckedChange={(checked) =>
-                            handleSplitToggle(participant.id, !!checked)
-                          }
-                        />
-                        <label
-                          htmlFor={`weight-${participant.id}`}
-                          className="text-sm font-medium"
-                        >
-                          {participant.name}
-                        </label>
-                      </div>
-                      {splitBetween.includes(participant.id) && (
-                        <div className="flex items-center gap-2">
+                        )}
+                        
+                        {isIncluded && splitMode === 'weight' && (
                           <Input
                             type="number"
                             step="0.1"
-                            min="0.1"
-                            value={weights[participant.id] || ''}
-                            onChange={(e) =>
-                              handleWeightChange(participant.id, e.target.value)
-                            }
-                            className="w-16 h-8 text-sm"
-                            placeholder="1"
+                            min="0"
+                            className="w-20"
+                            placeholder="1.0"
+                            value={split?.weight || ''}
+                            onChange={(e) => handleWeightChange(participant.id, e.target.value)}
                           />
-                          <span className="text-sm font-medium text-primary">
-                            $
-                            {calculateWeightedAmount(participant.id).toFixed(2)}
-                          </span>
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                  <div className="text-xs text-muted-foreground">
-                    Total weight:{' '}
-                    {splitBetween.reduce(
-                      (sum, id) => sum + (weights[id] || 1),
-                      0
-                    )}{' '}
-                    • Total: $
-                    {splitBetween
-                      .reduce((sum, id) => sum + calculateWeightedAmount(id), 0)
-                      .toFixed(2)}
-                  </div>
-                </TabsContent>
-              </Tabs>
-            </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </>
           )}
-        </div>
 
-        <DialogFooter className="gap-2">
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Cancel
-          </Button>
-          <Button onClick={handleSubmit} variant="gradient">
-            {isEditing ? 'Update' : 'Add'}{' '}
-            {type.charAt(0).toUpperCase() + type.slice(1)}
-          </Button>
-        </DialogFooter>
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+              Cancel
+            </Button>
+            <Button type="submit" disabled={!isFormValid()}>
+              {isEditing ? 'Update' : 'Save'} {type.charAt(0).toUpperCase() + type.slice(1)}
+            </Button>
+          </DialogFooter>
+        </form>
       </DialogContent>
     </Dialog>
   );
