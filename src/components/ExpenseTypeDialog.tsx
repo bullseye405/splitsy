@@ -1,3 +1,4 @@
+import { ExpenseWithSplits } from '@/api/expenses';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import {
@@ -18,9 +19,9 @@ import {
 } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
-import { useState, useEffect } from 'react';
 import { Participant } from '@/types/participants';
-import { ExpenseWithSplits } from '@/api/expenses';
+import { useEffect, useState } from 'react';
+import { useParams } from 'react-router-dom';
 
 interface ExpenseTypeDialogProps {
   open: boolean;
@@ -43,7 +44,6 @@ interface ExpenseTypeDialogProps {
   expense?: ExpenseWithSplits | null;
   isEditing?: boolean;
   type: 'expense' | 'transfer' | 'income';
-  currentParticipant?: string | null;
 }
 
 export function ExpenseTypeDialog({
@@ -54,7 +54,6 @@ export function ExpenseTypeDialog({
   expense,
   isEditing = false,
   type,
-  currentParticipant,
 }: ExpenseTypeDialogProps) {
   const [description, setDescription] = useState('');
   const [amount, setAmount] = useState('');
@@ -69,6 +68,11 @@ export function ExpenseTypeDialog({
   );
   const [weights, setWeights] = useState<{ [key: string]: number }>({});
   const { toast } = useToast();
+
+  const { groupId } = useParams<{ groupId: string }>();
+
+  const currentParticipant =
+    localStorage.getItem(`participant_${groupId}`) || null;
 
   // Update amounts when total amount changes
   useEffect(() => {

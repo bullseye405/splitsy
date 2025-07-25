@@ -133,7 +133,7 @@ export function ParticipantsModal({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="px-6 pb-6 pt-4">
+        <div className="px-6 pb-6">
           {/* Add new participant */}
           <div className="flex gap-2 mb-4">
             <Input
@@ -154,7 +154,7 @@ export function ParticipantsModal({
           </div>
 
           {/* Participants list */}
-          <div className="divide-y divide-muted max-h-60 overflow-y-auto bg-background rounded-md">
+          <div className="divide-y divide-muted max-h-80 overflow-y-auto bg-background rounded-md">
             {participants.map((participant, index) => (
               <div
                 key={participant.id}

@@ -36,9 +36,8 @@ export function GroupDashboard() {
   const [showParticipantsModal, setShowParticipantsModal] = useState(false);
   const [showParticipantSelection, setShowParticipantSelection] =
     useState(false);
-  const [currentParticipant, setCurrentParticipant] = useState<string | null>(
-    null
-  );
+  const currentParticipant =
+    localStorage.getItem(`participant_${groupId}`) || null;
   const [dialogType, setDialogType] = useState<
     'expense' | 'transfer' | 'income'
   >('expense');
@@ -48,18 +47,6 @@ export function GroupDashboard() {
   const { toast } = useToast();
 
   const shareUrl = `${window.location.origin}/${groupId}`;
-
-  // Check for existing participant selection in session storage
-  useEffect(() => {
-    if (groupId) {
-      const storedParticipant = sessionStorage.getItem(
-        `participant_${groupId}`
-      );
-      if (storedParticipant) {
-        setCurrentParticipant(storedParticipant);
-      }
-    }
-  }, [groupId]);
 
   const fetchGroupData = useCallback(async () => {
     if (!groupId) return;
@@ -75,7 +62,8 @@ export function GroupDashboard() {
       }
       setGroup(data);
 
-      // Show participant selection modal if no participant is selected and participants exist
+      // Show participant selection modal if no participant is selected in localStorage and participants exist
+
       if (
         !currentParticipant &&
         data.participants &&
@@ -86,7 +74,7 @@ export function GroupDashboard() {
     } catch (error) {
       console.error('Error fetching group:', error);
     }
-  }, [groupId, toast, currentParticipant]);
+  }, [currentParticipant, groupId, toast]);
 
   const fetchExpenses = useCallback(async () => {
     if (!groupId) return;
@@ -109,20 +97,6 @@ export function GroupDashboard() {
     fetchGroupData();
     fetchExpenses();
   }, [fetchGroupData, fetchExpenses]);
-
-  const handleParticipantSelect = async (participantId: string) => {
-    if (!groupId) return;
-
-    setCurrentParticipant(participantId);
-    sessionStorage.setItem(`participant_${groupId}`, participantId);
-
-    // Record group view
-    try {
-      await recordGroupView(groupId, participantId);
-    } catch (error) {
-      console.error('Error recording group view:', error);
-    }
-  };
 
   const handleShare = async () => {
     try {
@@ -535,7 +509,6 @@ export function GroupDashboard() {
         open={showParticipantSelection}
         onOpenChange={setShowParticipantSelection}
         participants={group.participants || []}
-        onParticipantSelect={handleParticipantSelect}
       />
 
       <ExpenseTypeDialog
@@ -549,7 +522,6 @@ export function GroupDashboard() {
         expense={editingExpense}
         isEditing={!!editingExpense}
         type={dialogType}
-        currentParticipant={currentParticipant}
       />
     </div>
   );
