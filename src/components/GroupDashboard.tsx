@@ -26,11 +26,11 @@ import { ExpenseTypeDialog } from './ExpenseTypeDialog';
 import { ParticipantsModal } from './ParticipantsModal';
 import { ParticipantSelectionModal } from './ParticipantSelectionModal';
 import { DebtSettlement } from './DebtSettlement';
-import { Group } from '@/types/group';
+import { GroupWithParticipants } from '@/types/group';
 
 export function GroupDashboard() {
   const { groupId } = useParams<{ groupId: string }>();
-  const [group, setGroup] = useState<Group>();
+  const [group, setGroup] = useState<GroupWithParticipants>();
   const [expenses, setExpenses] = useState<ExpenseWithSplits[]>([]);
   const [showExpenseDialog, setShowExpenseDialog] = useState(false);
   const [showParticipantsModal, setShowParticipantsModal] = useState(false);
@@ -312,7 +312,8 @@ export function GroupDashboard() {
               {group.name}
             </h1>
             <p className="text-slate-600 mt-1">
-              Track expenses and settle debts with your group
+              {group.description ||
+                'Track expenses and settle debts with your group'}
             </p>
           </div>
 
@@ -327,49 +328,35 @@ export function GroupDashboard() {
           </Button>
         </div>
 
-        {/* Top Dashboard Card */}
-        <Card className="shadow-lg border-0 bg-white/80 backdrop-blur-sm">
-          <CardContent className="p-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {/* Stats */}
-              <div className="text-center p-4 rounded-xl bg-gradient-to-br from-red-50 to-red-100 border border-red-200">
-                <div className="text-3xl font-bold text-red-600 mb-1">
-                  ${totalExpenses.toFixed(2)}
-                </div>
-                <div className="text-sm font-medium text-red-700">
-                  Total Expenses
-                </div>
-              </div>
-
-              <div className="text-center p-4 rounded-xl bg-gradient-to-br from-green-50 to-green-100 border border-green-200">
-                <div className="text-3xl font-bold text-green-600 mb-1">
-                  ${totalIncome.toFixed(2)}
-                </div>
-                <div className="text-sm font-medium text-green-700">
-                  Total Income
-                </div>
-              </div>
-
-              <div className="text-center p-4 rounded-xl bg-gradient-to-br from-blue-50 to-blue-100 border border-blue-200">
-                <div className="text-3xl font-bold text-blue-600 mb-1">
-                  {group.participants?.length || 0}
-                </div>
-                <div className="text-sm font-medium text-blue-700">
-                  Participants
-                </div>
-              </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {/* Stats */}
+          <div className="text-center p-4 rounded-xl bg-gradient-to-br from-red-50 to-red-100 border border-red-200">
+            <div className="text-3xl font-bold text-red-600 mb-1">
+              ${totalExpenses.toFixed(2)}
             </div>
+            <div className="text-sm font-medium text-red-700">
+              Total Expenses
+            </div>
+          </div>
 
-            {(!group.participants || group.participants.length < 2) && (
-              <div className="mt-6 p-4 bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-xl">
-                <p className="text-sm text-amber-700 text-center font-medium">
-                  <Users className="w-4 h-4 inline mr-2" />
-                  Add at least 2 participants to start tracking expenses
-                </p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+          <div className="text-center p-4 rounded-xl bg-gradient-to-br from-green-50 to-green-100 border border-green-200">
+            <div className="text-3xl font-bold text-green-600 mb-1">
+              ${totalIncome.toFixed(2)}
+            </div>
+            <div className="text-sm font-medium text-green-700">
+              Total Income
+            </div>
+          </div>
+
+          <div className="text-center p-4 rounded-xl bg-gradient-to-br from-blue-50 to-blue-100 border border-blue-200">
+            <div className="text-3xl font-bold text-blue-600 mb-1">
+              {group.participants?.length || 0}
+            </div>
+            <div className="text-sm font-medium text-blue-700">
+              Participants
+            </div>
+          </div>
+        </div>
 
         <div className="flex items-center gap-3 justify-end mt-4">
           <Button
