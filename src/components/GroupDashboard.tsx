@@ -504,6 +504,7 @@ export function GroupDashboard() {
               participants={group.participants}
               groupId={groupId}
               currentParticipant={currentParticipant}
+              onTransactionChange={fetchExpenses}
             />
           </div>
         )}

@@ -25,6 +25,7 @@ interface DebtSettlementProps {
   participants: Participant[];
   groupId: string;
   currentParticipant?: string | null;
+  onTransactionChange?: () => void;
 }
 
 interface Balance {
@@ -36,7 +37,8 @@ export function DebtSettlement({
   expenses, 
   participants, 
   groupId,
-  currentParticipant 
+  currentParticipant,
+  onTransactionChange
 }: DebtSettlementProps) {
   const [debts, setDebts] = useState<DebtItem[]>([]);
   const [settlements, setSettlements] = useState<SettlementType[]>([]);
@@ -143,8 +145,9 @@ export function DebtSettlement({
         description: `$${amount.toFixed(2)} settlement from ${fromName} to ${toName} has been recorded`,
       });
 
-      // Refresh settlements which will trigger debt recalculation
+      // Refresh settlements and transactions
       await fetchSettlements();
+      onTransactionChange?.();
     } catch (error) {
       console.error('Error creating settlement:', error);
       toast({
@@ -164,8 +167,9 @@ export function DebtSettlement({
         description: 'The settlement has been removed and the debt is now outstanding again',
       });
 
-      // Refresh settlements which will trigger debt recalculation
+      // Refresh settlements and transactions
       await fetchSettlements();
+      onTransactionChange?.();
     } catch (error) {
       console.error('Error deleting settlement:', error);
       toast({
@@ -295,7 +299,7 @@ export function DebtSettlement({
                   className="hover:bg-red-50 hover:text-red-600 transition-colors"
                 >
                   <Trash2 className="w-3 h-3 mr-1" />
-                  Delete
+                  Undo
                 </Button>
               </div>
             );
