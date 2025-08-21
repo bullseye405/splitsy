@@ -40,3 +40,19 @@ export async function getSettlementsByGroupId(groupId: string) {
   console.log('Settlements fetched:', data);
   return data as Settlement[];
 }
+
+export async function deleteSettlement(settlementId: string) {
+  console.log('Deleting settlement:', settlementId);
+  
+  const { error } = await supabase
+    .from('settlements')
+    .delete()
+    .eq('id', settlementId);
+
+  if (error) {
+    console.error('Error deleting settlement:', error);
+    throw error;
+  }
+
+  console.log('Settlement deleted:', settlementId);
+}

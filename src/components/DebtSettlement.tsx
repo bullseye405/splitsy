@@ -3,11 +3,12 @@ import {
   CheckCircle,
   CreditCard,
   History,
+  Trash2,
 } from 'lucide-react';
 import { useEffect, useState, useCallback } from 'react';
 import { ExpenseWithSplits } from '@/api/expenses';
 import { Participant } from '@/types/participants';
-import { createSettlement, getSettlementsByGroupId } from '@/api/settlements';
+import { createSettlement, getSettlementsByGroupId, deleteSettlement } from '@/api/settlements';
 import { useToast } from '@/hooks/use-toast';
 import { Settlement as SettlementType } from '@/types/settlements';
 import { Button } from './ui/button';
@@ -154,6 +155,27 @@ export function DebtSettlement({
     }
   };
 
+  const handleDeleteSettlement = async (settlementId: string) => {
+    try {
+      await deleteSettlement(settlementId);
+
+      toast({
+        title: 'Settlement deleted',
+        description: 'The settlement has been removed and the debt is now outstanding again',
+      });
+
+      // Refresh settlements which will trigger debt recalculation
+      await fetchSettlements();
+    } catch (error) {
+      console.error('Error deleting settlement:', error);
+      toast({
+        title: 'Error',
+        description: 'Could not delete settlement. Please try again.',
+        variant: 'destructive',
+      });
+    }
+  };
+
   useEffect(() => {
     fetchSettlements();
   }, [fetchSettlements]);
@@ -268,11 +290,12 @@ export function DebtSettlement({
                 
                 <Button
                   size="sm"
-                  disabled
-                  className="bg-green-100 text-green-700 cursor-not-allowed"
+                  variant="ghost"
+                  onClick={() => handleDeleteSettlement(settlement.id)}
+                  className="hover:bg-red-50 hover:text-red-600 transition-colors"
                 >
-                  <CheckCircle className="w-3 h-3 mr-1" />
-                  Settled
+                  <Trash2 className="w-3 h-3 mr-1" />
+                  Delete
                 </Button>
               </div>
             );
