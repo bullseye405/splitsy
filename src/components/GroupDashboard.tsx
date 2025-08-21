@@ -118,6 +118,11 @@ export function GroupDashboard() {
     }
   }, [groupId]);
 
+  const refreshTransactions = useCallback(async () => {
+    await Promise.all([fetchExpenses(), fetchSettlements()]);
+  }, [fetchExpenses, fetchSettlements]);
+
+
   useEffect(() => {
     fetchGroupData();
     fetchExpenses();
@@ -257,7 +262,7 @@ export function GroupDashboard() {
         title: 'Settlement deleted',
         description: 'The settlement has been removed',
       });
-      fetchSettlements();
+      await refreshTransactions();
     } catch (error) {
       console.error('Error deleting settlement:', error);
       toast({
@@ -504,7 +509,7 @@ export function GroupDashboard() {
               participants={group.participants}
               groupId={groupId}
               currentParticipant={currentParticipant}
-              onTransactionChange={fetchExpenses}
+              onTransactionChange={refreshTransactions}
             />
           </div>
         )}
@@ -559,7 +564,8 @@ export function GroupDashboard() {
                           onClick={() => handleDeleteSettlement(settlement.id)}
                           className="hover:bg-red-50 hover:text-red-600 transition-colors"
                         >
-                          <Trash2 className="w-4 h-4" />
+                          <Trash2 className="w-4 h-4 mr-1" />
+                          Undo
                         </Button>
                       </div>
                     </div>
