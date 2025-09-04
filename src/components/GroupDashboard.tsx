@@ -179,6 +179,7 @@ export function GroupDashboard() {
     }>;
     expenseType: 'expense' | 'transfer' | 'income';
     transferTo?: string;
+    date: string;
   }) => {
     if (!groupId || !group) return;
 
@@ -190,6 +191,7 @@ export function GroupDashboard() {
         group_id: groupId,
         split_type: expenseData.splitMode,
         expense_type: expenseData.expenseType,
+        created_at: new Date(expenseData.date).toISOString(),
       };
 
       if (editingExpense) {
