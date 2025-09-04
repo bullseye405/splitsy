@@ -526,156 +526,154 @@ export function GroupDashboard() {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              {/* Settlements */}
-              {settlements.map((settlement) => {
-                const fromName = getParticipantDisplayName(settlement.from_participant_id);
-                const toName = getParticipantDisplayName(settlement.to_participant_id);
+              {/* Combine and sort all transactions by created date */}
+              {[
+                ...settlements.map(settlement => ({
+                  ...settlement,
+                  type: 'settlement' as const,
+                  created_at: settlement.created_at
+                })),
+                ...expenses.map(expense => ({
+                  ...expense,
+                  type: 'expense' as const,
+                  created_at: expense.created_at
+                }))
+              ]
+                .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+                .map((transaction) => {
+                  if (transaction.type === 'settlement') {
+                    const settlement = transaction;
+                    const fromName = getParticipantDisplayName(settlement.from_participant_id);
+                    const toName = getParticipantDisplayName(settlement.to_participant_id);
 
-                return (
-                  <div
-                    key={`settlement-${settlement.id}`}
-                    className="flex justify-between items-center p-5 rounded-xl bg-gradient-to-r from-white to-slate-50 border border-slate-200 hover:shadow-md transition-all duration-200 hover:border-slate-300"
-                  >
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3">
-                        <div className="p-2 rounded-full bg-blue-100">
-                          <span className="text-blue-600">
-                            <ArrowRightLeft className="w-4 h-4" />
-                          </span>
-                        </div>
+                    return (
+                      <div
+                        key={`settlement-${settlement.id}`}
+                        className="flex justify-between items-center p-5 rounded-xl bg-gradient-to-r from-white to-slate-50 border border-slate-200 hover:shadow-md transition-all duration-200 hover:border-slate-300"
+                      >
                         <div className="flex-1">
-                          <span className="font-semibold text-slate-800 text-lg">
-                            Settlement: {fromName} → {toName}
-                          </span>
-                          <div className="text-sm text-slate-600 mt-1">
-                            Payment settlement
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-4">
-                      <div className="text-right">
-                        <div className="text-xl font-bold text-blue-600">
-                          ${settlement.amount.toFixed(2)}
-                        </div>
-                      </div>
-                      <div className="flex gap-1">
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => handleDeleteSettlement(settlement.id)}
-                          className="hover:bg-red-50 hover:text-red-600 transition-colors"
-                        >
-                          <Trash2 className="w-4 h-4 mr-1" />
-                          Undo
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-              
-              {/* Expenses */}
-              {expenses.map((expense) => {
-                const paidByName = getParticipantDisplayName(expense.paid_by);
-                const expenseType = expense.expense_type || 'expense';
-
-                // Calculate current participant's share
-                const myShare = currentParticipant
-                  ? expense.expense_splits.find(
-                      (split) => split.participant_id === currentParticipant
-                    )?.amount || 0
-                  : 0;
-
-                return (
-                  <div
-                    key={expense.id}
-                    className="flex justify-between items-center p-5 rounded-xl bg-gradient-to-r from-white to-slate-50 border border-slate-200 hover:shadow-md transition-all duration-200 hover:border-slate-300"
-                  >
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3">
-                        <div
-                          className={`p-2 rounded-full ${
-                            expenseType === 'transfer'
-                              ? 'bg-blue-100'
-                              : expenseType === 'income'
-                              ? 'bg-green-100'
-                              : 'bg-red-100'
-                          }`}
-                        >
-                          <span className={getExpenseTypeColor(expenseType)}>
-                            {getExpenseTypeIcon(expenseType)}
-                          </span>
-                        </div>
-                        <div className="flex-1">
-                          <span className="font-semibold text-slate-800 text-lg">
-                            {expense.description}
-                          </span>
-                          <div className="text-sm text-slate-600 mt-1">
-                            {expenseType === 'transfer'
-                              ? 'Transferred'
-                              : expenseType === 'income'
-                              ? 'Received'
-                              : 'Paid'}{' '}
-                            by <span className="font-medium">{paidByName}</span>
-                            {expenseType !== 'transfer' &&
-                              ` • Split ${expense.expense_splits.length} ways`}
-                            {myShare > 0 &&
-                              expenseType !== 'transfer' &&
-                              ` • ${myShare.toFixed(2)}`}
-                          </div>
-                          {/* {currentParticipant &&
-                            myShare > 0 &&
-                            expenseType !== 'transfer' && (
-                              <div className="text-xs text-slate-500 mt-1">
-                                My share:{' '}
-                                <span className="font-medium text-slate-700">
-                                  ${myShare.toFixed(2)}
-                                </span>
-                              </div>
-                            )} */}
-                        </div>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-4">
-                      <div className="text-right">
-                        <div
-                          className={`text-xl font-bold ${getExpenseTypeColor(
-                            expenseType
-                          )}`}
-                        >
-                          ${expense.amount.toFixed(2)}
-                        </div>
-                        {/* {currentParticipant &&
-                          myShare > 0 &&
-                          expenseType !== 'transfer' && (
-                            <div className="text-sm text-slate-600">
-                              You: ${myShare.toFixed(2)}
+                          <div className="flex items-center gap-3">
+                            <div className="p-2 rounded-full bg-blue-100">
+                              <span className="text-blue-600">
+                                <ArrowRightLeft className="w-4 h-4" />
+                              </span>
                             </div>
-                          )} */}
+                            <div className="flex-1">
+                              <span className="font-semibold text-slate-800 text-lg">
+                                Settlement: {fromName} → {toName}
+                              </span>
+                              <div className="text-sm text-slate-600 mt-1">
+                                Payment settlement • {new Date(settlement.created_at).toLocaleDateString()}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-4">
+                          <div className="text-right">
+                            <div className="text-xl font-bold text-blue-600">
+                              ${settlement.amount.toFixed(2)}
+                            </div>
+                          </div>
+                          <div className="flex gap-1">
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => handleDeleteSettlement(settlement.id)}
+                              className="hover:bg-red-50 hover:text-red-600 transition-colors"
+                            >
+                              <Trash2 className="w-4 h-4 mr-1" />
+                              Undo
+                            </Button>
+                          </div>
+                        </div>
                       </div>
-                      <div className="flex gap-1">
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => handleEditExpense(expense)}
-                          className="hover:bg-blue-50 hover:text-blue-600 transition-colors"
-                        >
-                          <Edit className="w-4 h-4" />
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => handleDeleteExpense(expense.id)}
-                          className="hover:bg-red-50 hover:text-red-600 transition-colors"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
+                    );
+                  } else {
+                    const expense = transaction;
+                    const paidByName = getParticipantDisplayName(expense.paid_by);
+                    const expenseType = expense.expense_type || 'expense';
+
+                    // Calculate current participant's share
+                    const myShare = currentParticipant
+                      ? expense.expense_splits.find(
+                          (split) => split.participant_id === currentParticipant
+                        )?.amount || 0
+                      : 0;
+
+                    return (
+                      <div
+                        key={expense.id}
+                        className="flex justify-between items-center p-5 rounded-xl bg-gradient-to-r from-white to-slate-50 border border-slate-200 hover:shadow-md transition-all duration-200 hover:border-slate-300"
+                      >
+                        <div className="flex-1">
+                          <div className="flex items-center gap-3">
+                            <div
+                              className={`p-2 rounded-full ${
+                                expenseType === 'transfer'
+                                  ? 'bg-blue-100'
+                                  : expenseType === 'income'
+                                  ? 'bg-green-100'
+                                  : 'bg-red-100'
+                              }`}
+                            >
+                              <span className={getExpenseTypeColor(expenseType)}>
+                                {getExpenseTypeIcon(expenseType)}
+                              </span>
+                            </div>
+                            <div className="flex-1">
+                              <span className="font-semibold text-slate-800 text-lg">
+                                {expense.description}
+                              </span>
+                              <div className="text-sm text-slate-600 mt-1">
+                                {expenseType === 'transfer'
+                                  ? 'Transferred'
+                                  : expenseType === 'income'
+                                  ? 'Received'
+                                  : 'Paid'}{' '}
+                                by <span className="font-medium">{paidByName}</span>
+                                {expenseType !== 'transfer' &&
+                                  ` • Split ${expense.expense_splits.length} ways`}
+                                {myShare > 0 &&
+                                  expenseType !== 'transfer' &&
+                                  ` • $${myShare.toFixed(2)}`}
+                                {' • ' + new Date(expense.created_at).toLocaleDateString()}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-4">
+                          <div className="text-right">
+                            <div
+                              className={`text-xl font-bold ${getExpenseTypeColor(
+                                expenseType
+                              )}`}
+                            >
+                              ${expense.amount.toFixed(2)}
+                            </div>
+                          </div>
+                          <div className="flex gap-1">
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => handleEditExpense(expense)}
+                              className="hover:bg-blue-50 hover:text-blue-600 transition-colors"
+                            >
+                              <Edit className="w-4 h-4" />
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => handleDeleteExpense(expense.id)}
+                              className="hover:bg-red-50 hover:text-red-600 transition-colors"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        </div>
                       </div>
-                    </div>
-                  </div>
-                );
-              })}
+                    );
+                  }
+                })}
             </CardContent>
           </Card>
         )}
