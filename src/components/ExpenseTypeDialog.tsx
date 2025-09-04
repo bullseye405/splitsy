@@ -70,7 +70,9 @@ export function ExpenseTypeDialog({
     {}
   );
   const [weights, setWeights] = useState<{ [key: string]: number }>({});
-  const [manuallyAdjustedAmounts, setManuallyAdjustedAmounts] = useState<Set<string>>(new Set());
+  const [manuallyAdjustedAmounts, setManuallyAdjustedAmounts] = useState<
+    Set<string>
+  >(new Set());
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
   const { toast } = useToast();
 
@@ -79,27 +81,34 @@ export function ExpenseTypeDialog({
     if (splitMode === 'amount' && splitBetween.length > 0) {
       const totalAmount = parseFloat(amount) || 0;
       const newAmounts: { [key: string]: number } = {};
-      
+
       // Only adjust amounts for participants that haven't been manually adjusted
-      const nonManualParticipants = splitBetween.filter(id => !manuallyAdjustedAmounts.has(id));
-      const manualParticipants = splitBetween.filter(id => manuallyAdjustedAmounts.has(id));
-      
+      const nonManualParticipants = splitBetween.filter(
+        (id) => !manuallyAdjustedAmounts.has(id)
+      );
+      const manualParticipants = splitBetween.filter((id) =>
+        manuallyAdjustedAmounts.has(id)
+      );
+
       // Keep manually adjusted amounts
-      manualParticipants.forEach(id => {
+      manualParticipants.forEach((id) => {
         newAmounts[id] = customAmounts[id] || 0;
       });
-      
+
       // Calculate remaining amount for non-manual participants
-      const usedAmount = manualParticipants.reduce((sum, id) => sum + (customAmounts[id] || 0), 0);
+      const usedAmount = manualParticipants.reduce(
+        (sum, id) => sum + (customAmounts[id] || 0),
+        0
+      );
       const remainingAmount = Math.max(0, totalAmount - usedAmount);
-      
+
       if (nonManualParticipants.length > 0) {
         const equalAmount = remainingAmount / nonManualParticipants.length;
         nonManualParticipants.forEach((id) => {
           newAmounts[id] = equalAmount;
         });
       }
-      
+
       setCustomAmounts(newAmounts);
     }
   }, [amount, splitMode, splitBetween, manuallyAdjustedAmounts, customAmounts]);
@@ -130,7 +139,11 @@ export function ExpenseTypeDialog({
       setDescription(expense.description || '');
       setAmount(expense.amount.toString());
       setPaidBy(expense.paid_by);
-      setDate(expense.created_at ? new Date(expense.created_at).toISOString().split('T')[0] : new Date().toISOString().split('T')[0]);
+      setDate(
+        expense.created_at
+          ? new Date(expense.created_at).toISOString().split('T')[0]
+          : new Date().toISOString().split('T')[0]
+      );
       setSplitMode(
         (expense.split_type as 'equal' | 'amount' | 'weight') || 'equal'
       );
@@ -309,7 +322,9 @@ export function ExpenseTypeDialog({
         const newAmounts = { ...customAmounts };
         newAmounts[participantId] = equalAmount;
         // Redistribute to existing participants that haven't been manually adjusted
-        const nonManualParticipants = splitBetween.filter(id => !manuallyAdjustedAmounts.has(id));
+        const nonManualParticipants = splitBetween.filter(
+          (id) => !manuallyAdjustedAmounts.has(id)
+        );
         nonManualParticipants.forEach((id) => {
           newAmounts[id] = equalAmount;
         });
@@ -326,14 +341,23 @@ export function ExpenseTypeDialog({
 
       if (splitMode === 'amount' && splitBetween.length > 1) {
         const totalAmount = parseFloat(amount) || 0;
-        const remainingParticipants = splitBetween.filter((id) => id !== participantId);
-        const nonManualParticipants = remainingParticipants.filter(id => !manuallyAdjustedAmounts.has(id));
-        const manualParticipants = remainingParticipants.filter(id => manuallyAdjustedAmounts.has(id));
-        
+        const remainingParticipants = splitBetween.filter(
+          (id) => id !== participantId
+        );
+        const nonManualParticipants = remainingParticipants.filter(
+          (id) => !manuallyAdjustedAmounts.has(id)
+        );
+        const manualParticipants = remainingParticipants.filter((id) =>
+          manuallyAdjustedAmounts.has(id)
+        );
+
         // Keep manually adjusted amounts
-        const usedAmount = manualParticipants.reduce((sum, id) => sum + (customAmounts[id] || 0), 0);
+        const usedAmount = manualParticipants.reduce(
+          (sum, id) => sum + (customAmounts[id] || 0),
+          0
+        );
         const remainingAmount = Math.max(0, totalAmount - usedAmount);
-        
+
         if (nonManualParticipants.length > 0) {
           const equalAmount = remainingAmount / nonManualParticipants.length;
           nonManualParticipants.forEach((id) => {
@@ -341,9 +365,9 @@ export function ExpenseTypeDialog({
           });
         }
       }
-      
+
       // Remove from manually adjusted set
-      setManuallyAdjustedAmounts(prev => {
+      setManuallyAdjustedAmounts((prev) => {
         const newSet = new Set(prev);
         newSet.delete(participantId);
         return newSet;
@@ -365,15 +389,21 @@ export function ExpenseTypeDialog({
     newAmounts[participantId] = numValue;
 
     // Mark this participant as manually adjusted
-    setManuallyAdjustedAmounts(prev => new Set(prev).add(participantId));
+    setManuallyAdjustedAmounts((prev) => new Set(prev).add(participantId));
 
     // Calculate remaining amount to distribute among non-manually adjusted participants
     const otherParticipants = splitBetween.filter((id) => id !== participantId);
-    const nonManualParticipants = otherParticipants.filter(id => !manuallyAdjustedAmounts.has(id));
-    const manualParticipants = otherParticipants.filter(id => manuallyAdjustedAmounts.has(id));
-    
+    const nonManualParticipants = otherParticipants.filter(
+      (id) => !manuallyAdjustedAmounts.has(id)
+    );
+    const manualParticipants = otherParticipants.filter((id) =>
+      manuallyAdjustedAmounts.has(id)
+    );
+
     // Calculate used amount including this change and other manual amounts
-    const usedAmount = numValue + manualParticipants.reduce((sum, id) => sum + (customAmounts[id] || 0), 0);
+    const usedAmount =
+      numValue +
+      manualParticipants.reduce((sum, id) => sum + (customAmounts[id] || 0), 0);
     const remainingAmount = Math.max(0, totalAmount - usedAmount);
 
     if (nonManualParticipants.length > 0) {
@@ -448,13 +478,15 @@ export function ExpenseTypeDialog({
                   }
                 }}
                 placeholder="0.00"
-                style={{
-                  MozAppearance: 'textfield'
-                } as React.CSSProperties}
+                style={
+                  {
+                    MozAppearance: 'textfield',
+                  } as React.CSSProperties
+                }
                 className="[&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
               />
             </div>
-            
+
             <div className="space-y-2">
               <label htmlFor="date" className="text-sm font-medium">
                 Date
@@ -649,36 +681,41 @@ export function ExpenseTypeDialog({
                           {getParticipantDisplayName(participant.id)}
                         </label>
                       </div>
-                       {splitBetween.includes(participant.id) && (
-                         <div className="flex items-center gap-1">
-                           <span className="text-sm">$</span>
-                           <Input
-                             type="number"
-                             step="0.01"
-                             min="0"
-                             value={customAmounts[participant.id] || ''}
-                             onChange={(e) =>
-                               handleCustomAmountChange(
-                                 participant.id,
-                                 e.target.value
-                               )
-                             }
-                             onKeyDown={(e) => {
-                               if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
-                                 e.preventDefault();
-                               }
-                             }}
-                             className="w-20 h-8 text-sm [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                             style={{
-                               MozAppearance: 'textfield'
-                             } as React.CSSProperties}
-                             placeholder="0.00"
-                           />
-                            {manuallyAdjustedAmounts.has(participant.id) && (
-                              <Lock className="h-3 w-3 text-muted-foreground" />
-                            )}
-                         </div>
-                       )}
+                      {splitBetween.includes(participant.id) && (
+                        <div className="flex items-center gap-1">
+                           {manuallyAdjustedAmounts.has(participant.id) && (
+                            <Lock className="h-3 w-3 text-muted-foreground" />
+                          )}
+                          <span className="text-sm">$</span>
+                          <Input
+                            type="number"
+                            step="0.01"
+                            min="0"
+                            value={customAmounts[participant.id] || ''}
+                            onChange={(e) =>
+                              handleCustomAmountChange(
+                                participant.id,
+                                e.target.value
+                              )
+                            }
+                            onKeyDown={(e) => {
+                              if (
+                                e.key === 'ArrowUp' ||
+                                e.key === 'ArrowDown'
+                              ) {
+                                e.preventDefault();
+                              }
+                            }}
+                            className="w-20 h-8 text-sm [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                            style={
+                              {
+                                MozAppearance: 'textfield',
+                              } as React.CSSProperties
+                            }
+                            placeholder="0.00"
+                          />
+                        </div>
+                      )}
                     </div>
                   ))}
                   <div className="text-xs text-muted-foreground text-center">
@@ -715,31 +752,36 @@ export function ExpenseTypeDialog({
                         </label>
                       </div>
                       {splitBetween.includes(participant.id) && (
-                         <div className="flex items-center gap-2">
-                           <Input
-                             type="number"
-                             step="0.1"
-                             min="0.1"
-                             value={weights[participant.id] || 1}
-                             onChange={(e) =>
-                               handleWeightChange(participant.id, e.target.value)
-                             }
-                             onKeyDown={(e) => {
-                               if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
-                                 e.preventDefault();
-                               }
-                             }}
-                             className="w-16 h-8 text-sm [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                             style={{
-                               MozAppearance: 'textfield'
-                             } as React.CSSProperties}
-                             placeholder="1"
-                           />
-                           <span className="text-sm font-medium text-primary w-16 text-right">
-                             $
-                             {calculateWeightedAmount(participant.id).toFixed(2)}
-                           </span>
-                         </div>
+                        <div className="flex items-center gap-2">
+                          <Input
+                            type="number"
+                            step="0.1"
+                            min="0.1"
+                            value={weights[participant.id] || 1}
+                            onChange={(e) =>
+                              handleWeightChange(participant.id, e.target.value)
+                            }
+                            onKeyDown={(e) => {
+                              if (
+                                e.key === 'ArrowUp' ||
+                                e.key === 'ArrowDown'
+                              ) {
+                                e.preventDefault();
+                              }
+                            }}
+                            className="w-16 h-8 text-sm [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                            style={
+                              {
+                                MozAppearance: 'textfield',
+                              } as React.CSSProperties
+                            }
+                            placeholder="1"
+                          />
+                          <span className="text-sm font-medium text-primary w-16 text-right">
+                            $
+                            {calculateWeightedAmount(participant.id).toFixed(2)}
+                          </span>
+                        </div>
                       )}
                     </div>
                   ))}
