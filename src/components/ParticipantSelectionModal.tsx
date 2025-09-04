@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import {
@@ -46,19 +45,25 @@ export function ParticipantSelectionModal({
             Please select which participant you are from the list below
           </DialogDescription>
         </DialogHeader>
-        
+
         <div className="space-y-4">
           <div className="flex flex-wrap gap-2 max-h-60 overflow-y-auto">
-            {participants.map((participant) => (
-              <Badge
-                key={participant.id}
-                variant={selectedParticipant === participant.id ? 'default' : 'secondary'}
-                className="px-3 py-2 cursor-pointer transition-all hover:scale-105"
-                onClick={() => setSelectedParticipant(participant.id)}
-              >
-                {participant.name}
-              </Badge>
-            ))}
+            {participants
+              .sort((a, b) => a.name.localeCompare(b.name))
+              .map((participant) => (
+                <Badge
+                  key={participant.id}
+                  variant={
+                    selectedParticipant === participant.id
+                      ? 'default'
+                      : 'secondary'
+                  }
+                  className="px-3 py-2 cursor-pointer transition-all hover:scale-105"
+                  onClick={() => setSelectedParticipant(participant.id)}
+                >
+                  {participant.name}
+                </Badge>
+              ))}
           </div>
 
           <div className="flex justify-end gap-2">
@@ -67,7 +72,9 @@ export function ParticipantSelectionModal({
               disabled={!selectedParticipant}
               className="w-full"
             >
-              Continue as {participants.find(p => p.id === selectedParticipant)?.name || 'Selected Participant'}
+              Continue as{' '}
+              {participants.find((p) => p.id === selectedParticipant)?.name ||
+                'Selected Participant'}
             </Button>
           </div>
         </div>
