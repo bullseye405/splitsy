@@ -48,24 +48,16 @@ export function ParticipantSelectionModal({
         </DialogHeader>
         
         <div className="space-y-4">
-          <div className="space-y-2 max-h-60 overflow-y-auto">
+          <div className="flex flex-wrap gap-2 max-h-60 overflow-y-auto">
             {participants.map((participant) => (
-              <div
+              <Badge
                 key={participant.id}
-                className={`flex items-center justify-between p-3 rounded-lg border cursor-pointer transition-all ${
-                  selectedParticipant === participant.id
-                    ? 'border-blue-500 bg-blue-50'
-                    : 'border-slate-200 hover:border-slate-300 bg-white'
-                }`}
+                variant={selectedParticipant === participant.id ? 'default' : 'secondary'}
+                className="px-3 py-2 cursor-pointer transition-all hover:scale-105"
                 onClick={() => setSelectedParticipant(participant.id)}
               >
-                <Badge 
-                  variant={selectedParticipant === participant.id ? 'default' : 'secondary'} 
-                  className="px-3 py-1"
-                >
-                  {participant.name}
-                </Badge>
-              </div>
+                {participant.name}
+              </Badge>
             ))}
           </div>
 
