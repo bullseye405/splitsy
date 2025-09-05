@@ -1,3 +1,4 @@
+import { ExpenseWithSplits } from '@/api/expenses';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import {
@@ -18,10 +19,10 @@ import {
 } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
-import { useState, useEffect } from 'react';
 import { Participant } from '@/types/participants';
-import { ExpenseWithSplits } from '@/api/expenses';
 import { Calendar, Lock } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { useParams } from 'react-router-dom';
 
 interface ExpenseTypeDialogProps {
   open: boolean;
@@ -45,7 +46,6 @@ interface ExpenseTypeDialogProps {
   expense?: ExpenseWithSplits | null;
   isEditing?: boolean;
   type: 'expense' | 'transfer' | 'income';
-  currentParticipant?: string | null;
 }
 
 export function ExpenseTypeDialog({
@@ -56,7 +56,6 @@ export function ExpenseTypeDialog({
   expense,
   isEditing = false,
   type,
-  currentParticipant,
 }: ExpenseTypeDialogProps) {
   const [description, setDescription] = useState('');
   const [amount, setAmount] = useState('');
@@ -75,6 +74,11 @@ export function ExpenseTypeDialog({
   >(new Set());
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
   const { toast } = useToast();
+
+  const { groupId } = useParams<{ groupId: string }>();
+
+  const currentParticipant =
+    localStorage.getItem(`participant_${groupId}`) || null;
 
   // Update amounts when total amount changes
   useEffect(() => {
@@ -208,7 +212,7 @@ export function ExpenseTypeDialog({
 
   const getParticipantDisplayName = (participantId: string) => {
     if (participantId === currentParticipant) {
-      return 'me';
+      return 'Me';
     }
     return participants.find((p) => p.id === participantId)?.name || 'Unknown';
   };
@@ -444,7 +448,7 @@ export function ExpenseTypeDialog({
         <div className="space-y-4">
           <div className="space-y-2">
             <label htmlFor="description" className="text-sm font-medium">
-              Description
+              What for?
             </label>
             <Input
               id="description"
@@ -468,7 +472,6 @@ export function ExpenseTypeDialog({
               <Input
                 id="amount"
                 type="number"
-                step="0.01"
                 min="0"
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
@@ -512,28 +515,72 @@ export function ExpenseTypeDialog({
                 ? 'Received by'
                 : 'Paid by'}
             </label>
-            <Select value={paidBy} onValueChange={setPaidBy}>
-              <SelectTrigger>
-                <SelectValue
-                  placeholder={`Select who ${
-                    type === 'transfer'
-                      ? 'sent'
-                      : type === 'income'
-                      ? 'received'
-                      : 'paid'
+            <div className="flex flex-wrap gap-2 mt-1">
+              {participants.map((participant) => (
+                <button
+                  key={participant.id}
+                  type="button"
+                  className={`px-3 py-1 rounded-full border text-sm font-medium transition-colors focus:outline-none ${
+                    paidBy === participant.id
+                      ? 'bg-primary text-white border-primary'
+                      : 'bg-muted text-foreground border-muted-foreground'
                   }`}
-                />
-              </SelectTrigger>
-              <SelectContent>
-                {participants.map((participant) => (
-                  <SelectItem key={participant.id} value={participant.id}>
-                    {getParticipantDisplayName(participant.id)}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+                  onClick={() => setPaidBy(participant.id)}
+                >
+                  {getParticipantDisplayName(participant.id)}
+                </button>
+              ))}
+            </div>
           </div>
-
+          <div className="space-y-2">
+            <label htmlFor="amount" className="text-sm font-medium">
+              Amount ($)
+            </label>
+            <div className="flex gap-2 mb-1">
+              {[50, 100, 200, 500, 1000].map((amt) => (
+                <Button
+                  key={amt}
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className={
+                    parseFloat(amount) === amt
+                      ? 'border-primary text-primary'
+                      : ''
+                  }
+                  onClick={() => setAmount(amt.toString())}
+                >
+                  ${amt}
+                </Button>
+              ))}
+            </div>
+            <div className="relative flex items-center">
+              <Input
+                id="amount"
+                type="number"
+                min="0"
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+                placeholder="0.00"
+                className="pr-8"
+              />
+              {amount && (
+                <button
+                  type="button"
+                  aria-label="Clear amount"
+                  className="absolute right-2 text-muted-foreground hover:text-primary"
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    cursor: 'pointer',
+                  }}
+                  onClick={() => setAmount('')}
+                >
+                  &#10005;
+                </button>
+              )}
+            </div>
+          </div>
           {type === 'transfer' && (
             <div className="space-y-2">
               <label className="text-sm font-medium">To</label>
@@ -553,7 +600,6 @@ export function ExpenseTypeDialog({
               </Select>
             </div>
           )}
-
           {type !== 'transfer' && (
             <div className="space-y-4">
               <div className="flex items-center justify-between">
@@ -628,7 +674,7 @@ export function ExpenseTypeDialog({
                   {participants.map((participant) => (
                     <div
                       key={participant.id}
-                      className="flex items-center justify-between"
+                      className="flex items-center justify-between my-1"
                     >
                       <div className="flex items-center space-x-2">
                         <Checkbox
@@ -646,7 +692,7 @@ export function ExpenseTypeDialog({
                         </label>
                       </div>
                       {splitBetween.includes(participant.id) && (
-                        <span className="text-sm font-medium text-primary">
+                        <span className="text-sm font-medium text-primary mr-6">
                           $
                           {(
                             (parseFloat(amount) || 0) / splitBetween.length
@@ -664,7 +710,7 @@ export function ExpenseTypeDialog({
                   {participants.map((participant) => (
                     <div
                       key={participant.id}
-                      className="flex items-center justify-between gap-2"
+                      className="flex items-center justify-between gap-2 my-1"
                     >
                       <div className="flex items-center space-x-2">
                         <Checkbox
@@ -683,13 +729,12 @@ export function ExpenseTypeDialog({
                       </div>
                       {splitBetween.includes(participant.id) && (
                         <div className="flex items-center gap-1">
-                           {manuallyAdjustedAmounts.has(participant.id) && (
+                          {manuallyAdjustedAmounts.has(participant.id) && (
                             <Lock className="h-3 w-3 text-muted-foreground" />
                           )}
                           <span className="text-sm">$</span>
                           <Input
                             type="number"
-                            step="0.01"
                             min="0"
                             value={customAmounts[participant.id] || ''}
                             onChange={(e) =>
@@ -706,7 +751,7 @@ export function ExpenseTypeDialog({
                                 e.preventDefault();
                               }
                             }}
-                            className="w-20 h-8 text-sm [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                            className="w-20 h-8 text-sm [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none mr-6"
                             style={
                               {
                                 MozAppearance: 'textfield',
@@ -734,7 +779,7 @@ export function ExpenseTypeDialog({
                   {participants.map((participant) => (
                     <div
                       key={participant.id}
-                      className="flex items-center justify-between gap-2"
+                      className="flex items-center justify-between gap-2 my-1"
                     >
                       <div className="flex items-center space-x-2">
                         <Checkbox
@@ -755,20 +800,11 @@ export function ExpenseTypeDialog({
                         <div className="flex items-center gap-2">
                           <Input
                             type="number"
-                            step="0.1"
-                            min="0.1"
+                            min="0"
                             value={weights[participant.id] || 1}
                             onChange={(e) =>
                               handleWeightChange(participant.id, e.target.value)
                             }
-                            onKeyDown={(e) => {
-                              if (
-                                e.key === 'ArrowUp' ||
-                                e.key === 'ArrowDown'
-                              ) {
-                                e.preventDefault();
-                              }
-                            }}
                             className="w-16 h-8 text-sm [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                             style={
                               {

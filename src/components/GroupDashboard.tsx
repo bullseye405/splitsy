@@ -40,7 +40,7 @@ export function GroupDashboard() {
   const [showParticipantSelection, setShowParticipantSelection] =
     useState(false);
   const [currentParticipant, setCurrentParticipant] = useState<string | null>(
-    null
+    sessionStorage.getItem(`participant_${groupId}`) || null
   );
   const [dialogType, setDialogType] = useState<
     'expense' | 'transfer' | 'income'
@@ -79,6 +79,7 @@ export function GroupDashboard() {
       setGroup(data);
 
       // Show participant selection modal if no participant is selected and participants exist
+
       if (
         !currentParticipant &&
         data.participants &&
@@ -121,7 +122,6 @@ export function GroupDashboard() {
   const refreshTransactions = useCallback(async () => {
     await Promise.all([fetchExpenses(), fetchSettlements()]);
   }, [fetchExpenses, fetchSettlements]);
-
 
   useEffect(() => {
     fetchGroupData();
@@ -391,30 +391,40 @@ export function GroupDashboard() {
         {/* Personal Summary */}
         {currentParticipant && (
           <div className="bg-white/80 backdrop-blur-sm rounded-xl shadow-lg border-0 p-6">
-            <h3 className="text-lg font-bold text-slate-800 mb-4">Your Summary</h3>
+            <h3 className="text-lg font-bold text-slate-800 mb-4">
+              Your Summary
+            </h3>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div className="text-center p-3 rounded-lg bg-orange-50 border border-orange-200">
                 <div className="text-xl font-bold text-orange-600 mb-1">
-                  ${(() => {
+                  $
+                  {(() => {
                     return expenses
-                      .filter(e => e.expense_type === 'expense' || !e.expense_type)
+                      .filter(
+                        (e) => e.expense_type === 'expense' || !e.expense_type
+                      )
                       .reduce((sum, expense) => {
-                        const myShare = expense.expense_splits.find(
-                          split => split.participant_id === currentParticipant
-                        )?.amount || 0;
+                        const myShare =
+                          expense.expense_splits.find(
+                            (split) =>
+                              split.participant_id === currentParticipant
+                          )?.amount || 0;
                         return sum + myShare;
                       }, 0)
                       .toFixed(2);
                   })()}
                 </div>
-                <div className="text-xs font-medium text-orange-700">My Cost</div>
+                <div className="text-xs font-medium text-orange-700">
+                  My Cost
+                </div>
               </div>
 
               <div className="text-center p-3 rounded-lg bg-blue-50 border border-blue-200">
                 <div className="text-xl font-bold text-blue-600 mb-1">
-                  ${(() => {
+                  $
+                  {(() => {
                     return expenses
-                      .filter(e => e.paid_by === currentParticipant)
+                      .filter((e) => e.paid_by === currentParticipant)
                       .reduce((sum, expense) => sum + expense.amount, 0)
                       .toFixed(2);
                   })()}
@@ -424,41 +434,57 @@ export function GroupDashboard() {
 
               <div className="text-center p-3 rounded-lg bg-purple-50 border border-purple-200">
                 <div className="text-xl font-bold text-purple-600 mb-1">
-                  ${(() => {
+                  $
+                  {(() => {
                     return expenses
-                      .filter(e => e.expense_type === 'income' && e.expense_splits.some(split => split.participant_id === currentParticipant))
+                      .filter(
+                        (e) =>
+                          e.expense_type === 'income' &&
+                          e.expense_splits.some(
+                            (split) =>
+                              split.participant_id === currentParticipant
+                          )
+                      )
                       .reduce((sum, expense) => {
-                        const myShare = expense.expense_splits.find(
-                          split => split.participant_id === currentParticipant
-                        )?.amount || 0;
+                        const myShare =
+                          expense.expense_splits.find(
+                            (split) =>
+                              split.participant_id === currentParticipant
+                          )?.amount || 0;
                         return sum + myShare;
                       }, 0)
                       .toFixed(2);
                   })()}
                 </div>
-                <div className="text-xs font-medium text-purple-700">I Received</div>
+                <div className="text-xs font-medium text-purple-700">
+                  I Received
+                </div>
               </div>
 
               <div className="text-center p-3 rounded-lg bg-emerald-50 border border-emerald-200">
                 <div className="text-xl font-bold text-emerald-600 mb-1">
-                  ${(() => {
+                  $
+                  {(() => {
                     let balance = 0;
-                    
+
                     // Calculate from expenses
-                    expenses.forEach(expense => {
+                    expenses.forEach((expense) => {
                       if (expense.paid_by === currentParticipant) {
                         balance += expense.amount;
                       }
-                      const myShare = expense.expense_splits.find(
-                        split => split.participant_id === currentParticipant
-                      )?.amount || 0;
+                      const myShare =
+                        expense.expense_splits.find(
+                          (split) => split.participant_id === currentParticipant
+                        )?.amount || 0;
                       balance -= myShare;
                     });
 
                     return balance >= 0 ? balance.toFixed(2) : '0.00';
                   })()}
                 </div>
-                <div className="text-xs font-medium text-emerald-700">I'm Owed</div>
+                <div className="text-xs font-medium text-emerald-700">
+                  I'm Owed
+                </div>
               </div>
             </div>
           </div>
@@ -528,23 +554,31 @@ export function GroupDashboard() {
             <CardContent className="space-y-3">
               {/* Combine and sort all transactions by created date */}
               {[
-                ...settlements.map(settlement => ({
+                ...settlements.map((settlement) => ({
                   ...settlement,
                   type: 'settlement' as const,
-                  created_at: settlement.created_at
+                  created_at: settlement.created_at,
                 })),
-                ...expenses.map(expense => ({
+                ...expenses.map((expense) => ({
                   ...expense,
                   type: 'expense' as const,
-                  created_at: expense.created_at
-                }))
+                  created_at: expense.created_at,
+                })),
               ]
-                .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+                .sort(
+                  (a, b) =>
+                    new Date(b.created_at).getTime() -
+                    new Date(a.created_at).getTime()
+                )
                 .map((transaction) => {
                   if (transaction.type === 'settlement') {
                     const settlement = transaction;
-                    const fromName = getParticipantDisplayName(settlement.from_participant_id);
-                    const toName = getParticipantDisplayName(settlement.to_participant_id);
+                    const fromName = getParticipantDisplayName(
+                      settlement.from_participant_id
+                    );
+                    const toName = getParticipantDisplayName(
+                      settlement.to_participant_id
+                    );
 
                     return (
                       <div
@@ -563,7 +597,10 @@ export function GroupDashboard() {
                                 Settlement: {fromName} → {toName}
                               </span>
                               <div className="text-sm text-slate-600 mt-1">
-                                Payment settlement • {new Date(settlement.created_at).toLocaleDateString()}
+                                Payment settlement •{' '}
+                                {new Date(
+                                  settlement.created_at
+                                ).toLocaleDateString()}
                               </div>
                             </div>
                           </div>
@@ -578,7 +615,9 @@ export function GroupDashboard() {
                             <Button
                               size="sm"
                               variant="ghost"
-                              onClick={() => handleDeleteSettlement(settlement.id)}
+                              onClick={() =>
+                                handleDeleteSettlement(settlement.id)
+                              }
                               className="hover:bg-red-50 hover:text-red-600 transition-colors"
                             >
                               <Trash2 className="w-4 h-4 mr-1" />
@@ -590,7 +629,9 @@ export function GroupDashboard() {
                     );
                   } else {
                     const expense = transaction;
-                    const paidByName = getParticipantDisplayName(expense.paid_by);
+                    const paidByName = getParticipantDisplayName(
+                      expense.paid_by
+                    );
                     const expenseType = expense.expense_type || 'expense';
 
                     // Calculate current participant's share
@@ -616,7 +657,9 @@ export function GroupDashboard() {
                                   : 'bg-red-100'
                               }`}
                             >
-                              <span className={getExpenseTypeColor(expenseType)}>
+                              <span
+                                className={getExpenseTypeColor(expenseType)}
+                              >
                                 {getExpenseTypeIcon(expenseType)}
                               </span>
                             </div>
@@ -630,13 +673,19 @@ export function GroupDashboard() {
                                   : expenseType === 'income'
                                   ? 'Received'
                                   : 'Paid'}{' '}
-                                by <span className="font-medium">{paidByName}</span>
+                                by{' '}
+                                <span className="font-medium">
+                                  {paidByName}
+                                </span>
                                 {expenseType !== 'transfer' &&
                                   ` • Split ${expense.expense_splits.length} ways`}
                                 {myShare > 0 &&
                                   expenseType !== 'transfer' &&
                                   ` • $${myShare.toFixed(2)}`}
-                                {' • ' + new Date(expense.created_at).toLocaleDateString()}
+                                {' • ' +
+                                  new Date(
+                                    expense.created_at
+                                  ).toLocaleDateString()}
                               </div>
                             </div>
                           </div>
@@ -704,7 +753,7 @@ export function GroupDashboard() {
         expense={editingExpense}
         isEditing={!!editingExpense}
         type={dialogType}
-        currentParticipant={currentParticipant}
+        // currentParticipant={currentParticipant}
       />
     </div>
   );

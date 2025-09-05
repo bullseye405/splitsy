@@ -29,6 +29,7 @@ export function ParticipantSelectionModal({
   const handleSelect = () => {
     if (selectedParticipant) {
       onParticipantSelect(selectedParticipant);
+
       onOpenChange(false);
     }
   };
@@ -47,7 +48,7 @@ export function ParticipantSelectionModal({
         </DialogHeader>
 
         <div className="space-y-4">
-          <div className="flex flex-wrap gap-2 max-h-60 overflow-y-auto">
+          <div className="flex flex-wrap gap-2">
             {participants
               .sort((a, b) => a.name.localeCompare(b.name))
               .map((participant) => (
@@ -72,9 +73,12 @@ export function ParticipantSelectionModal({
               disabled={!selectedParticipant}
               className="w-full"
             >
-              Continue as{' '}
-              {participants.find((p) => p.id === selectedParticipant)?.name ||
-                'Selected Participant'}
+              Continue
+              {participants.find((p) => p.id === selectedParticipant)?.name
+                ? ` as ${
+                    participants.find((p) => p.id === selectedParticipant)?.name
+                  }`
+                : ''}
             </Button>
           </div>
         </div>

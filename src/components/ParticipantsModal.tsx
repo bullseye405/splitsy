@@ -1,4 +1,8 @@
-import { useState } from 'react';
+import {
+  createParticipant,
+  deleteParticipant,
+  updateParticipant,
+} from '@/api/participants';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -7,13 +11,12 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { Edit, Plus, Trash2, Users } from 'lucide-react';
-import { createParticipant, updateParticipant, deleteParticipant } from '@/api/participants';
-import { useParams } from 'react-router-dom';
 import { Participant } from '@/types/participants';
+import { Edit, Plus, Trash2, Users } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { useParams } from 'react-router-dom';
 
 interface ParticipantsModalProps {
   open: boolean;
@@ -38,6 +41,16 @@ export function ParticipantsModal({
   const [editName, setEditName] = useState('');
   const { toast } = useToast();
 
+  // Reset all modal states when opened
+  useEffect(() => {
+    if (open) {
+      setNewParticipantName('');
+      setEditingParticipant(null);
+      setEditName('');
+      setConfirmDeleteId(null);
+    }
+  }, [open]);
+
   const handleAddParticipant = async () => {
     if (!newParticipantName.trim() || !groupId) return;
 
@@ -57,7 +70,6 @@ export function ParticipantsModal({
       });
     }
   };
-
 
   const startEditing = (participant: Participant) => {
     setEditingParticipant(participant.id);
@@ -110,49 +122,53 @@ export function ParticipantsModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Users className="w-5 h-5" />
+      <DialogContent className="sm:max-w-md bg-background p-0">
+        <DialogHeader className="border-b px-6 pt-6 pb-4">
+          <DialogTitle className="flex items-center gap-2 text-lg font-semibold">
+            <Users className="w-5 h-5 text-primary" />
             Manage Participants
           </DialogTitle>
-          <DialogDescription>
+          <DialogDescription className="text-muted-foreground mt-1">
             Add, edit, or remove participants from this group
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-4">
+        <div className="px-6 pb-6">
           {/* Add new participant */}
-          <div className="flex gap-2">
+          <div className="flex gap-2 mb-4">
             <Input
               value={newParticipantName}
               onChange={(e) => setNewParticipantName(e.target.value)}
               placeholder="Enter participant name"
               onKeyDown={(e) => e.key === 'Enter' && handleAddParticipant()}
+              className="h-9 text-sm"
             />
             <Button
               onClick={handleAddParticipant}
               disabled={!newParticipantName.trim()}
               size="sm"
+              className="h-9"
             >
               <Plus className="w-4 h-4" />
             </Button>
           </div>
 
           {/* Participants list */}
-          <div className="space-y-3 max-h-60 overflow-y-auto">
+          <div className="divide-y divide-muted max-h-80 overflow-y-auto bg-background rounded-md">
             {participants.map((participant, index) => (
               <div
                 key={participant.id}
-                className="flex items-center justify-between border rounded-md bg-background p-3 shadow-sm hover:bg-muted transition-all"
+                className="flex items-center justify-between py-2 px-1 hover:bg-muted transition-all"
               >
                 {editingParticipant === participant.id ? (
                   <div className="flex gap-2 flex-1 items-center">
                     <Input
                       value={editName}
                       onChange={(e) => setEditName(e.target.value)}
-                      className="h-8"
-                      onKeyDown={(e) => e.key === 'Enter' && handleEditParticipant()}
+                      className="h-8 text-sm"
+                      onKeyDown={(e) =>
+                        e.key === 'Enter' && handleEditParticipant()
+                      }
                     />
                     <Button size="sm" onClick={cancelEditing} variant="outline">
                       Cancel
@@ -163,12 +179,10 @@ export function ParticipantsModal({
                   </div>
                 ) : (
                   <>
-                    <div className="flex flex-col">
-                      <span className="font-medium text-base text-foreground">
-                        {participant.name}
-                        {index === 0 ? ' (me)' : ''}
-                      </span>
-                    </div>
+                    <span className="font-medium text-sm text-foreground">
+                      {participant.name}
+                      {index === 0 ? ' (me)' : ''}
+                    </span>
                     <div className="flex gap-2 items-center">
                       {confirmDeleteId === participant.id ? (
                         <>
@@ -182,7 +196,9 @@ export function ParticipantsModal({
                           <Button
                             size="sm"
                             variant="destructive"
-                            onClick={() => handleDeleteParticipant(participant.id)}
+                            onClick={() =>
+                              handleDeleteParticipant(participant.id)
+                            }
                           >
                             Confirm
                           </Button>

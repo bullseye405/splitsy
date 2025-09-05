@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 
 export interface GroupView {
@@ -9,19 +8,20 @@ export interface GroupView {
   created_at: string;
 }
 
-export async function recordGroupView(groupId: string, participantId: string): Promise<void> {
-  const { error } = await supabase
-    .from('group_views')
-    .upsert(
-      { 
-        group_id: groupId, 
-        participant_id: participantId,
-        viewed_at: new Date().toISOString()
-      },
-      { 
-        onConflict: 'group_id,participant_id' 
-      }
-    );
+export async function recordGroupView(
+  groupId: string,
+  participantId: string
+): Promise<void> {
+  const { error } = await supabase.from('group_views').upsert(
+    {
+      group_id: groupId,
+      participant_id: participantId,
+      viewed_at: new Date().toISOString(),
+    },
+    {
+      onConflict: 'group_id,participant_id',
+    }
+  );
 
   if (error) {
     console.error('Error recording group view:', error);
