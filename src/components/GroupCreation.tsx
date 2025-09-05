@@ -81,15 +81,20 @@ export function GroupCreation() {
   return (
     <div className="min-h-screen bg-gradient-hero flex items-center justify-center p-4">
       <div className="w-full max-w-md">
-        <Card className="shadow-strong border-0">
+        <Card
+          className="shadow-strong border-0"
+          style={{ background: '#F5F8FA' }}
+        >
           <CardHeader className="text-center space-y-4">
-            <div className="mx-auto w-16 h-16 bg-gradient-primary rounded-full flex items-center justify-center">
-              <Users className="w-8 h-8 text-primary-foreground" />
+            <div className="mx-auto w-48 h-48 flex items-center justify-center">
+              <img
+                src="/splitsy.png"
+                alt="Splitsy"
+                className="w-48 h-48 rounded-lg object-cover"
+              />
             </div>
             <div>
-              <CardTitle className="text-2xl font-bold">
-                Split Expenses
-              </CardTitle>
+
               <CardDescription className="text-base mt-2">
                 Create a group to start splitting expenses with friends
               </CardDescription>

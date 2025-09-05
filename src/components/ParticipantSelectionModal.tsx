@@ -1,3 +1,5 @@
+import { useState } from 'react';
+import { Button } from '@/components/ui/button';
 import {
   Dialog,
   DialogContent,
@@ -5,56 +7,79 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { Participant } from '@/types/participants';
+import { Badge } from '@/components/ui/badge';
 import { Users } from 'lucide-react';
+import { Participant } from '@/types/participants';
 
 interface ParticipantSelectionModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   participants: Participant[];
+  onParticipantSelect: (participantId: string) => void;
 }
 
 export function ParticipantSelectionModal({
   open,
   onOpenChange,
   participants,
+  onParticipantSelect,
 }: ParticipantSelectionModalProps) {
-  const handleParticipantSelect = (participant: Participant) => {
-    localStorage.setItem(`participant_${participant.group_id}`, participant.id);
-    onOpenChange(false);
+  const [selectedParticipant, setSelectedParticipant] = useState<string>('');
+
+  const handleSelect = () => {
+    if (selectedParticipant) {
+      onParticipantSelect(selectedParticipant);
+
+      onOpenChange(false);
+    }
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md bg-background p-0 backdrop-blur-xl bg-opacity-80">
-        <DialogHeader className="border-b px-6 pt-6 pb-4">
-          <DialogTitle className="flex items-center gap-2 text-lg font-semibold">
-            <Users className="w-5 h-5 text-primary" />
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <Users className="w-5 h-5" />
             Welcome to the Group
           </DialogTitle>
-          <DialogDescription className="text-muted-foreground mt-1">
+          <DialogDescription>
             Please select which participant you are from the list below
           </DialogDescription>
         </DialogHeader>
 
-        <div className="px-6 pb-6 pt-2">
-          <div className="flex justify-around gap-2 overflow-x-auto py-1 px-1 flex-wrap">
-            {participants.map((participant) => (
-              <button
-                key={participant.id}
-                type="button"
-                className={`focus:outline-none transition-all px-4 py-2 rounded-full text-sm font-medium border shadow-sm whitespace-nowrap hover:bg-primary/10 hover:text-primary bg-muted text-foreground border-muted`}
-                onMouseEnter={(e) =>
-                  e.currentTarget.classList.add('ring-2', 'ring-primary/30')
-                }
-                onMouseLeave={(e) =>
-                  e.currentTarget.classList.remove('ring-2', 'ring-primary/30')
-                }
-                onClick={() => handleParticipantSelect(participant)}
-              >
-                {participant.name}
-              </button>
-            ))}
+        <div className="space-y-4">
+          <div className="flex flex-wrap gap-2">
+            {participants
+              .sort((a, b) => a.name.localeCompare(b.name))
+              .map((participant) => (
+                <Badge
+                  key={participant.id}
+                  variant={
+                    selectedParticipant === participant.id
+                      ? 'default'
+                      : 'secondary'
+                  }
+                  className="px-3 py-2 cursor-pointer transition-all hover:scale-105"
+                  onClick={() => setSelectedParticipant(participant.id)}
+                >
+                  {participant.name}
+                </Badge>
+              ))}
+          </div>
+
+          <div className="flex justify-end gap-2">
+            <Button
+              onClick={handleSelect}
+              disabled={!selectedParticipant}
+              className="w-full"
+            >
+              Continue
+              {participants.find((p) => p.id === selectedParticipant)?.name
+                ? ` as ${
+                    participants.find((p) => p.id === selectedParticipant)?.name
+                  }`
+                : ''}
+            </Button>
           </div>
         </div>
       </DialogContent>

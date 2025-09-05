@@ -7,6 +7,8 @@ import {
   updateExpense,
   ExpenseWithSplits,
 } from '@/api/expenses';
+import { getSettlementsByGroupId, deleteSettlement } from '@/api/settlements';
+import { Settlement } from '@/types/settlements';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
@@ -32,12 +34,14 @@ export function GroupDashboard() {
   const { groupId } = useParams<{ groupId: string }>();
   const [group, setGroup] = useState<GroupWithParticipants>();
   const [expenses, setExpenses] = useState<ExpenseWithSplits[]>([]);
+  const [settlements, setSettlements] = useState<Settlement[]>([]);
   const [showExpenseDialog, setShowExpenseDialog] = useState(false);
   const [showParticipantsModal, setShowParticipantsModal] = useState(false);
   const [showParticipantSelection, setShowParticipantSelection] =
     useState(false);
-  const currentParticipant =
-    localStorage.getItem(`participant_${groupId}`) || null;
+  const [currentParticipant, setCurrentParticipant] = useState<string | null>(
+    sessionStorage.getItem(`participant_${groupId}`) || null
+  );
   const [dialogType, setDialogType] = useState<
     'expense' | 'transfer' | 'income'
   >('expense');
@@ -47,6 +51,18 @@ export function GroupDashboard() {
   const { toast } = useToast();
 
   const shareUrl = `${window.location.origin}/${groupId}`;
+
+  // Check for existing participant selection in session storage
+  useEffect(() => {
+    if (groupId) {
+      const storedParticipant = sessionStorage.getItem(
+        `participant_${groupId}`
+      );
+      if (storedParticipant) {
+        setCurrentParticipant(storedParticipant);
+      }
+    }
+  }, [groupId]);
 
   const fetchGroupData = useCallback(async () => {
     if (!groupId) return;
@@ -62,7 +78,7 @@ export function GroupDashboard() {
       }
       setGroup(data);
 
-      // Show participant selection modal if no participant is selected in localStorage and participants exist
+      // Show participant selection modal if no participant is selected and participants exist
 
       if (
         !currentParticipant &&
@@ -74,7 +90,7 @@ export function GroupDashboard() {
     } catch (error) {
       console.error('Error fetching group:', error);
     }
-  }, [currentParticipant, groupId, toast]);
+  }, [groupId, toast, currentParticipant]);
 
   const fetchExpenses = useCallback(async () => {
     if (!groupId) return;
@@ -93,10 +109,39 @@ export function GroupDashboard() {
     }
   }, [groupId, toast]);
 
+  const fetchSettlements = useCallback(async () => {
+    if (!groupId) return;
+    try {
+      const data = await getSettlementsByGroupId(groupId);
+      setSettlements(data);
+    } catch (error) {
+      console.error('Error fetching settlements:', error);
+    }
+  }, [groupId]);
+
+  const refreshTransactions = useCallback(async () => {
+    await Promise.all([fetchExpenses(), fetchSettlements()]);
+  }, [fetchExpenses, fetchSettlements]);
+
   useEffect(() => {
     fetchGroupData();
     fetchExpenses();
-  }, [fetchGroupData, fetchExpenses]);
+    fetchSettlements();
+  }, [fetchGroupData, fetchExpenses, fetchSettlements]);
+
+  const handleParticipantSelect = async (participantId: string) => {
+    if (!groupId) return;
+
+    setCurrentParticipant(participantId);
+    sessionStorage.setItem(`participant_${groupId}`, participantId);
+
+    // Record group view
+    try {
+      await recordGroupView(groupId, participantId);
+    } catch (error) {
+      console.error('Error recording group view:', error);
+    }
+  };
 
   const handleShare = async () => {
     try {
@@ -134,6 +179,7 @@ export function GroupDashboard() {
     }>;
     expenseType: 'expense' | 'transfer' | 'income';
     transferTo?: string;
+    date: string;
   }) => {
     if (!groupId || !group) return;
 
@@ -145,6 +191,7 @@ export function GroupDashboard() {
         group_id: groupId,
         split_type: expenseData.splitMode,
         expense_type: expenseData.expenseType,
+        created_at: new Date(expenseData.date).toISOString(),
       };
 
       if (editingExpense) {
@@ -205,6 +252,24 @@ export function GroupDashboard() {
       toast({
         title: 'Error deleting',
         description: 'Could not delete. Please try again.',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleDeleteSettlement = async (settlementId: string) => {
+    try {
+      await deleteSettlement(settlementId);
+      toast({
+        title: 'Settlement deleted',
+        description: 'The settlement has been removed',
+      });
+      await refreshTransactions();
+    } catch (error) {
+      console.error('Error deleting settlement:', error);
+      toast({
+        title: 'Error deleting',
+        description: 'Could not delete settlement. Please try again.',
         variant: 'destructive',
       });
     }
@@ -302,7 +367,7 @@ export function GroupDashboard() {
           </Button>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Stats */}
           <div className="text-center p-4 rounded-xl bg-gradient-to-br from-red-50 to-red-100 border border-red-200">
             <div className="text-3xl font-bold text-red-600 mb-1">
@@ -321,16 +386,109 @@ export function GroupDashboard() {
               Total Income
             </div>
           </div>
+        </div>
 
-          <div className="text-center p-4 rounded-xl bg-gradient-to-br from-blue-50 to-blue-100 border border-blue-200">
-            <div className="text-3xl font-bold text-blue-600 mb-1">
-              {group.participants?.length || 0}
-            </div>
-            <div className="text-sm font-medium text-blue-700">
-              Participants
+        {/* Personal Summary */}
+        {currentParticipant && (
+          <div className="bg-white/80 backdrop-blur-sm rounded-xl shadow-lg border-0 p-6">
+            <h3 className="text-lg font-bold text-slate-800 mb-4">
+              Your Summary
+            </h3>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="text-center p-3 rounded-lg bg-orange-50 border border-orange-200">
+                <div className="text-xl font-bold text-orange-600 mb-1">
+                  $
+                  {(() => {
+                    return expenses
+                      .filter(
+                        (e) => e.expense_type === 'expense' || !e.expense_type
+                      )
+                      .reduce((sum, expense) => {
+                        const myShare =
+                          expense.expense_splits.find(
+                            (split) =>
+                              split.participant_id === currentParticipant
+                          )?.amount || 0;
+                        return sum + myShare;
+                      }, 0)
+                      .toFixed(2);
+                  })()}
+                </div>
+                <div className="text-xs font-medium text-orange-700">
+                  My Cost
+                </div>
+              </div>
+
+              <div className="text-center p-3 rounded-lg bg-blue-50 border border-blue-200">
+                <div className="text-xl font-bold text-blue-600 mb-1">
+                  $
+                  {(() => {
+                    return expenses
+                      .filter((e) => e.paid_by === currentParticipant)
+                      .reduce((sum, expense) => sum + expense.amount, 0)
+                      .toFixed(2);
+                  })()}
+                </div>
+                <div className="text-xs font-medium text-blue-700">I Paid</div>
+              </div>
+
+              <div className="text-center p-3 rounded-lg bg-purple-50 border border-purple-200">
+                <div className="text-xl font-bold text-purple-600 mb-1">
+                  $
+                  {(() => {
+                    return expenses
+                      .filter(
+                        (e) =>
+                          e.expense_type === 'income' &&
+                          e.expense_splits.some(
+                            (split) =>
+                              split.participant_id === currentParticipant
+                          )
+                      )
+                      .reduce((sum, expense) => {
+                        const myShare =
+                          expense.expense_splits.find(
+                            (split) =>
+                              split.participant_id === currentParticipant
+                          )?.amount || 0;
+                        return sum + myShare;
+                      }, 0)
+                      .toFixed(2);
+                  })()}
+                </div>
+                <div className="text-xs font-medium text-purple-700">
+                  I Received
+                </div>
+              </div>
+
+              <div className="text-center p-3 rounded-lg bg-emerald-50 border border-emerald-200">
+                <div className="text-xl font-bold text-emerald-600 mb-1">
+                  $
+                  {(() => {
+                    let balance = 0;
+
+                    // Calculate from expenses
+                    expenses.forEach((expense) => {
+                      if (expense.paid_by === currentParticipant) {
+                        balance += expense.amount;
+                      }
+                      const myShare =
+                        expense.expense_splits.find(
+                          (split) => split.participant_id === currentParticipant
+                        )?.amount || 0;
+                      balance -= myShare;
+                    });
+
+                    return balance >= 0 ? balance.toFixed(2) : '0.00';
+                  })()}
+                </div>
+                <div className="text-xs font-medium text-emerald-700">
+                  I'm Owed
+                </div>
+              </div>
             </div>
           </div>
-        </div>
+        )}
 
         <div className="flex items-center gap-3 justify-end mt-4">
           <Button
@@ -379,12 +537,13 @@ export function GroupDashboard() {
               participants={group.participants}
               groupId={groupId}
               currentParticipant={currentParticipant}
+              onTransactionChange={refreshTransactions}
             />
           </div>
         )}
 
         {/* Recent Transactions */}
-        {expenses.length > 0 && (
+        {(expenses.length > 0 || settlements.length > 0) && (
           <Card className="shadow-lg border-0 bg-white/80 backdrop-blur-sm">
             <CardHeader className="pb-4">
               <CardTitle className="text-2xl font-bold bg-gradient-to-r from-slate-700 to-slate-800 bg-clip-text text-transparent flex items-center">
@@ -393,106 +552,177 @@ export function GroupDashboard() {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              {expenses.map((expense) => {
-                const paidByName = getParticipantDisplayName(expense.paid_by);
-                const expenseType = expense.expense_type || 'expense';
+              {/* Combine and sort all transactions by created date */}
+              {[
+                ...settlements.map((settlement) => ({
+                  ...settlement,
+                  type: 'settlement' as const,
+                  created_at: settlement.created_at,
+                })),
+                ...expenses.map((expense) => ({
+                  ...expense,
+                  type: 'expense' as const,
+                  created_at: expense.created_at,
+                })),
+              ]
+                .sort(
+                  (a, b) =>
+                    new Date(b.created_at).getTime() -
+                    new Date(a.created_at).getTime()
+                )
+                .map((transaction) => {
+                  if (transaction.type === 'settlement') {
+                    const settlement = transaction;
+                    const fromName = getParticipantDisplayName(
+                      settlement.from_participant_id
+                    );
+                    const toName = getParticipantDisplayName(
+                      settlement.to_participant_id
+                    );
 
-                // Calculate current participant's share
-                const myShare = currentParticipant
-                  ? expense.expense_splits.find(
-                      (split) => split.participant_id === currentParticipant
-                    )?.amount || 0
-                  : 0;
-
-                return (
-                  <div
-                    key={expense.id}
-                    className="flex justify-between items-center p-5 rounded-xl bg-gradient-to-r from-white to-slate-50 border border-slate-200 hover:shadow-md transition-all duration-200 hover:border-slate-300"
-                  >
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3">
-                        <div
-                          className={`p-2 rounded-full ${
-                            expenseType === 'transfer'
-                              ? 'bg-blue-100'
-                              : expenseType === 'income'
-                              ? 'bg-green-100'
-                              : 'bg-red-100'
-                          }`}
-                        >
-                          <span className={getExpenseTypeColor(expenseType)}>
-                            {getExpenseTypeIcon(expenseType)}
-                          </span>
-                        </div>
+                    return (
+                      <div
+                        key={`settlement-${settlement.id}`}
+                        className="flex justify-between items-center p-5 rounded-xl bg-gradient-to-r from-white to-slate-50 border border-slate-200 hover:shadow-md transition-all duration-200 hover:border-slate-300"
+                      >
                         <div className="flex-1">
-                          <span className="font-semibold text-slate-800 text-lg">
-                            {expense.description}
-                          </span>
-                          <div className="text-sm text-slate-600 mt-1">
-                            {expenseType === 'transfer'
-                              ? 'Transferred'
-                              : expenseType === 'income'
-                              ? 'Received'
-                              : 'Paid'}{' '}
-                            by <span className="font-medium">{paidByName}</span>
-                            {expenseType !== 'transfer' &&
-                              ` • Split ${expense.expense_splits.length} ways`}
-                            {myShare > 0 &&
-                              expenseType !== 'transfer' &&
-                              ` • ${myShare.toFixed(2)}`}
-                          </div>
-                          {/* {currentParticipant &&
-                            myShare > 0 &&
-                            expenseType !== 'transfer' && (
-                              <div className="text-xs text-slate-500 mt-1">
-                                My share:{' '}
-                                <span className="font-medium text-slate-700">
-                                  ${myShare.toFixed(2)}
-                                </span>
-                              </div>
-                            )} */}
-                        </div>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-4">
-                      <div className="text-right">
-                        <div
-                          className={`text-xl font-bold ${getExpenseTypeColor(
-                            expenseType
-                          )}`}
-                        >
-                          ${expense.amount.toFixed(2)}
-                        </div>
-                        {/* {currentParticipant &&
-                          myShare > 0 &&
-                          expenseType !== 'transfer' && (
-                            <div className="text-sm text-slate-600">
-                              You: ${myShare.toFixed(2)}
+                          <div className="flex items-center gap-3">
+                            <div className="p-2 rounded-full bg-blue-100">
+                              <span className="text-blue-600">
+                                <ArrowRightLeft className="w-4 h-4" />
+                              </span>
                             </div>
-                          )} */}
+                            <div className="flex-1">
+                              <span className="font-semibold text-slate-800 text-lg">
+                                Settlement: {fromName} → {toName}
+                              </span>
+                              <div className="text-sm text-slate-600 mt-1">
+                                Payment settlement •{' '}
+                                {new Date(
+                                  settlement.created_at
+                                ).toLocaleDateString()}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-4">
+                          <div className="text-right">
+                            <div className="text-xl font-bold text-blue-600">
+                              ${settlement.amount.toFixed(2)}
+                            </div>
+                          </div>
+                          <div className="flex gap-1">
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() =>
+                                handleDeleteSettlement(settlement.id)
+                              }
+                              className="hover:bg-red-50 hover:text-red-600 transition-colors"
+                            >
+                              <Trash2 className="w-4 h-4 mr-1" />
+                              Undo
+                            </Button>
+                          </div>
+                        </div>
                       </div>
-                      <div className="flex gap-1">
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => handleEditExpense(expense)}
-                          className="hover:bg-blue-50 hover:text-blue-600 transition-colors"
-                        >
-                          <Edit className="w-4 h-4" />
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => handleDeleteExpense(expense.id)}
-                          className="hover:bg-red-50 hover:text-red-600 transition-colors"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
+                    );
+                  } else {
+                    const expense = transaction;
+                    const paidByName = getParticipantDisplayName(
+                      expense.paid_by
+                    );
+                    const expenseType = expense.expense_type || 'expense';
+
+                    // Calculate current participant's share
+                    const myShare = currentParticipant
+                      ? expense.expense_splits.find(
+                          (split) => split.participant_id === currentParticipant
+                        )?.amount || 0
+                      : 0;
+
+                    return (
+                      <div
+                        key={expense.id}
+                        className="flex justify-between items-center p-5 rounded-xl bg-gradient-to-r from-white to-slate-50 border border-slate-200 hover:shadow-md transition-all duration-200 hover:border-slate-300"
+                      >
+                        <div className="flex-1">
+                          <div className="flex items-center gap-3">
+                            <div
+                              className={`p-2 rounded-full ${
+                                expenseType === 'transfer'
+                                  ? 'bg-blue-100'
+                                  : expenseType === 'income'
+                                  ? 'bg-green-100'
+                                  : 'bg-red-100'
+                              }`}
+                            >
+                              <span
+                                className={getExpenseTypeColor(expenseType)}
+                              >
+                                {getExpenseTypeIcon(expenseType)}
+                              </span>
+                            </div>
+                            <div className="flex-1">
+                              <span className="font-semibold text-slate-800 text-lg">
+                                {expense.description}
+                              </span>
+                              <div className="text-sm text-slate-600 mt-1">
+                                {expenseType === 'transfer'
+                                  ? 'Transferred'
+                                  : expenseType === 'income'
+                                  ? 'Received'
+                                  : 'Paid'}{' '}
+                                by{' '}
+                                <span className="font-medium">
+                                  {paidByName}
+                                </span>
+                                {expenseType !== 'transfer' &&
+                                  ` • Split ${expense.expense_splits.length} ways`}
+                                {myShare > 0 &&
+                                  expenseType !== 'transfer' &&
+                                  ` • $${myShare.toFixed(2)}`}
+                                {' • ' +
+                                  new Date(
+                                    expense.created_at
+                                  ).toLocaleDateString()}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-4">
+                          <div className="text-right">
+                            <div
+                              className={`text-xl font-bold ${getExpenseTypeColor(
+                                expenseType
+                              )}`}
+                            >
+                              ${expense.amount.toFixed(2)}
+                            </div>
+                          </div>
+                          <div className="flex gap-1">
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => handleEditExpense(expense)}
+                              className="hover:bg-blue-50 hover:text-blue-600 transition-colors"
+                            >
+                              <Edit className="w-4 h-4" />
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => handleDeleteExpense(expense.id)}
+                              className="hover:bg-red-50 hover:text-red-600 transition-colors"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        </div>
                       </div>
-                    </div>
-                  </div>
-                );
-              })}
+                    );
+                  }
+                })}
             </CardContent>
           </Card>
         )}
@@ -509,6 +739,7 @@ export function GroupDashboard() {
         open={showParticipantSelection}
         onOpenChange={setShowParticipantSelection}
         participants={group.participants || []}
+        onParticipantSelect={handleParticipantSelect}
       />
 
       <ExpenseTypeDialog
@@ -522,6 +753,7 @@ export function GroupDashboard() {
         expense={editingExpense}
         isEditing={!!editingExpense}
         type={dialogType}
+        // currentParticipant={currentParticipant}
       />
     </div>
   );
