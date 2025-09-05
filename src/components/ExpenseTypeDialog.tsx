@@ -175,7 +175,7 @@ export function ExpenseTypeDialog({
 
   const getParticipantDisplayName = (participantId: string) => {
     if (participantId === currentParticipant) {
-      return 'me';
+      return 'Me';
     }
     return participants.find((p) => p.id === participantId)?.name || 'Unknown';
   };
@@ -370,7 +370,7 @@ export function ExpenseTypeDialog({
         <div className="space-y-4">
           <div className="space-y-2">
             <label htmlFor="description" className="text-sm font-medium">
-              Description
+              What for?
             </label>
             <Input
               id="description"
@@ -385,22 +385,6 @@ export function ExpenseTypeDialog({
               }
             />
           </div>
-
-          <div className="space-y-2">
-            <label htmlFor="amount" className="text-sm font-medium">
-              Amount ($)
-            </label>
-            <Input
-              id="amount"
-              type="number"
-              step="0.01"
-              min="0"
-              value={amount}
-              onChange={(e) => setAmount(e.target.value)}
-              placeholder="0.00"
-            />
-          </div>
-
           <div className="space-y-2">
             <label className="text-sm font-medium">
               {type === 'transfer'
@@ -409,28 +393,74 @@ export function ExpenseTypeDialog({
                 ? 'Received by'
                 : 'Paid by'}
             </label>
-            <Select value={paidBy} onValueChange={setPaidBy}>
-              <SelectTrigger>
-                <SelectValue
-                  placeholder={`Select who ${
-                    type === 'transfer'
-                      ? 'sent'
-                      : type === 'income'
-                      ? 'received'
-                      : 'paid'
+            <div className="flex flex-wrap gap-2 mt-1">
+              {participants.map((participant) => (
+                <button
+                  key={participant.id}
+                  type="button"
+                  className={`px-3 py-1 rounded-full border text-sm font-medium transition-colors focus:outline-none ${
+                    paidBy === participant.id
+                      ? 'bg-primary text-white border-primary'
+                      : 'bg-muted text-foreground border-muted-foreground'
                   }`}
-                />
-              </SelectTrigger>
-              <SelectContent>
-                {participants.map((participant) => (
-                  <SelectItem key={participant.id} value={participant.id}>
-                    {getParticipantDisplayName(participant.id)}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+                  onClick={() => setPaidBy(participant.id)}
+                >
+                  {getParticipantDisplayName(participant.id)}
+                </button>
+              ))}
+            </div>
           </div>
-
+          <div className="space-y-2">
+            <label htmlFor="amount" className="text-sm font-medium">
+              Amount ($)
+            </label>
+            <div className="flex gap-2 mb-1">
+              {[50, 100, 200, 500, 1000].map((amt) => (
+                <Button
+                  key={amt}
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className={
+                    parseFloat(amount) === amt
+                      ? 'border-primary text-primary'
+                      : ''
+                  }
+                  onClick={() => setAmount(amt.toString())}
+                >
+                  ${amt}
+                </Button>
+              ))}
+            </div>
+            <div className="relative flex items-center">
+              <Input
+                id="amount"
+                type="number"
+                step="0.01"
+                min="0"
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+                placeholder="0.00"
+                className="pr-8"
+              />
+              {amount && (
+                <button
+                  type="button"
+                  aria-label="Clear amount"
+                  className="absolute right-2 text-muted-foreground hover:text-primary"
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    cursor: 'pointer',
+                  }}
+                  onClick={() => setAmount('')}
+                >
+                  
+                  &#10005;
+                </button>
+              )}
+            </div>
+          </div>
           {type === 'transfer' && (
             <div className="space-y-2">
               <label className="text-sm font-medium">To</label>
@@ -450,7 +480,6 @@ export function ExpenseTypeDialog({
               </Select>
             </div>
           )}
-
           {type !== 'transfer' && (
             <div className="space-y-4">
               <div className="flex items-center justify-between">
