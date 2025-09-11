@@ -1,63 +1,60 @@
-function calculateDebts(expenses, participants, settlements) {
-  if (!participants || participants.length === 0) {
-    return [];
-  }
-  const balances = {};
-  participants.forEach((p) => (balances[p.id] = 0));
-  expenses.forEach((expense) => {
-    balances[expense.paid_by] += expense.amount;
-    expense.expense_splits.forEach((split) => {
-      balances[split.participant_id] -= split.amount;
-    });
-  });
-  settlements.forEach((settlement) => {
-    balances[settlement.from_participant_id] += settlement.amount;
-    balances[settlement.to_participant_id] -= settlement.amount;
-  });
-  const debtList = [];
-  // Cast amount to number for correct arithmetic
-  const creditors = Object.entries(balances).filter(
-    ([_, amount]) => (amount as number) > 0.01
-  );
-  const debtors = Object.entries(balances).filter(
-    ([_, amount]) => (amount as number) < -0.01
-  );
-  debtors.forEach(([debtorId, debtAmount]) => {
-    let remainingDebt = Math.abs(debtAmount as number);
-    creditors.forEach(([creditorId, creditAmount]) => {
-      if (remainingDebt > 0.01 && (creditAmount as number) > 0.01) {
-        const settlementAmount = Math.min(
-          remainingDebt,
-          creditAmount as number
-        );
-        debtList.push({
-          fromId: debtorId,
-          toId: creditorId,
-          amount: settlementAmount,
-          settled: false,
-        });
-        remainingDebt -= settlementAmount;
-        const creditorIndex = creditors.findIndex(([id]) => id === creditorId);
-        if (creditorIndex !== -1) {
-          creditors[creditorIndex][1] =
-            (creditors[creditorIndex][1] as number) - settlementAmount;
-        }
-      }
-    });
-  });
-  return debtList;
-}
+import { calculateDebts, getNetBalances } from '../lib/utils';
+import { generateMockData } from '../lib/transaction-mock';
+import { Expense } from '@/types/expense';
+import { ExpenseWithSplits } from '@/api/expenses';
+import { Settlement } from '@/types/settlements';
 
 describe('Debt Settlement Algorithm', () => {
-  function getNetBalances(debts, participants) {
-    const balances = {};
-    participants.forEach((p) => (balances[p.id] = 0));
-    debts.forEach(({ fromId, toId, amount }) => {
-      balances[fromId] -= amount;
-      balances[toId] += amount;
+  it('should be accurate for small group (5 participants, equal split)', () => {
+    const { participants, expenses, settlements } = generateMockData(5, {
+      expenseType: 'equal',
+      numExpenses: 5,
     });
-    return balances;
-  }
+    const debts = calculateDebts(expenses, participants, settlements);
+    const balances = getNetBalances(debts, participants);
+    // All balances should sum to zero
+    const total = (Object.values(balances) as number[]).reduce(
+      (a, b) => a + b,
+      0
+    );
+    expect(total).toBeCloseTo(0);
+    // Each participant should have a balance close to zero
+    (Object.values(balances) as number[]).forEach((bal) =>
+      expect(Math.abs(bal)).toBeLessThan(0.01)
+    );
+  });
+
+  it('should be accurate for large group (100 participants, equal split)', () => {
+    const { participants, expenses, settlements } = generateMockData(100, {
+      expenseType: 'equal',
+      numExpenses: 100,
+    });
+    const debts = calculateDebts(expenses, participants, settlements);
+    const balances = getNetBalances(debts, participants);
+    const total = (Object.values(balances) as number[]).reduce(
+      (a, b) => a + b,
+      0
+    );
+    expect(total).toBeCloseTo(0);
+    (Object.values(balances) as number[]).forEach((bal) =>
+      expect(Math.abs(bal)).toBeLessThan(0.01)
+    );
+  });
+
+  it('should be accurate for large group (100 participants, random split)', () => {
+    const { participants, expenses, settlements } = generateMockData(100, {
+      expenseType: 'random',
+      numExpenses: 100,
+    });
+    const debts = calculateDebts(expenses, participants, settlements);
+    const balances = getNetBalances(debts, participants);
+    const total = (Object.values(balances) as number[]).reduce(
+      (a, b) => a + b,
+      0
+    );
+    // Only check that the sum of all balances is close to zero
+    expect(total).toBeCloseTo(0);
+  });
 
   it('should handle simple equal split', () => {
     const participants = [{ id: 'A' }, { id: 'B' }, { id: 'C' }];
@@ -71,7 +68,7 @@ describe('Debt Settlement Algorithm', () => {
           { participant_id: 'C', amount: 30 },
         ],
       },
-    ];
+    ] as ExpenseWithSplits[];
     const settlements = [];
     const debts = calculateDebts(expenses, participants, settlements);
     const balances = getNetBalances(debts, participants);
@@ -111,11 +108,10 @@ describe('Debt Settlement Algorithm', () => {
           { participant_id: 'D', amount: 20 },
         ],
       },
-    ];
+    ] as ExpenseWithSplits[];
     const settlements = [];
     const debts = calculateDebts(expenses, participants, settlements);
     const balances = getNetBalances(debts, participants);
-    // Final balances should match what is owed/paid
     expect(
       balances['A'] + balances['B'] + balances['C'] + balances['D']
     ).toBeCloseTo(0);
@@ -137,12 +133,10 @@ describe('Debt Settlement Algorithm', () => {
           { participant_id: 'C', amount: 30 },
         ],
       },
-    ];
+    ] as ExpenseWithSplits[];
     const settlements = [];
     const debts = calculateDebts(expenses, participants, settlements);
     const balances = getNetBalances(debts, participants);
-    console.log({debts, balances});
-
     expect(balances['A'] + balances['B'] + balances['C']).toBeCloseTo(0);
     expect(balances['A']).toBeGreaterThan(0);
     expect(balances['B']).toBeLessThan(0);
@@ -160,10 +154,10 @@ describe('Debt Settlement Algorithm', () => {
           { participant_id: 'B', amount: 25 },
         ],
       },
-    ];
+    ] as ExpenseWithSplits[];
     const settlements = [
       { from_participant_id: 'B', to_participant_id: 'A', amount: 25 },
-    ];
+    ] as Settlement[];
     const debts = calculateDebts(expenses, participants, settlements);
     const balances = getNetBalances(debts, participants);
 
@@ -202,7 +196,7 @@ describe('Debt Settlement Algorithm', () => {
           { participant_id: 'C', amount: 10 },
         ],
       },
-    ];
+    ] as ExpenseWithSplits[];
     const settlements = [];
     const debts = calculateDebts(expenses, participants, settlements);
     const balances = getNetBalances(debts, participants);

@@ -9,7 +9,8 @@
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
     "preview": "vite preview",
-    "supabase:types": "npx supabase gen types --lang typescript --linked > src/integrations/supabase/types.ts"
+    "supabase:types": "npx supabase gen types --lang typescript --linked > src/integrations/supabase/types.ts",
+    "test": "jest --config jest.config.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.0",

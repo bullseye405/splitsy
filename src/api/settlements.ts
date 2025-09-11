@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { Database } from '@/integrations/supabase/types';
 
@@ -6,8 +5,6 @@ type Settlement = Database['public']['Tables']['settlements']['Row'];
 type SettlementInsert = Database['public']['Tables']['settlements']['Insert'];
 
 export async function createSettlement(settlement: SettlementInsert) {
-  console.log('Creating settlement:', settlement);
-  
   const { data, error } = await supabase
     .from('settlements')
     .insert(settlement)
@@ -19,13 +16,10 @@ export async function createSettlement(settlement: SettlementInsert) {
     throw error;
   }
 
-  console.log('Settlement created:', data);
   return data;
 }
 
 export async function getSettlementsByGroupId(groupId: string) {
-  console.log('Fetching settlements for group:', groupId);
-  
   const { data, error } = await supabase
     .from('settlements')
     .select('*')
@@ -37,13 +31,10 @@ export async function getSettlementsByGroupId(groupId: string) {
     throw error;
   }
 
-  console.log('Settlements fetched:', data);
   return data as Settlement[];
 }
 
 export async function deleteSettlement(settlementId: string) {
-  console.log('Deleting settlement:', settlementId);
-  
   const { error } = await supabase
     .from('settlements')
     .delete()
@@ -53,6 +44,4 @@ export async function deleteSettlement(settlementId: string) {
     console.error('Error deleting settlement:', error);
     throw error;
   }
-
-  console.log('Settlement deleted:', settlementId);
 }
