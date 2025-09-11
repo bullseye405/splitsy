@@ -1,38 +1,40 @@
-import { getGroupById } from '@/api/groups';
-import { updateGroupName } from '@/api/groups';
-import { recordGroupView } from '@/api/groupViews';
 import {
   createExpense,
   deleteExpense,
+  ExpenseWithSplits,
   getExpensesByGroupId,
   updateExpense,
-  ExpenseWithSplits,
 } from '@/api/expenses';
-import { getSettlementsByGroupId, deleteSettlement } from '@/api/settlements';
-import { Settlement } from '@/types/settlements';
+import { getGroupById, updateGroupName } from '@/api/groups';
+import { recordGroupView } from '@/api/groupViews';
+import { deleteSettlement, getSettlementsByGroupId } from '@/api/settlements';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
+import { GroupWithParticipants } from '@/types/group';
+import { Settlement } from '@/types/settlements';
 import {
+  ArrowRightLeft,
+  DollarSign,
   Edit,
+  Home,
   Plus,
   Share,
   Trash2,
-  Users,
-  ArrowRightLeft,
   TrendingUp,
-  DollarSign,
+  Users,
 } from 'lucide-react';
-import { useEffect, useState, useCallback } from 'react';
-import { useParams } from 'react-router-dom';
-import { ExpenseTypeDialog } from './ExpenseTypeDialog';
-import { ParticipantsModal } from './ParticipantsModal';
-import { ParticipantSelectionModal } from './ParticipantSelectionModal';
+import { useCallback, useEffect, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import { DebtSettlement } from './DebtSettlement';
-import { GroupWithParticipants } from '@/types/group';
+import { ExpenseTypeDialog } from './ExpenseTypeDialog';
+import { ParticipantSelectionModal } from './ParticipantSelectionModal';
+import { ParticipantsModal } from './ParticipantsModal';
 
 export function GroupDashboard() {
   const { groupId } = useParams<{ groupId: string }>();
+  const navigate = useNavigate();
+
   const [group, setGroup] = useState<GroupWithParticipants>();
   const [editingName, setEditingName] = useState(false);
   const [newGroupName, setNewGroupName] = useState('');
@@ -162,6 +164,10 @@ export function GroupDashboard() {
         variant: 'destructive',
       });
     }
+  };
+
+  const handleHomeClick = () => {
+    navigate('/');
   };
 
   const handleOpenDialog = (type: 'expense' | 'transfer' | 'income') => {
@@ -438,16 +444,27 @@ export function GroupDashboard() {
             </p>
           </div>
 
+          <div className="flex gap-2">
+            <Button
+              onClick={handleHomeClick}
+              variant="outline"
+              size="sm"
+              className="border-blue-200 hover:bg-blue-50 hover:border-blue-300 text-blue-600"
+            >
+              <Home className="w-4 h-4 mr-2" />
+              Home
+            </Button>
 
-          <Button
-            onClick={handleShare}
-            variant="outline"
-            size="sm"
-            className="border-blue-200 hover:bg-blue-50 hover:border-blue-300 text-blue-600"
-          >
-            <Share className="w-4 h-4 mr-2" />
-            Share
-          </Button>
+            <Button
+              onClick={handleShare}
+              variant="outline"
+              size="sm"
+              className="border-blue-200 hover:bg-blue-50 hover:border-blue-300 text-blue-600"
+            >
+              <Share className="w-4 h-4 mr-2" />
+              Share
+            </Button>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

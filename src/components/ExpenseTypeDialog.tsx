@@ -439,7 +439,7 @@ export function ExpenseTypeDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{getTitle()}</DialogTitle>
           <DialogDescription>{getDescription()}</DialogDescription>
@@ -462,49 +462,6 @@ export function ExpenseTypeDialog({
                   : 'Dinner, taxi, groceries...'
               }
             />
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <label htmlFor="amount" className="text-sm font-medium">
-                Amount ($)
-              </label>
-              <Input
-                id="amount"
-                type="number"
-                min="0"
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
-                    e.preventDefault();
-                  }
-                }}
-                placeholder="0.00"
-                style={
-                  {
-                    MozAppearance: 'textfield',
-                  } as React.CSSProperties
-                }
-                className="[&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <label htmlFor="date" className="text-sm font-medium">
-                Date
-              </label>
-              <div className="relative">
-                <Input
-                  id="date"
-                  type="date"
-                  value={date}
-                  onChange={(e) => setDate(e.target.value)}
-                  className="pl-10"
-                />
-                <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
-              </div>
-            </div>
           </div>
 
           <div className="space-y-2">
@@ -536,25 +493,8 @@ export function ExpenseTypeDialog({
             <label htmlFor="amount" className="text-sm font-medium">
               Amount ($)
             </label>
-            <div className="flex gap-2 mb-1">
-              {[50, 100, 200, 500, 1000].map((amt) => (
-                <Button
-                  key={amt}
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  className={
-                    parseFloat(amount) === amt
-                      ? 'border-primary text-primary'
-                      : ''
-                  }
-                  onClick={() => setAmount(amt.toString())}
-                >
-                  ${amt}
-                </Button>
-              ))}
-            </div>
-            <div className="relative flex items-center">
+
+            <div className="flex gap-2">
               <Input
                 id="amount"
                 type="number"
@@ -562,23 +502,27 @@ export function ExpenseTypeDialog({
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
                 placeholder="0.00"
-                className="pr-8"
               />
-              {amount && (
-                <button
-                  type="button"
-                  aria-label="Clear amount"
-                  className="absolute right-2 text-muted-foreground hover:text-primary"
-                  style={{
-                    background: 'none',
-                    border: 'none',
-                    cursor: 'pointer',
-                  }}
-                  onClick={() => setAmount('')}
-                >
-                  &#10005;
-                </button>
-              )}
+
+              <div className="relative flex items-center">
+                <div className="flex gap-2 mb-1">
+                  {[50, 100, 200, 500, 1000].map((amt) => (
+                    <Button
+                      key={amt}
+                      type="button"
+                      variant="outline"
+                      className={
+                        parseFloat(amount) === amt
+                          ? 'border-primary text-primary'
+                          : ''
+                      }
+                      onClick={() => setAmount(amt.toString())}
+                    >
+                      ${amt}
+                    </Button>
+                  ))}
+                </div>
+              </div>
             </div>
           </div>
           {type === 'transfer' && (
@@ -600,6 +544,24 @@ export function ExpenseTypeDialog({
               </Select>
             </div>
           )}
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <label htmlFor="date" className="text-sm font-medium">
+                Date
+              </label>
+              <div className="relative">
+                <Input
+                  id="date"
+                  type="date"
+                  value={date}
+                  onChange={(e) => setDate(e.target.value)}
+                  className="pl-10"
+                />
+                <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+              </div>
+            </div>
+          </div>
           {type !== 'transfer' && (
             <div className="space-y-4">
               <div className="flex items-center justify-between">

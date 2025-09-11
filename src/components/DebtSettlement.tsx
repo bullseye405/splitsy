@@ -5,6 +5,7 @@ import {
   getSettlementsByGroupId,
 } from '@/api/settlements';
 import { useToast } from '@/hooks/use-toast';
+import { calculateDebts } from '@/lib/utils';
 import { Participant } from '@/types/participants';
 import { Settlement as SettlementType } from '@/types/settlements';
 import { Calculator, CreditCard, Trash2, TreePalm } from 'lucide-react';
@@ -48,74 +49,6 @@ export function DebtSettlement({
     }
     return participants.find((p) => p.id === participantId)?.name || 'Unknown';
   };
-
-  const calculateDebts = useCallback(() => {
-    if (!participants || participants.length === 0) {
-      setDebts([]);
-      return;
-    }
-
-    // Initialize balances for each participant
-    const balances: { [participantId: string]: number } = {};
-    participants.forEach((p) => (balances[p.id] = 0));
-
-    // Calculate how much each participant paid vs owes from expenses
-    expenses.forEach((expense) => {
-      // Add amount paid by this participant
-      balances[expense.paid_by] += expense.amount;
-
-      // Subtract what each participant owes for this expense
-      expense.expense_splits.forEach((split) => {
-        balances[split.participant_id] -= split.amount;
-      });
-    });
-
-    // Apply settlements to balances
-    settlements.forEach((settlement) => {
-      // The person who paid reduces their debt (increases their balance)
-      balances[settlement.from_participant_id] += settlement.amount;
-      // The person who received reduces what they're owed (decreases their balance)
-      balances[settlement.to_participant_id] -= settlement.amount;
-    });
-
-    // Create debt relationships from remaining balances
-    const debtList: DebtItem[] = [];
-    const creditors = Object.entries(balances).filter(
-      ([_, amount]) => amount > 0.01
-    );
-    const debtors = Object.entries(balances).filter(
-      ([_, amount]) => amount < -0.01
-    );
-
-    // Simple debt settlement algorithm
-    debtors.forEach(([debtorId, debtAmount]) => {
-      let remainingDebt = Math.abs(debtAmount);
-
-      creditors.forEach(([creditorId, creditAmount]) => {
-        if (remainingDebt > 0.01 && creditAmount > 0.01) {
-          const settlementAmount = Math.min(remainingDebt, creditAmount);
-
-          debtList.push({
-            fromId: debtorId,
-            toId: creditorId,
-            amount: settlementAmount,
-            settled: false, // All debts shown are unsettled since settlements are already accounted for in balances
-          });
-
-          remainingDebt -= settlementAmount;
-          // Update creditor's remaining credit
-          const creditorIndex = creditors.findIndex(
-            ([id]) => id === creditorId
-          );
-          if (creditorIndex !== -1) {
-            creditors[creditorIndex][1] -= settlementAmount;
-          }
-        }
-      });
-    });
-
-    setDebts(debtList);
-  }, [expenses, participants, settlements]);
 
   const fetchSettlements = useCallback(async () => {
     try {
@@ -197,8 +130,9 @@ export function DebtSettlement({
   }, [fetchSettlements]);
 
   useEffect(() => {
-    calculateDebts();
-  }, [calculateDebts]);
+    const debts = calculateDebts(expenses, participants, settlements);
+    setDebts(debts);
+  }, [expenses, participants, settlements]);
 
   if (debts.length === 0 && settlements.length === 0) {
     return (
