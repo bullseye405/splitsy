@@ -5,7 +5,7 @@ import {
   getExpensesByGroupId,
   updateExpense,
 } from '@/api/expenses';
-import { getGroupById } from '@/api/groups';
+import { getGroupById, updateGroupName } from '@/api/groups';
 import { recordGroupView } from '@/api/groupViews';
 import { deleteSettlement, getSettlementsByGroupId } from '@/api/settlements';
 import { Button } from '@/components/ui/button';
@@ -36,6 +36,9 @@ export function GroupDashboard() {
   const navigate = useNavigate();
 
   const [group, setGroup] = useState<GroupWithParticipants>();
+  const [editingName, setEditingName] = useState(false);
+  const [newGroupName, setNewGroupName] = useState('');
+  const [nameLoading, setNameLoading] = useState(false);
   const [expenses, setExpenses] = useState<ExpenseWithSplits[]>([]);
   const [settlements, setSettlements] = useState<Settlement[]>([]);
   const [showExpenseDialog, setShowExpenseDialog] = useState(false);
@@ -321,6 +324,39 @@ export function GroupDashboard() {
     );
   };
 
+  const handleSaveName = async () => {
+    if (!groupId || !newGroupName.trim()) return;
+    setNameLoading(true);
+    try {
+      const { data, error } = await updateGroupName(
+        groupId,
+        newGroupName,
+        group?.description
+      );
+      if (error || !data) {
+        toast({
+          title: 'Error updating group name',
+          description: error?.message || 'Could not update group name.',
+          variant: 'destructive',
+        });
+        setNameLoading(false);
+        return;
+      }
+      setGroup((prevGroup) =>
+        prevGroup ? { ...prevGroup, name: newGroupName } : prevGroup
+      );
+      setEditingName(false);
+    } catch (err) {
+      toast({
+        title: 'Error updating group name',
+        description: String(err),
+        variant: 'destructive',
+      });
+    } finally {
+      setNameLoading(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-4 flex items-center justify-center">
@@ -352,37 +388,106 @@ export function GroupDashboard() {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-4">
       <div className="max-w-4xl mx-auto space-y-8">
         {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-              {group.name}
-            </h1>
-            <p className="text-slate-600 mt-1">
-              {group.description ||
-                'Track expenses and settle debts with your group'}
-            </p>
-          </div>
 
-          <div className="flex gap-2">
-            <Button
-              onClick={handleHomeClick}
-              variant="outline"
-              size="sm"
-              className="border-blue-200 hover:bg-blue-50 hover:border-blue-300 text-blue-600"
-            >
-              <Home className="w-4 h-4 mr-2" />
-              Home
-            </Button>
+        <div>
+          <div className="flex justify-between items-start">
+            <div className="flex-1">
+              {editingName ? (
+                <div className="space-y-2">
+                  <input
+                    className="w-full text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent border-b border-blue-300 outline-none px-2 pb-1"
+                    value={newGroupName}
+                    onChange={(e) => setNewGroupName(e.target.value)}
+                    disabled={nameLoading}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') handleSaveName();
+                      if (e.key === 'Escape') setEditingName(false);
+                    }}
+                    autoFocus
+                  />
+                  <textarea
+                    className="w-full text-slate-600 text-sm border-b border-blue-300 outline-none px-2 pb-1 resize-none"
+                    value={group.description || ''}
+                    placeholder="Add a description..."
+                    onChange={(e) =>
+                      setGroup((prev) =>
+                        prev ? { ...prev, description: e.target.value } : prev
+                      )
+                    }
+                    disabled={nameLoading}
+                    rows={2}
+                  />
+                </div>
+              ) : (
+                <div>
+                  <div className="flex items-center">
+                    <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent leading-none pb-1">
+                      {group.name}
+                    </h1>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="ml-2"
+                      onClick={() => {
+                        setEditingName(true);
+                        setNewGroupName(group.name);
+                      }}
+                      disabled={editingName}
+                      aria-label="Edit group name and description"
+                    >
+                      <Edit className="w-5 h-5 text-blue-600" />
+                    </Button>
+                  </div>
+                  <p className="text-slate-600 mt-1">
+                    {group.description ||
+                      'Track expenses and settle debts with your group'}
+                  </p>
+                </div>
+              )}
+            </div>
 
-            <Button
-              onClick={handleShare}
-              variant="outline"
-              size="sm"
-              className="border-blue-200 hover:bg-blue-50 hover:border-blue-300 text-blue-600"
-            >
-              <Share className="w-4 h-4 mr-2" />
-              Share
-            </Button>
+            {/* Right side: Actions */}
+            {editingName ? (
+              <div className="flex gap-2 mt-1">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleSaveName}
+                  disabled={nameLoading || !newGroupName.trim()}
+                >
+                  Save
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setEditingName(false)}
+                  disabled={nameLoading}
+                >
+                  Cancel
+                </Button>
+              </div>
+            ) : (
+              <div className="flex gap-2 mt-1">
+                <Button
+                  onClick={handleHomeClick}
+                  variant="outline"
+                  size="sm"
+                  className="border-blue-200 hover:bg-blue-50 hover:border-blue-300 text-blue-600"
+                >
+                  <Home className="w-4 h-4 mr-2" />
+                  Home
+                </Button>
+                <Button
+                  onClick={handleShare}
+                  variant="outline"
+                  size="sm"
+                  className="border-blue-200 hover:bg-blue-50 hover:border-blue-300 text-blue-600"
+                >
+                  <Share className="w-4 h-4 mr-2" />
+                  Share
+                </Button>
+              </div>
+            )}
           </div>
         </div>
 
