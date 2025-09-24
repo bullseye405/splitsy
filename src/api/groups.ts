@@ -22,6 +22,13 @@ export async function createGroup(name: string, description?: string) {
     .single();
 }
 
+export async function getAllGroups() {
+  return await supabase
+    .from('group')
+    .select('id, name, description, created_at')
+    .order('created_at', { ascending: false });
+}
+
 export async function getGroupById(groupId: string) {
   return await supabase
     .from('group')
