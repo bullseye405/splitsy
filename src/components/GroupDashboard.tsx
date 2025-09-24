@@ -15,14 +15,17 @@ import { GroupWithParticipants } from '@/types/group';
 import { Settlement } from '@/types/settlements';
 import {
   ArrowRightLeft,
+  CalendarIcon,
   DollarSign,
   Edit,
+  Filter,
   Home,
   Plus,
   Share,
   Trash2,
   TrendingUp,
   Users,
+  X,
 } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
@@ -30,6 +33,9 @@ import { DebtSettlement } from './DebtSettlement';
 import { ExpenseTypeDialog } from './ExpenseTypeDialog';
 import { ParticipantSelectionModal } from './ParticipantSelectionModal';
 import { ParticipantsModal } from './ParticipantsModal';
+import { Input } from './ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
+import { Badge } from './ui/badge';
 
 export function GroupDashboard() {
   const { groupId } = useParams<{ groupId: string }>();
@@ -48,6 +54,15 @@ export function GroupDashboard() {
   const [currentParticipant, setCurrentParticipant] = useState<string | null>(
     sessionStorage.getItem(`participant_${groupId}`) || null
   );
+  
+  // Filter states
+  const [showFilters, setShowFilters] = useState(false);
+  const [filterParticipant, setFilterParticipant] = useState<string>('all');
+  const [filterType, setFilterType] = useState<string>('all');
+  const [filterMinAmount, setFilterMinAmount] = useState<string>('');
+  const [filterMaxAmount, setFilterMaxAmount] = useState<string>('');
+  const [filterDateFrom, setFilterDateFrom] = useState<string>('');
+  const [filterDateTo, setFilterDateTo] = useState<string>('');
   const [dialogType, setDialogType] = useState<
     'expense' | 'transfer' | 'income'
   >('expense');
@@ -670,31 +685,216 @@ export function GroupDashboard() {
         {(expenses.length > 0 || settlements.length > 0) && (
           <Card className="shadow-lg border-0 bg-white/80 backdrop-blur-sm">
             <CardHeader className="pb-4">
-              <CardTitle className="text-2xl font-bold bg-gradient-to-r from-slate-700 to-slate-800 bg-clip-text text-transparent flex items-center">
-                <DollarSign className="w-6 h-6 mr-2 text-slate-600" />
-                Recent Transactions
-              </CardTitle>
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-2xl font-bold bg-gradient-to-r from-slate-700 to-slate-800 bg-clip-text text-transparent flex items-center">
+                  <DollarSign className="w-6 h-6 mr-2 text-slate-600" />
+                  Recent Transactions
+                </CardTitle>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowFilters(!showFilters)}
+                  className="flex items-center gap-2"
+                >
+                  <Filter className="w-4 h-4" />
+                  Filters
+                </Button>
+              </div>
+              
+              {/* Filter Controls */}
+              {showFilters && (
+                <div className="mt-4 p-4 bg-slate-50 rounded-lg space-y-4">
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    {/* Participant Filter */}
+                    <div>
+                      <label className="text-sm font-medium text-slate-700 block mb-1">
+                        Participant
+                      </label>
+                      <Select value={filterParticipant} onValueChange={setFilterParticipant}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="All participants" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">All participants</SelectItem>
+                          {group?.participants?.map((participant) => (
+                            <SelectItem key={participant.id} value={participant.id}>
+                              {participant.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {/* Transaction Type Filter */}
+                    <div>
+                      <label className="text-sm font-medium text-slate-700 block mb-1">
+                        Type
+                      </label>
+                      <Select value={filterType} onValueChange={setFilterType}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="All types" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">All types</SelectItem>
+                          <SelectItem value="expense">Expenses</SelectItem>
+                          <SelectItem value="income">Income</SelectItem>
+                          <SelectItem value="transfer">Transfers</SelectItem>
+                          <SelectItem value="settlement">Settlements</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {/* Amount Range */}
+                    <div>
+                      <label className="text-sm font-medium text-slate-700 block mb-1">
+                        Min Amount
+                      </label>
+                      <Input
+                        type="number"
+                        placeholder="$0"
+                        value={filterMinAmount}
+                        onChange={(e) => setFilterMinAmount(e.target.value)}
+                        className="w-full"
+                      />
+                    </div>
+                    
+                    <div>
+                      <label className="text-sm font-medium text-slate-700 block mb-1">
+                        Max Amount
+                      </label>
+                      <Input
+                        type="number"
+                        placeholder="No limit"
+                        value={filterMaxAmount}
+                        onChange={(e) => setFilterMaxAmount(e.target.value)}
+                        className="w-full"
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-4">
+                    {/* Date Range */}
+                    <div>
+                      <label className="text-sm font-medium text-slate-700 block mb-1">
+                        From Date
+                      </label>
+                      <Input
+                        type="date"
+                        value={filterDateFrom}
+                        onChange={(e) => setFilterDateFrom(e.target.value)}
+                        className="w-full"
+                      />
+                    </div>
+                    
+                    <div>
+                      <label className="text-sm font-medium text-slate-700 block mb-1">
+                        To Date
+                      </label>
+                      <Input
+                        type="date"
+                        value={filterDateTo}
+                        onChange={(e) => setFilterDateTo(e.target.value)}
+                        className="w-full"
+                      />
+                    </div>
+                  </div>
+                  
+                  {/* Clear Filters */}
+                  <div className="flex justify-end">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        setFilterParticipant('all');
+                        setFilterType('all');
+                        setFilterMinAmount('');
+                        setFilterMaxAmount('');
+                        setFilterDateFrom('');
+                        setFilterDateTo('');
+                      }}
+                      className="flex items-center gap-2"
+                    >
+                      <X className="w-4 h-4" />
+                      Clear Filters
+                    </Button>
+                  </div>
+                </div>
+              )}
             </CardHeader>
             <CardContent className="space-y-3">
               {/* Combine and sort all transactions by created date */}
-              {[
-                ...settlements.map((settlement) => ({
-                  ...settlement,
-                  type: 'settlement' as const,
-                  created_at: settlement.created_at,
-                })),
-                ...expenses.map((expense) => ({
-                  ...expense,
-                  type: 'expense' as const,
-                  created_at: expense.created_at,
-                })),
-              ]
-                .sort(
-                  (a, b) =>
-                    new Date(b.created_at).getTime() -
-                    new Date(a.created_at).getTime()
-                )
-                .map((transaction) => {
+              {(() => {
+                let transactions = [
+                  ...settlements.map((settlement) => ({
+                    ...settlement,
+                    type: 'settlement' as const,
+                    created_at: settlement.created_at,
+                  })),
+                  ...expenses.map((expense) => ({
+                    ...expense,
+                    type: 'expense' as const,
+                    created_at: expense.created_at,
+                  })),
+                ];
+
+                // Apply filters
+                transactions = transactions.filter((transaction) => {
+                  // Participant filter
+                  if (filterParticipant !== 'all') {
+                    if (transaction.type === 'settlement') {
+                      const settlement = transaction;
+                      if (settlement.from_participant_id !== filterParticipant && 
+                          settlement.to_participant_id !== filterParticipant) {
+                        return false;
+                      }
+                    } else {
+                      const expense = transaction;
+                      if (expense.paid_by !== filterParticipant && 
+                          !expense.expense_splits.some(split => split.participant_id === filterParticipant)) {
+                        return false;
+                      }
+                    }
+                  }
+
+                  // Type filter
+                  if (filterType !== 'all') {
+                    if (transaction.type === 'settlement' && filterType !== 'settlement') {
+                      return false;
+                    }
+                    if (transaction.type === 'expense' && 
+                        transaction.expense_type !== filterType && filterType !== 'expense') {
+                      return false;
+                    }
+                  }
+
+                  // Amount filter
+                  const amount = transaction.amount;
+                  if (filterMinAmount && amount < parseFloat(filterMinAmount)) {
+                    return false;
+                  }
+                  if (filterMaxAmount && amount > parseFloat(filterMaxAmount)) {
+                    return false;
+                  }
+
+                  // Date filter
+                  const transactionDate = new Date(transaction.created_at).toISOString().split('T')[0];
+                  if (filterDateFrom && transactionDate < filterDateFrom) {
+                    return false;
+                  }
+                  if (filterDateTo && transactionDate > filterDateTo) {
+                    return false;
+                  }
+
+                  return true;
+                });
+
+                return transactions
+                  .sort(
+                    (a, b) =>
+                      new Date(b.created_at).getTime() -
+                      new Date(a.created_at).getTime()
+                  )
+                  .map((transaction) => {
                   if (transaction.type === 'settlement') {
                     const settlement = transaction;
                     const fromName = getParticipantDisplayName(
@@ -846,7 +1046,8 @@ export function GroupDashboard() {
                       </div>
                     );
                   }
-                })}
+                });
+              })()}
             </CardContent>
           </Card>
         )}
