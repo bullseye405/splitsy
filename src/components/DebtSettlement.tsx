@@ -38,7 +38,7 @@ export function DebtSettlement({
   currentParticipant,
   onTransactionChange,
 }: DebtSettlementProps) {
-  const [viewGraph, setViewGraph] = useState(false);
+  const [viewGraph, setViewGraph] = useState(true);
   const [debts, setDebts] = useState<DebtItem[]>([]);
   const [settlements, setSettlements] = useState<SettlementType[]>([]);
   const { toast } = useToast();
