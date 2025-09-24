@@ -303,6 +303,13 @@ export function ExpenseTypeDialog({
             };
           });
 
+    // Convert the date to a full timestamp with current time
+    const selectedDate = new Date(date);
+    const now = new Date();
+    // Set the time components from now to preserve chronological order within the same day
+    selectedDate.setHours(now.getHours(), now.getMinutes(), now.getSeconds(), now.getMilliseconds());
+    const timestamp = selectedDate.toISOString();
+
     onSave({
       description: description.trim(),
       amount: amountNumber,
@@ -311,7 +318,7 @@ export function ExpenseTypeDialog({
       splits,
       expenseType: type,
       transferTo: type === 'transfer' ? transferTo : undefined,
-      date,
+      date: timestamp,
     });
   };
 
