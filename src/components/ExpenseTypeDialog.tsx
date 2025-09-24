@@ -489,42 +489,65 @@ export function ExpenseTypeDialog({
               ))}
             </div>
           </div>
-          <div className="space-y-2">
-            <label htmlFor="amount" className="text-sm font-medium">
-              Amount ($)
-            </label>
+          <div className="flex gap-2 ">
+            <div className="flex-1">
+              <div className="space-y-2">
+                <label htmlFor="amount" className="text-sm font-medium">
+                  Amount ($)
+                </label>
 
-            <div className="flex gap-2">
-              <Input
-                id="amount"
-                type="number"
-                min="0"
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
-                placeholder="0.00"
-              />
+                <div className="flex gap-2 flex-col">
+                  <Input
+                    id="amount"
+                    type="number"
+                    min="0"
+                    value={amount}
+                    onChange={(e) => setAmount(e.target.value)}
+                    placeholder="0.00"
+                  />
 
-              <div className="relative flex items-center">
-                <div className="flex gap-2 mb-1">
-                  {[50, 100, 200, 500, 1000].map((amt) => (
-                    <Button
-                      key={amt}
-                      type="button"
-                      variant="outline"
-                      className={
-                        parseFloat(amount) === amt
-                          ? 'border-primary text-primary'
-                          : ''
-                      }
-                      onClick={() => setAmount(amt.toString())}
-                    >
-                      ${amt}
-                    </Button>
-                  ))}
+                  <div className="relative flex items-center">
+                    <div className="flex gap-2 mb-1 flex-wrap">
+                      {[50, 100, 200, 500].map((amt) => (
+                        <Button
+                          key={amt}
+                          type="button"
+                          variant="outline"
+                          className={
+                            parseFloat(amount) === amt
+                              ? 'border-primary text-primary'
+                              : ''
+                          }
+                          onClick={() => setAmount(amt.toString())}
+                        >
+                          ${amt}
+                        </Button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="">
+              <div className="space-y-2">
+                <label htmlFor="date" className="text-sm font-medium">
+                  Date
+                </label>
+                <div className="relative">
+                  <Input
+                    id="date"
+                    type="date"
+                    value={date}
+                    onChange={(e) => setDate(e.target.value)}
+                    className="pl-10"
+                  />
+
+                  <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
                 </div>
               </div>
             </div>
           </div>
+
           {type === 'transfer' && (
             <div className="space-y-2">
               <label className="text-sm font-medium">To</label>
@@ -545,23 +568,6 @@ export function ExpenseTypeDialog({
             </div>
           )}
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <label htmlFor="date" className="text-sm font-medium">
-                Date
-              </label>
-              <div className="relative">
-                <Input
-                  id="date"
-                  type="date"
-                  value={date}
-                  onChange={(e) => setDate(e.target.value)}
-                  className="pl-10"
-                />
-                <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
-              </div>
-            </div>
-          </div>
           {type !== 'transfer' && (
             <div className="space-y-4">
               <div className="flex items-center justify-between">
@@ -672,7 +678,7 @@ export function ExpenseTypeDialog({
                   {participants.map((participant) => (
                     <div
                       key={participant.id}
-                      className="flex items-center justify-between gap-2 my-1"
+                      className="flex items-center justify-between gap-2 my-1 mr-5"
                     >
                       <div className="flex items-center space-x-2">
                         <Checkbox
@@ -713,7 +719,7 @@ export function ExpenseTypeDialog({
                                 e.preventDefault();
                               }
                             }}
-                            className="w-20 h-8 text-sm [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none mr-6"
+                            className="w-20 h-8 text-sm [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                             style={
                               {
                                 MozAppearance: 'textfield',
@@ -725,13 +731,6 @@ export function ExpenseTypeDialog({
                       )}
                     </div>
                   ))}
-                  <div className="text-xs text-muted-foreground text-center">
-                    Total: $
-                    {Object.values(customAmounts)
-                      .reduce((sum, amt) => sum + (amt || 0), 0)
-                      .toFixed(2)}{' '}
-                    / ${amount || '0.00'}
-                  </div>
                 </TabsContent>
 
                 <TabsContent
@@ -741,7 +740,7 @@ export function ExpenseTypeDialog({
                   {participants.map((participant) => (
                     <div
                       key={participant.id}
-                      className="flex items-center justify-between gap-2 my-1"
+                      className="flex items-center justify-between gap-2 my-1 mr-5"
                     >
                       <div className="flex items-center space-x-2">
                         <Checkbox
@@ -783,24 +782,32 @@ export function ExpenseTypeDialog({
                       )}
                     </div>
                   ))}
-                  <div className="text-xs text-muted-foreground text-center">
-                    Total weight:{' '}
-                    {splitBetween.reduce(
-                      (sum, id) => sum + (weights[id] || 1),
-                      0
-                    )}{' '}
-                    • Total: $
-                    {splitBetween
-                      .reduce((sum, id) => sum + calculateWeightedAmount(id), 0)
-                      .toFixed(2)}
-                  </div>
                 </TabsContent>
               </Tabs>
             </div>
           )}
         </div>
 
-        <DialogFooter className="gap-2">
+        <DialogFooter className="gap-2 items-center">
+          {splitMode === 'amount' && (
+            <div className="text-xs text-muted-foreground text-center">
+              Total: $
+              {Object.values(customAmounts)
+                .reduce((sum, amt) => sum + (amt || 0), 0)
+                .toFixed(2)}{' '}
+              / ${amount || '0.00'}
+            </div>
+          )}
+          {splitMode === 'weight' && (
+            <div className="text-xs text-muted-foreground text-center">
+              Total weight:{' '}
+              {splitBetween.reduce((sum, id) => sum + (weights[id] || 1), 0)} •
+              Total: $
+              {splitBetween
+                .reduce((sum, id) => sum + calculateWeightedAmount(id), 0)
+                .toFixed(2)}
+            </div>
+          )}
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             Cancel
           </Button>
