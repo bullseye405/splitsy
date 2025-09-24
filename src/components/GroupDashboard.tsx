@@ -34,7 +34,13 @@ import { ExpenseTypeDialog } from './ExpenseTypeDialog';
 import { ParticipantSelectionModal } from './ParticipantSelectionModal';
 import { ParticipantsModal } from './ParticipantsModal';
 import { Input } from './ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from './ui/select';
 import { Badge } from './ui/badge';
 
 export function GroupDashboard() {
@@ -54,7 +60,7 @@ export function GroupDashboard() {
   const [currentParticipant, setCurrentParticipant] = useState<string | null>(
     sessionStorage.getItem(`participant_${groupId}`) || null
   );
-  
+
   // Filter states
   const [showFilters, setShowFilters] = useState(false);
   const [filterParticipant, setFilterParticipant] = useState<string>('all');
@@ -700,7 +706,7 @@ export function GroupDashboard() {
                   Filters
                 </Button>
               </div>
-              
+
               {/* Filter Controls */}
               {showFilters && (
                 <div className="mt-4 p-4 bg-slate-50 rounded-lg space-y-4">
@@ -710,14 +716,20 @@ export function GroupDashboard() {
                       <label className="text-sm font-medium text-slate-700 block mb-1">
                         Participant
                       </label>
-                      <Select value={filterParticipant} onValueChange={setFilterParticipant}>
+                      <Select
+                        value={filterParticipant}
+                        onValueChange={setFilterParticipant}
+                      >
                         <SelectTrigger>
                           <SelectValue placeholder="All participants" />
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="all">All participants</SelectItem>
                           {group?.participants?.map((participant) => (
-                            <SelectItem key={participant.id} value={participant.id}>
+                            <SelectItem
+                              key={participant.id}
+                              value={participant.id}
+                            >
                               {participant.name}
                             </SelectItem>
                           ))}
@@ -739,7 +751,9 @@ export function GroupDashboard() {
                           <SelectItem value="expense">Expenses</SelectItem>
                           <SelectItem value="income">Income</SelectItem>
                           <SelectItem value="transfer">Transfers</SelectItem>
-                          <SelectItem value="settlement">Settlements</SelectItem>
+                          <SelectItem value="settlement">
+                            Settlements
+                          </SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
@@ -757,7 +771,7 @@ export function GroupDashboard() {
                         className="w-full"
                       />
                     </div>
-                    
+
                     <div>
                       <label className="text-sm font-medium text-slate-700 block mb-1">
                         Max Amount
@@ -771,7 +785,7 @@ export function GroupDashboard() {
                       />
                     </div>
                   </div>
-                  
+
                   <div className="grid grid-cols-2 gap-4">
                     {/* Date Range */}
                     <div>
@@ -785,7 +799,7 @@ export function GroupDashboard() {
                         className="w-full"
                       />
                     </div>
-                    
+
                     <div>
                       <label className="text-sm font-medium text-slate-700 block mb-1">
                         To Date
@@ -798,7 +812,7 @@ export function GroupDashboard() {
                       />
                     </div>
                   </div>
-                  
+
                   {/* Clear Filters */}
                   <div className="flex justify-end">
                     <Button
@@ -843,14 +857,20 @@ export function GroupDashboard() {
                   if (filterParticipant !== 'all') {
                     if (transaction.type === 'settlement') {
                       const settlement = transaction;
-                      if (settlement.from_participant_id !== filterParticipant && 
-                          settlement.to_participant_id !== filterParticipant) {
+                      if (
+                        settlement.from_participant_id !== filterParticipant &&
+                        settlement.to_participant_id !== filterParticipant
+                      ) {
                         return false;
                       }
                     } else {
                       const expense = transaction;
-                      if (expense.paid_by !== filterParticipant && 
-                          !expense.expense_splits.some(split => split.participant_id === filterParticipant)) {
+                      if (
+                        expense.paid_by !== filterParticipant &&
+                        !expense.expense_splits.some(
+                          (split) => split.participant_id === filterParticipant
+                        )
+                      ) {
                         return false;
                       }
                     }
@@ -858,11 +878,17 @@ export function GroupDashboard() {
 
                   // Type filter
                   if (filterType !== 'all') {
-                    if (transaction.type === 'settlement' && filterType !== 'settlement') {
+                    if (
+                      transaction.type === 'settlement' &&
+                      filterType !== 'settlement'
+                    ) {
                       return false;
                     }
-                    if (transaction.type === 'expense' && 
-                        transaction.expense_type !== filterType && filterType !== 'expense') {
+                    if (
+                      transaction.type === 'expense' &&
+                      transaction.expense_type !== filterType &&
+                      filterType !== 'expense'
+                    ) {
                       return false;
                     }
                   }
@@ -877,7 +903,9 @@ export function GroupDashboard() {
                   }
 
                   // Date filter
-                  const transactionDate = new Date(transaction.created_at).toISOString().split('T')[0];
+                  const transactionDate = new Date(transaction.created_at)
+                    .toISOString()
+                    .split('T')[0];
                   if (filterDateFrom && transactionDate < filterDateFrom) {
                     return false;
                   }
@@ -895,158 +923,159 @@ export function GroupDashboard() {
                       new Date(a.created_at).getTime()
                   )
                   .map((transaction) => {
-                  if (transaction.type === 'settlement') {
-                    const settlement = transaction;
-                    const fromName = getParticipantDisplayName(
-                      settlement.from_participant_id
-                    );
-                    const toName = getParticipantDisplayName(
-                      settlement.to_participant_id
-                    );
+                    if (transaction.type === 'settlement') {
+                      const settlement = transaction;
+                      const fromName = getParticipantDisplayName(
+                        settlement.from_participant_id
+                      );
+                      const toName = getParticipantDisplayName(
+                        settlement.to_participant_id
+                      );
 
-                    return (
-                      <div
-                        key={`settlement-${settlement.id}`}
-                        className="flex justify-between items-center p-5 rounded-xl bg-gradient-to-r from-white to-slate-50 border border-slate-200 hover:shadow-md transition-all duration-200 hover:border-slate-300"
-                      >
-                        <div className="flex-1">
-                          <div className="flex items-center gap-3">
-                            <div className="p-2 rounded-full bg-blue-100">
-                              <span className="text-blue-600">
-                                <ArrowRightLeft className="w-4 h-4" />
-                              </span>
-                            </div>
-                            <div className="flex-1">
-                              <span className="font-semibold text-slate-800 text-lg">
-                                Settlement: {fromName} → {toName}
-                              </span>
-                              <div className="text-sm text-slate-600 mt-1">
-                                Payment settlement •{' '}
-                                {new Date(
-                                  settlement.created_at
-                                ).toLocaleDateString()}
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-4">
-                          <div className="text-right">
-                            <div className="text-xl font-bold text-blue-600">
-                              ${settlement.amount.toFixed(2)}
-                            </div>
-                          </div>
-                          <div className="flex gap-1">
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={() =>
-                                handleDeleteSettlement(settlement.id)
-                              }
-                              className="hover:bg-red-50 hover:text-red-600 transition-colors"
-                            >
-                              <Trash2 className="w-4 h-4 mr-1" />
-                              Undo
-                            </Button>
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  } else {
-                    const expense = transaction;
-                    const paidByName = getParticipantDisplayName(
-                      expense.paid_by
-                    );
-                    const expenseType = expense.expense_type || 'expense';
-
-                    // Calculate current participant's share
-                    const myShare = currentParticipant
-                      ? expense.expense_splits.find(
-                          (split) => split.participant_id === currentParticipant
-                        )?.amount || 0
-                      : 0;
-
-                    return (
-                      <div
-                        key={expense.id}
-                        className="flex justify-between items-center p-5 rounded-xl bg-gradient-to-r from-white to-slate-50 border border-slate-200 hover:shadow-md transition-all duration-200 hover:border-slate-300"
-                      >
-                        <div className="flex-1">
-                          <div className="flex items-center gap-3">
-                            <div
-                              className={`p-2 rounded-full ${
-                                expenseType === 'transfer'
-                                  ? 'bg-blue-100'
-                                  : expenseType === 'income'
-                                  ? 'bg-green-100'
-                                  : 'bg-red-100'
-                              }`}
-                            >
-                              <span
-                                className={getExpenseTypeColor(expenseType)}
-                              >
-                                {getExpenseTypeIcon(expenseType)}
-                              </span>
-                            </div>
-                            <div className="flex-1">
-                              <span className="font-semibold text-slate-800 text-lg">
-                                {expense.description}
-                              </span>
-                              <div className="text-sm text-slate-600 mt-1">
-                                {expenseType === 'transfer'
-                                  ? 'Transferred'
-                                  : expenseType === 'income'
-                                  ? 'Received'
-                                  : 'Paid'}{' '}
-                                by{' '}
-                                <span className="font-medium">
-                                  {paidByName}
+                      return (
+                        <div
+                          key={`settlement-${settlement.id}`}
+                          className="flex justify-between items-center p-5 rounded-xl bg-gradient-to-r from-white to-slate-50 border border-slate-200 hover:shadow-md transition-all duration-200 hover:border-slate-300"
+                        >
+                          <div className="flex-1">
+                            <div className="flex items-center gap-3">
+                              <div className="p-2 rounded-full bg-blue-100">
+                                <span className="text-blue-600">
+                                  <ArrowRightLeft className="w-4 h-4" />
                                 </span>
-                                {expenseType !== 'transfer' &&
-                                  ` • Split ${expense.expense_splits.length} ways`}
-                                {myShare > 0 &&
-                                  expenseType !== 'transfer' &&
-                                  ` • $${myShare.toFixed(2)}`}
-                                {' • ' +
-                                  new Date(
-                                    expense.created_at
+                              </div>
+                              <div className="flex-1">
+                                <span className="font-semibold text-slate-800 text-lg">
+                                  Settlement: {fromName} → {toName}
+                                </span>
+                                <div className="text-sm text-slate-600 mt-1">
+                                  Payment settlement •{' '}
+                                  {new Date(
+                                    settlement.created_at
                                   ).toLocaleDateString()}
+                                </div>
                               </div>
                             </div>
                           </div>
-                        </div>
-                        <div className="flex items-center gap-4">
-                          <div className="text-right">
-                            <div
-                              className={`text-xl font-bold ${getExpenseTypeColor(
-                                expenseType
-                              )}`}
-                            >
-                              ${expense.amount.toFixed(2)}
+                          <div className="flex items-center gap-4">
+                            <div className="text-right">
+                              <div className="text-xl font-bold text-blue-600">
+                                ${settlement.amount.toFixed(2)}
+                              </div>
+                            </div>
+                            <div className="flex gap-1">
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() =>
+                                  handleDeleteSettlement(settlement.id)
+                                }
+                                className="hover:bg-red-50 hover:text-red-600 transition-colors"
+                              >
+                                <Trash2 className="w-4 h-4 mr-1" />
+                                Undo
+                              </Button>
                             </div>
                           </div>
-                          <div className="flex gap-1">
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={() => handleEditExpense(expense)}
-                              className="hover:bg-blue-50 hover:text-blue-600 transition-colors"
-                            >
-                              <Edit className="w-4 h-4" />
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={() => handleDeleteExpense(expense.id)}
-                              className="hover:bg-red-50 hover:text-red-600 transition-colors"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </Button>
+                        </div>
+                      );
+                    } else {
+                      const expense = transaction;
+                      const paidByName = getParticipantDisplayName(
+                        expense.paid_by
+                      );
+                      const expenseType = expense.expense_type || 'expense';
+
+                      // Calculate current participant's share
+                      const myShare = currentParticipant
+                        ? expense.expense_splits.find(
+                            (split) =>
+                              split.participant_id === currentParticipant
+                          )?.amount || 0
+                        : 0;
+
+                      return (
+                        <div
+                          key={expense.id}
+                          className="flex justify-between items-center p-5 rounded-xl bg-gradient-to-r from-white to-slate-50 border border-slate-200 hover:shadow-md transition-all duration-200 hover:border-slate-300"
+                        >
+                          <div className="flex-1">
+                            <div className="flex items-center gap-3">
+                              <div
+                                className={`p-2 rounded-full ${
+                                  expenseType === 'transfer'
+                                    ? 'bg-blue-100'
+                                    : expenseType === 'income'
+                                    ? 'bg-green-100'
+                                    : 'bg-red-100'
+                                }`}
+                              >
+                                <span
+                                  className={getExpenseTypeColor(expenseType)}
+                                >
+                                  {getExpenseTypeIcon(expenseType)}
+                                </span>
+                              </div>
+                              <div className="flex-1">
+                                <span className="font-semibold text-slate-800 text-lg">
+                                  {expense.description}
+                                </span>
+                                <div className="text-sm text-slate-600 mt-1">
+                                  {expenseType === 'transfer'
+                                    ? 'Transferred'
+                                    : expenseType === 'income'
+                                    ? 'Received'
+                                    : 'Paid'}{' '}
+                                  by{' '}
+                                  <span className="font-medium">
+                                    {paidByName}
+                                  </span>
+                                  {expenseType !== 'transfer' &&
+                                    ` • Split ${expense.expense_splits.length} ways`}
+                                  {myShare > 0 &&
+                                    expenseType !== 'transfer' &&
+                                    ` • $${myShare.toFixed(2)}`}
+                                  {' • ' +
+                                    new Date(
+                                      expense.created_at
+                                    ).toLocaleDateString()}
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-4">
+                            <div className="text-right">
+                              <div
+                                className={`text-xl font-bold ${getExpenseTypeColor(
+                                  expenseType
+                                )}`}
+                              >
+                                ${expense.amount.toFixed(2)}
+                              </div>
+                            </div>
+                            <div className="flex gap-1">
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => handleEditExpense(expense)}
+                                className="hover:bg-blue-50 hover:text-blue-600 transition-colors"
+                              >
+                                <Edit className="w-4 h-4" />
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => handleDeleteExpense(expense.id)}
+                                className="hover:bg-red-50 hover:text-red-600 transition-colors"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    );
-                  }
-                });
+                      );
+                    }
+                  });
               })()}
             </CardContent>
           </Card>

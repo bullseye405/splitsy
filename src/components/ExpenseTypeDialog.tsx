@@ -307,7 +307,12 @@ export function ExpenseTypeDialog({
     const selectedDate = new Date(date);
     const now = new Date();
     // Set the time components from now to preserve chronological order within the same day
-    selectedDate.setHours(now.getHours(), now.getMinutes(), now.getSeconds(), now.getMilliseconds());
+    selectedDate.setHours(
+      now.getHours(),
+      now.getMinutes(),
+      now.getSeconds(),
+      now.getMilliseconds()
+    );
     const timestamp = selectedDate.toISOString();
 
     onSave({
