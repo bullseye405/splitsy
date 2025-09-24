@@ -346,7 +346,7 @@ export function GroupDashboard() {
   };
 
   // Check if any filters are active
-  const hasActiveFilters = 
+  const hasActiveFilters =
     filterParticipant !== 'all' ||
     filterType !== 'all' ||
     filterMinAmount !== '' ||
@@ -706,18 +706,17 @@ export function GroupDashboard() {
                   Recent Transactions
                 </CardTitle>
                 <Button
-                  variant={hasActiveFilters ? "default" : "outline"}
+                  variant={hasActiveFilters ? 'default' : 'outline'}
                   size="sm"
                   onClick={() => setShowFilters(!showFilters)}
-                  className={`flex items-center gap-2 ${hasActiveFilters ? 'bg-blue-600 hover:bg-blue-700 text-white' : ''}`}
+                  className={`flex items-center gap-2 ${
+                    hasActiveFilters
+                      ? 'bg-blue-600 hover:bg-blue-700 text-white'
+                      : ''
+                  }`}
                 >
                   <Filter className="w-4 h-4" />
                   Filters
-                  {hasActiveFilters && (
-                    <Badge variant="secondary" className="ml-1 bg-white/20 text-white border-white/30">
-                      ON
-                    </Badge>
-                  )}
                 </Button>
               </div>
 
