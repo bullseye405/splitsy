@@ -1,7 +1,14 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 import { getAllGroups } from '@/api/groups';
@@ -11,6 +18,13 @@ export default function Admin() {
   const [groups, setGroups] = useState<Group[]>([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const password = prompt('Enter admin password:');
+    if (password !== import.meta.env.VITE_ADMIN_PASS) {
+      navigate('/');
+    }
+  }, [navigate]);
 
   useEffect(() => {
     const fetchGroups = async () => {
@@ -62,7 +76,7 @@ export default function Admin() {
             Back to Home
           </Button>
         </div>
-        
+
         <Card>
           <CardHeader>
             <CardTitle>Admin - All Groups</CardTitle>
@@ -90,7 +104,9 @@ export default function Admin() {
                       </Button>
                     </TableCell>
                     <TableCell>{group.name}</TableCell>
-                    <TableCell>{group.description || 'No description'}</TableCell>
+                    <TableCell>
+                      {group.description || 'No description'}
+                    </TableCell>
                     <TableCell>{formatDate(group.created_at)}</TableCell>
                   </TableRow>
                 ))}
