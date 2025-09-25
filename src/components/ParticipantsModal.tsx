@@ -31,7 +31,6 @@ export function ParticipantsModal({
   participants,
   onParticipantChange,
 }: ParticipantsModalProps) {
-  // ...existing code...
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const { groupId } = useParams<{ groupId: string }>();
   const [newParticipantName, setNewParticipantName] = useState('');
@@ -120,6 +119,8 @@ export function ParticipantsModal({
     }
   };
 
+  const currentParticipant = sessionStorage.getItem(`participant_${groupId}`);
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md bg-background p-0">
@@ -181,7 +182,7 @@ export function ParticipantsModal({
                   <>
                     <span className="font-medium text-sm text-foreground">
                       {participant.name}
-                      {index === 0 ? ' (me)' : ''}
+                      {participant.id === currentParticipant ? ' (me)' : ''}
                     </span>
                     <div className="flex gap-2 items-center">
                       {confirmDeleteId === participant.id ? (

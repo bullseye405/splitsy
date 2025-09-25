@@ -19,10 +19,19 @@ export function calculateDebts(
   const balances = {};
   participants.forEach((p) => (balances[p.id] = 0));
   expenses.forEach((expense) => {
-    balances[expense.paid_by] += expense.amount;
-    expense.expense_splits.forEach((split) => {
-      balances[split.participant_id] -= split.amount;
-    });
+    if (expense.expense_type === 'income') {
+      // For income, the receiver owes each participant their split
+      expense.expense_splits.forEach((split) => {
+        balances[expense.paid_by] -= split.amount;
+        balances[split.participant_id] += split.amount;
+      });
+    } else {
+      // For expense and transfer, as before
+      balances[expense.paid_by] += expense.amount;
+      expense.expense_splits.forEach((split) => {
+        balances[split.participant_id] -= split.amount;
+      });
+    }
   });
   settlements.forEach((settlement) => {
     balances[settlement.from_participant_id] += settlement.amount;

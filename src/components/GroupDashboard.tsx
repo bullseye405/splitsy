@@ -607,14 +607,16 @@ export function GroupDashboard() {
           </div>
         )}
 
-        <RecentTransactions
-          expenses={expenses}
-          settlements={settlements}
-          handleEditExpense={handleEditExpense}
-          handleDeleteExpense={handleDeleteExpense}
-          refreshTransactions={refreshTransactions}
-          group={group}
-        />
+        {(expenses.length > 0 || settlements.length > 0) && (
+          <RecentTransactions
+            expenses={expenses}
+            settlements={settlements}
+            handleEditExpense={handleEditExpense}
+            handleDeleteExpense={handleDeleteExpense}
+            refreshTransactions={refreshTransactions}
+            group={group}
+          />
+        )}
       </div>
 
       <ParticipantsModal

@@ -21,7 +21,6 @@ export default function Admin() {
 
   useEffect(() => {
     const password = prompt('Enter admin password:');
-    const pass = import.meta.env.VITE_ADMIN_PASS;
     if (password !== import.meta.env.VITE_ADMIN_PASS) {
       navigate('/');
     }

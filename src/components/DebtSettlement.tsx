@@ -8,12 +8,7 @@ import { useToast } from '@/hooks/use-toast';
 import { calculateDebts } from '@/lib/utils';
 import { Participant } from '@/types/participants';
 import { Settlement as SettlementType } from '@/types/settlements';
-import {
-  Calculator,
-  CreditCard,
-  Trash2,
-  TreePalm
-} from 'lucide-react';
+import { Calculator, CreditCard, Trash2, TreePalm } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 import { DebtGraph } from './DebtGraph';
 import { Button } from './ui/button';
@@ -202,14 +197,10 @@ export function DebtSettlement({
                 className="flex flex-col md:flex-row md:items-center md:justify-between py-3 px-2 border-b border-slate-200 gap-2"
               >
                 <div className="flex-1 text-slate-800 text-base md:text-lg break-words">
-                  <span className="font-medium">
-                    {fromName}
-                  </span>
+                  <span className="font-medium">{fromName}</span>
                   {' owe'}
                   {fromName !== 'You' ? 's' : ''}{' '}
-                  <span className="font-medium">
-                    {toName}
-                  </span>{' '}
+                  <span className="font-medium">{toName}</span>{' '}
                   <span className="font-bold text-red-600">
                     ${debt.amount.toFixed(2)}
                   </span>

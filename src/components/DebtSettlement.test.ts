@@ -1,10 +1,38 @@
-import { calculateDebts, getNetBalances } from '../lib/utils';
-import { generateMockData } from '../lib/transaction-mock';
-import { Expense } from '@/types/expense';
 import { ExpenseWithSplits } from '@/api/expenses';
 import { Settlement } from '@/types/settlements';
+import { generateMockData } from '../lib/transaction-mock';
+import { calculateDebts, getNetBalances } from '../lib/utils';
 
 describe('Debt Settlement Algorithm', () => {
+  it('should handle income type correctly', () => {
+    const participants = [{ id: 'A' }, { id: 'B' }, { id: 'C' }];
+    const expenses = [
+      {
+        paid_by: 'A',
+        amount: 300,
+        expense_type: 'income',
+        expense_splits: [
+          { participant_id: 'A', amount: 100 },
+          { participant_id: 'B', amount: 100 },
+          { participant_id: 'C', amount: 100 },
+        ],
+      },
+    ] as ExpenseWithSplits[];
+    const settlements = [];
+    const debts = calculateDebts(expenses, participants, settlements);
+    const balances = getNetBalances(debts, participants);
+    // A should owe B and C 100 each, net -200
+    expect(balances['A']).toBeCloseTo(-200);
+    expect(balances['B']).toBeCloseTo(100);
+    expect(balances['C']).toBeCloseTo(100);
+    // Debts should show A owes B 100 and A owes C 100
+    expect(debts).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ fromId: 'A', toId: 'B', amount: 100 }),
+        expect.objectContaining({ fromId: 'A', toId: 'C', amount: 100 }),
+      ])
+    );
+  });
   it('should be accurate for small group (5 participants, equal split)', () => {
     const { participants, expenses, settlements } = generateMockData(5, {
       expenseType: 'equal',
