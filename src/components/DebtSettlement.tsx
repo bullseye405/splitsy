@@ -8,7 +8,12 @@ import { useToast } from '@/hooks/use-toast';
 import { calculateDebts } from '@/lib/utils';
 import { Participant } from '@/types/participants';
 import { Settlement as SettlementType } from '@/types/settlements';
-import { Calculator, CreditCard, Trash2, TreePalm } from 'lucide-react';
+import {
+  Calculator,
+  CreditCard,
+  Trash2,
+  TreePalm
+} from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 import { DebtGraph } from './DebtGraph';
 import { Button } from './ui/button';
@@ -45,7 +50,7 @@ export function DebtSettlement({
 
   const getParticipantDisplayName = (participantId: string) => {
     if (participantId === currentParticipant) {
-      return 'you';
+      return 'You';
     }
     return participants.find((p) => p.id === participantId)?.name || 'Unknown';
   };
@@ -194,34 +199,33 @@ export function DebtSettlement({
             return (
               <div
                 key={`${debt.fromId}-${debt.toId}-${index}`}
-                className="flex items-center justify-between py-3 px-2 border-b border-slate-200"
+                className="flex flex-col md:flex-row md:items-center md:justify-between py-3 px-2 border-b border-slate-200 gap-2"
               >
-                <div className="flex-1">
-                  <span className="text-slate-800">
-                    <span className="font-medium">
-                      {fromName === 'you' ? 'You' : fromName}
-                    </span>
-                    {' owe'}
-                    {fromName !== 'you' ? 's' : ''}{' '}
-                    <span className="font-medium">
-                      {toName === 'you' ? 'you' : toName}
-                    </span>{' '}
-                    <span className="font-bold text-red-600">
-                      ${debt.amount.toFixed(2)}
-                    </span>
+                <div className="flex-1 text-slate-800 text-base md:text-lg break-words">
+                  <span className="font-medium">
+                    {fromName}
+                  </span>
+                  {' owe'}
+                  {fromName !== 'You' ? 's' : ''}{' '}
+                  <span className="font-medium">
+                    {toName}
+                  </span>{' '}
+                  <span className="font-bold text-red-600">
+                    ${debt.amount.toFixed(2)}
                   </span>
                 </div>
-
-                <Button
-                  size="sm"
-                  onClick={() =>
-                    handleSettle(debt.fromId, debt.toId, debt.amount, index)
-                  }
-                  className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white"
-                >
-                  <CreditCard className="w-3 h-3 mr-1" />
-                  Settle
-                </Button>
+                <div className="flex w-full md:w-auto justify-end">
+                  <Button
+                    size="sm"
+                    onClick={() =>
+                      handleSettle(debt.fromId, debt.toId, debt.amount, index)
+                    }
+                    className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white w-full md:w-auto"
+                  >
+                    <CreditCard className="w-3 h-3 mr-1" />
+                    Settle
+                  </Button>
+                </div>
               </div>
             );
           })
@@ -245,32 +249,31 @@ export function DebtSettlement({
             return (
               <div
                 key={`settled-${index}`}
-                className="flex items-center justify-between py-3 px-2 border-b border-green-200 bg-green-50"
+                className="flex flex-col md:flex-row md:items-center md:justify-between py-3 px-2 border-b border-green-200 bg-green-50 gap-2"
               >
-                <div className="flex-1">
-                  <span className="text-slate-800">
-                    <span className="font-medium">
-                      {fromName === 'you' ? 'You' : fromName}
-                    </span>
-                    {' paid '}
-                    <span className="font-medium">
-                      {toName === 'you' ? 'you' : toName}
-                    </span>{' '}
-                    <span className="font-bold text-green-600">
-                      ${settlement.amount.toFixed(2)}
-                    </span>
+                <div className="flex-1 text-slate-800 text-base md:text-lg break-words">
+                  <span className="font-medium">
+                    {fromName === 'you' ? 'You' : fromName}
+                  </span>
+                  {' paid '}
+                  <span className="font-medium">
+                    {toName === 'you' ? 'you' : toName}
+                  </span>{' '}
+                  <span className="font-bold text-green-600">
+                    ${settlement.amount.toFixed(2)}
                   </span>
                 </div>
-
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  onClick={() => handleDeleteSettlement(settlement.id)}
-                  className="hover:bg-red-50 hover:text-red-600 transition-colors"
-                >
-                  <Trash2 className="w-3 h-3 mr-1" />
-                  Undo
-                </Button>
+                <div className="flex w-full md:w-auto justify-end">
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => handleDeleteSettlement(settlement.id)}
+                    className="hover:bg-red-50 hover:text-red-600 transition-colors w-full md:w-auto"
+                  >
+                    <Trash2 className="w-3 h-3 mr-1" />
+                    Undo
+                  </Button>
+                </div>
               </div>
             );
           })}
