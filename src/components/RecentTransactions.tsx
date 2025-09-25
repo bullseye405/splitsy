@@ -130,39 +130,40 @@ const RecentTransactions = ({
 
   return (
     <Card className="shadow-lg border-0 bg-white/80 backdrop-blur-sm">
-      <CardHeader className="pb-4">
+      <CardHeader className="pb-3 md:pb-4 px-4 md:px-6">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-2xl font-bold bg-gradient-to-r from-slate-700 to-slate-800 bg-clip-text text-transparent flex items-center">
-            <DollarSign className="w-6 h-6 mr-2 text-slate-600" />
-            Recent Transactions
+          <CardTitle className="text-lg md:text-2xl font-bold bg-gradient-to-r from-slate-700 to-slate-800 bg-clip-text text-transparent flex items-center">
+            <DollarSign className="w-5 h-5 md:w-6 md:h-6 mr-2 text-slate-600" />
+            <span className="hidden sm:inline">Recent Transactions</span>
+            <span className="sm:hidden">Transactions</span>
           </CardTitle>
           <Button
             variant={hasActiveFilters ? 'default' : 'outline'}
             size="sm"
             onClick={() => setShowFilters(!showFilters)}
-            className={`flex items-center gap-2 ${
+            className={`flex items-center gap-1 md:gap-2 h-8 md:h-9 px-2 md:px-3 text-xs md:text-sm ${
               hasActiveFilters ? 'bg-blue-600 hover:bg-blue-700 text-white' : ''
             }`}
           >
-            <Filter className="w-4 h-4" />
-            Filters
+            <Filter className="w-3 h-3 md:w-4 md:h-4" />
+            <span className="hidden sm:inline">Filters</span>
           </Button>
         </div>
 
         {/* Filter Controls */}
         {showFilters && (
-          <div className="mt-4 p-4 bg-slate-50 rounded-lg space-y-4">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="mt-4 p-3 md:p-4 bg-slate-50 rounded-lg space-y-3 md:space-y-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
               {/* Participant Filter */}
               <div>
-                <label className="text-sm font-medium text-slate-700 block mb-1">
+                <label className="text-xs md:text-sm font-medium text-slate-700 block mb-1">
                   Participant
                 </label>
                 <Select
                   value={filterParticipant}
                   onValueChange={setFilterParticipant}
                 >
-                  <SelectTrigger>
+                  <SelectTrigger className="h-9 md:h-10">
                     <SelectValue placeholder="All participants" />
                   </SelectTrigger>
                   <SelectContent>
@@ -178,11 +179,11 @@ const RecentTransactions = ({
 
               {/* Transaction Type Filter */}
               <div>
-                <label className="text-sm font-medium text-slate-700 block mb-1">
+                <label className="text-xs md:text-sm font-medium text-slate-700 block mb-1">
                   Type
                 </label>
                 <Select value={filterType} onValueChange={setFilterType}>
-                  <SelectTrigger>
+                  <SelectTrigger className="h-9 md:h-10">
                     <SelectValue placeholder="All types" />
                   </SelectTrigger>
                   <SelectContent>
@@ -197,7 +198,7 @@ const RecentTransactions = ({
 
               {/* Amount Range */}
               <div>
-                <label className="text-sm font-medium text-slate-700 block mb-1">
+                <label className="text-xs md:text-sm font-medium text-slate-700 block mb-1">
                   Min Amount
                 </label>
                 <Input
@@ -205,12 +206,12 @@ const RecentTransactions = ({
                   placeholder="$0"
                   value={filterMinAmount}
                   onChange={(e) => setFilterMinAmount(e.target.value)}
-                  className="w-full"
+                  className="h-9 md:h-10 text-sm"
                 />
               </div>
 
               <div>
-                <label className="text-sm font-medium text-slate-700 block mb-1">
+                <label className="text-xs md:text-sm font-medium text-slate-700 block mb-1">
                   Max Amount
                 </label>
                 <Input
@@ -218,40 +219,40 @@ const RecentTransactions = ({
                   placeholder="No limit"
                   value={filterMaxAmount}
                   onChange={(e) => setFilterMaxAmount(e.target.value)}
-                  className="w-full"
+                  className="h-9 md:h-10 text-sm"
                 />
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
               {/* Date Range */}
               <div>
-                <label className="text-sm font-medium text-slate-700 block mb-1">
+                <label className="text-xs md:text-sm font-medium text-slate-700 block mb-1">
                   From Date
                 </label>
                 <Input
                   type="date"
                   value={filterDateFrom}
                   onChange={(e) => setFilterDateFrom(e.target.value)}
-                  className="w-full"
+                  className="h-9 md:h-10 text-sm"
                 />
               </div>
 
               <div>
-                <label className="text-sm font-medium text-slate-700 block mb-1">
+                <label className="text-xs md:text-sm font-medium text-slate-700 block mb-1">
                   To Date
                 </label>
                 <Input
                   type="date"
                   value={filterDateTo}
                   onChange={(e) => setFilterDateTo(e.target.value)}
-                  className="w-full"
+                  className="h-9 md:h-10 text-sm"
                 />
               </div>
             </div>
 
             {/* Clear Filters */}
-            <div className="flex justify-end">
+            <div className="flex justify-center sm:justify-end">
               <Button
                 variant="outline"
                 size="sm"
@@ -263,7 +264,7 @@ const RecentTransactions = ({
                   setFilterDateFrom('');
                   setFilterDateTo('');
                 }}
-                className="flex items-center gap-2"
+                className="flex items-center gap-2 h-9 px-4 text-sm"
               >
                 <X className="w-4 h-4" />
                 Clear Filters
@@ -272,7 +273,7 @@ const RecentTransactions = ({
           </div>
         )}
       </CardHeader>
-      <CardContent className="space-y-3">
+      <CardContent className="space-y-2 md:space-y-3 px-4 md:px-6">
         {/* Combine and sort all transactions by created date */}
         {(() => {
           let transactions = [
@@ -372,43 +373,43 @@ const RecentTransactions = ({
                 return (
                   <div
                     key={`settlement-${settlement.id}`}
-                    className="flex justify-between items-center p-5 rounded-xl bg-gradient-to-r from-white to-slate-50 border border-slate-200 hover:shadow-md transition-all duration-200 hover:border-slate-300"
+                    className="p-3 md:p-5 rounded-xl bg-gradient-to-r from-white to-slate-50 border border-slate-200 hover:shadow-md transition-all duration-200 hover:border-slate-300"
                   >
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3">
-                        <div className="p-2 rounded-full bg-blue-100">
-                          <span className="text-blue-600">
-                            <ArrowRightLeft className="w-4 h-4" />
-                          </span>
-                        </div>
-                        <div className="flex-1">
-                          <span className="font-semibold text-slate-800 text-lg">
-                            Settlement: {fromName} → {toName}
-                          </span>
-                          <div className="text-sm text-slate-600 mt-1">
-                            Payment settlement •{' '}
-                            {new Date(
-                              settlement.created_at
-                            ).toLocaleDateString()}
+                    <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
+                      <div className="flex-1">
+                        <div className="flex items-start sm:items-center gap-3">
+                          <div className="p-2 rounded-full bg-blue-100 flex-shrink-0">
+                            <span className="text-blue-600">
+                              <ArrowRightLeft className="w-4 h-4" />
+                            </span>
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="font-semibold text-slate-800 text-sm md:text-lg leading-tight">
+                              Settlement: {fromName} → {toName}
+                            </div>
+                            <div className="text-xs md:text-sm text-slate-600 mt-1">
+                              Payment settlement •{' '}
+                              {new Date(
+                                settlement.created_at
+                              ).toLocaleDateString()}
+                            </div>
                           </div>
                         </div>
                       </div>
-                    </div>
-                    <div className="flex items-center gap-4">
-                      <div className="text-right">
-                        <div className="text-xl font-bold text-blue-600">
-                          ${settlement.amount.toFixed(2)}
+                      <div className="flex items-center justify-between sm:justify-end gap-3 sm:gap-4">
+                        <div className="text-right">
+                          <div className="text-lg md:text-xl font-bold text-blue-600">
+                            ${settlement.amount.toFixed(2)}
+                          </div>
                         </div>
-                      </div>
-                      <div className="flex gap-1">
                         <Button
                           size="sm"
                           variant="ghost"
                           onClick={() => handleDeleteSettlement(settlement.id)}
-                          className="hover:bg-red-50 hover:text-red-600 transition-colors"
+                          className="hover:bg-red-50 hover:text-red-600 transition-colors h-8 px-2 md:px-3"
                         >
-                          <Trash2 className="w-4 h-4 mr-1" />
-                          Undo
+                          <Trash2 className="w-3 h-3 md:w-4 md:h-4 md:mr-1" />
+                          <span className="hidden md:inline">Undo</span>
                         </Button>
                       </div>
                     </div>
@@ -429,72 +430,85 @@ const RecentTransactions = ({
                 return (
                   <div
                     key={expense.id}
-                    className="flex justify-between items-center p-5 rounded-xl bg-gradient-to-r from-white to-slate-50 border border-slate-200 hover:shadow-md transition-all duration-200 hover:border-slate-300"
+                    className="p-3 md:p-5 rounded-xl bg-gradient-to-r from-white to-slate-50 border border-slate-200 hover:shadow-md transition-all duration-200 hover:border-slate-300"
                   >
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3">
-                        <div
-                          className={`p-2 rounded-full ${
-                            expenseType === 'transfer'
-                              ? 'bg-blue-100'
-                              : expenseType === 'income'
-                              ? 'bg-green-100'
-                              : 'bg-red-100'
-                          }`}
-                        >
-                          <span className={getExpenseTypeColor(expenseType)}>
-                            {getExpenseTypeIcon(expenseType)}
-                          </span>
-                        </div>
-                        <div className="flex-1">
-                          <span className="font-semibold text-slate-800 text-lg">
-                            {expense.description}
-                          </span>
-                          <div className="text-sm text-slate-600 mt-1">
-                            {expenseType === 'transfer'
-                              ? 'Transferred'
-                              : expenseType === 'income'
-                              ? 'Received'
-                              : 'Paid'}{' '}
-                            by <span className="font-medium">{paidByName}</span>
-                            {expenseType !== 'transfer' &&
-                              ` • Split ${expense.expense_splits.length} ways`}
-                            {myShare > 0 &&
-                              expenseType !== 'transfer' &&
-                              ` • $${myShare.toFixed(2)}`}
-                            {' • ' +
-                              new Date(expense.created_at).toLocaleDateString()}
+                    <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
+                      <div className="flex-1">
+                        <div className="flex items-start sm:items-center gap-3">
+                          <div
+                            className={`p-2 rounded-full flex-shrink-0 ${
+                              expenseType === 'transfer'
+                                ? 'bg-blue-100'
+                                : expenseType === 'income'
+                                ? 'bg-green-100'
+                                : 'bg-red-100'
+                            }`}
+                          >
+                            <span className={getExpenseTypeColor(expenseType)}>
+                              {getExpenseTypeIcon(expenseType)}
+                            </span>
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="font-semibold text-slate-800 text-sm md:text-lg leading-tight">
+                              {expense.description}
+                            </div>
+                            <div className="text-xs md:text-sm text-slate-600 mt-1">
+                              <div className="block sm:inline">
+                                {expenseType === 'transfer'
+                                  ? 'Transferred'
+                                  : expenseType === 'income'
+                                  ? 'Received'
+                                  : 'Paid'}{' '}
+                                by <span className="font-medium">{paidByName}</span>
+                              </div>
+                              {expenseType !== 'transfer' && (
+                                <div className="block sm:inline">
+                                  <span className="hidden sm:inline"> • </span>
+                                  Split {expense.expense_splits.length} ways
+                                </div>
+                              )}
+                              {myShare > 0 && expenseType !== 'transfer' && (
+                                <div className="block sm:inline">
+                                  <span className="hidden sm:inline"> • </span>
+                                  Your share: ${myShare.toFixed(2)}
+                                </div>
+                              )}
+                              <div className="block sm:inline">
+                                <span className="hidden sm:inline"> • </span>
+                                {new Date(expense.created_at).toLocaleDateString()}
+                              </div>
+                            </div>
                           </div>
                         </div>
                       </div>
-                    </div>
-                    <div className="flex items-center gap-4">
-                      <div className="text-right">
-                        <div
-                          className={`text-xl font-bold ${getExpenseTypeColor(
-                            expenseType
-                          )}`}
-                        >
-                          ${expense.amount.toFixed(2)}
+                      <div className="flex items-center justify-between sm:justify-end gap-3 sm:gap-4">
+                        <div className="text-right">
+                          <div
+                            className={`text-lg md:text-xl font-bold ${getExpenseTypeColor(
+                              expenseType
+                            )}`}
+                          >
+                            ${expense.amount.toFixed(2)}
+                          </div>
                         </div>
-                      </div>
-                      <div className="flex gap-1">
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => handleEditExpense(expense)}
-                          className="hover:bg-blue-50 hover:text-blue-600 transition-colors"
-                        >
-                          <Edit className="w-4 h-4" />
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => handleDeleteExpense(expense.id)}
-                          className="hover:bg-red-50 hover:text-red-600 transition-colors"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
+                        <div className="flex gap-1">
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => handleEditExpense(expense)}
+                            className="hover:bg-blue-50 hover:text-blue-600 transition-colors h-8 w-8 p-0"
+                          >
+                            <Edit className="w-3 h-3 md:w-4 md:h-4" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => handleDeleteExpense(expense.id)}
+                            className="hover:bg-red-50 hover:text-red-600 transition-colors h-8 w-8 p-0"
+                          >
+                            <Trash2 className="w-3 h-3 md:w-4 md:h-4" />
+                          </Button>
+                        </div>
                       </div>
                     </div>
                   </div>
