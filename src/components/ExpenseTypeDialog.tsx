@@ -451,13 +451,13 @@ export function ExpenseTypeDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-[95vw] max-w-xl max-h-[90vh] overflow-y-auto p-4 sm:p-6">
-        <DialogHeader className="space-y-2 sm:space-y-3">
-          <DialogTitle className="text-lg sm:text-xl">{getTitle()}</DialogTitle>
-          <DialogDescription className="text-sm sm:text-base">{getDescription()}</DialogDescription>
+      <DialogContent className="sm:max-w-xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>{getTitle()}</DialogTitle>
+          <DialogDescription>{getDescription()}</DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-4 sm:space-y-6">
+        <div className="space-y-4">
           <div className="space-y-2">
             <label htmlFor="description" className="text-sm font-medium">
               What for?
@@ -473,11 +473,10 @@ export function ExpenseTypeDialog({
                   ? 'Refund, returned deposit...'
                   : 'Dinner, taxi, groceries...'
               }
-              className="h-10 sm:h-9"
             />
           </div>
 
-          <div className="space-y-3">
+          <div className="space-y-2">
             <label className="text-sm font-medium">
               {type === 'transfer'
                 ? 'From'
@@ -485,15 +484,15 @@ export function ExpenseTypeDialog({
                 ? 'Received by'
                 : 'Paid by'}
             </label>
-            <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-2">
+            <div className="flex flex-wrap gap-2 mt-1">
               {participants.map((participant) => (
                 <button
                   key={participant.id}
                   type="button"
-                  className={`px-3 py-2 sm:py-1 rounded-full border text-xs sm:text-sm font-medium transition-colors focus:outline-none min-h-[36px] sm:min-h-auto ${
+                  className={`px-3 py-1 rounded-full border text-sm font-medium transition-colors focus:outline-none ${
                     paidBy === participant.id
-                      ? 'bg-primary text-primary-foreground border-primary'
-                      : 'bg-background text-foreground border-border hover:bg-muted'
+                      ? 'bg-primary text-white border-primary'
+                      : 'bg-muted text-foreground border-muted-foreground'
                   }`}
                   onClick={() => setPaidBy(participant.id)}
                 >
@@ -502,54 +501,61 @@ export function ExpenseTypeDialog({
               ))}
             </div>
           </div>
-          
-          <div className="flex flex-col sm:flex-row gap-4">
-            <div className="flex-1 space-y-2">
-              <label htmlFor="amount" className="text-sm font-medium">
-                Amount ($)
-              </label>
-              <Input
-                id="amount"
-                type="number"
-                min="0"
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
-                placeholder="0.00"
-                className="h-10 sm:h-9 text-base sm:text-sm"
-              />
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-2">
-                {[50, 100, 200, 500].map((amt) => (
-                  <Button
-                    key={amt}
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    className={`h-8 text-xs ${
-                      parseFloat(amount) === amt
-                        ? 'border-primary text-primary bg-primary/5'
-                        : ''
-                    }`}
-                    onClick={() => setAmount(amt.toString())}
-                  >
-                    ${amt}
-                  </Button>
-                ))}
+          <div className="flex gap-2 ">
+            <div className="flex-1">
+              <div className="space-y-2">
+                <label htmlFor="amount" className="text-sm font-medium">
+                  Amount ($)
+                </label>
+
+                <div className="flex gap-2 flex-col">
+                  <Input
+                    id="amount"
+                    type="number"
+                    min="0"
+                    value={amount}
+                    onChange={(e) => setAmount(e.target.value)}
+                    placeholder="0.00"
+                  />
+
+                  <div className="relative flex items-center">
+                    <div className="flex gap-2 mb-1 flex-wrap">
+                      {[50, 100, 200, 500].map((amt) => (
+                        <Button
+                          key={amt}
+                          type="button"
+                          variant="outline"
+                          className={
+                            parseFloat(amount) === amt
+                              ? 'border-primary text-primary'
+                              : ''
+                          }
+                          onClick={() => setAmount(amt.toString())}
+                        >
+                          ${amt}
+                        </Button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
-            
-            <div className="sm:w-32 space-y-2">
-              <label htmlFor="date" className="text-sm font-medium">
-                Date
-              </label>
-              <div className="relative">
-                <Input
-                  id="date"
-                  type="date"
-                  value={date}
-                  onChange={(e) => setDate(e.target.value)}
-                  className="h-10 sm:h-9 text-base sm:text-sm pl-10"
-                />
-                <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+            <div className="">
+              <div className="space-y-2">
+                <label htmlFor="date" className="text-sm font-medium">
+                  Date
+                </label>
+                <div className="relative">
+                  <Input
+                    id="date"
+                    type="date"
+                    value={date}
+                    onChange={(e) => setDate(e.target.value)}
+                    className="pl-10"
+                  />
+
+                  <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+                </div>
               </div>
             </div>
           </div>
@@ -558,7 +564,7 @@ export function ExpenseTypeDialog({
             <div className="space-y-2">
               <label className="text-sm font-medium">To</label>
               <Select value={transferTo} onValueChange={setTransferTo}>
-                <SelectTrigger className="h-10 sm:h-9">
+                <SelectTrigger>
                   <SelectValue placeholder="Select who received" />
                 </SelectTrigger>
                 <SelectContent>
@@ -576,7 +582,7 @@ export function ExpenseTypeDialog({
 
           {type !== 'transfer' && (
             <div className="space-y-4">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div className="flex items-center justify-between">
                 <label className="text-sm font-medium">
                   {type === 'income' ? 'Benefited' : 'Split between'}
                 </label>
@@ -585,7 +591,6 @@ export function ExpenseTypeDialog({
                     type="button"
                     variant="outline"
                     size="sm"
-                    className="h-8 px-3 text-xs"
                     onClick={() => {
                       const allIds = participants.map((p) => p.id);
                       setSplitBetween(allIds);
@@ -602,7 +607,6 @@ export function ExpenseTypeDialog({
                     type="button"
                     variant="outline"
                     size="sm"
-                    className="h-8 px-3 text-xs"
                     onClick={() => {
                       setSplitBetween([]);
                       setCustomAmounts({});
@@ -637,39 +641,38 @@ export function ExpenseTypeDialog({
                   }
                 }}
               >
-                <TabsList className="grid w-full grid-cols-3 h-9">
-                  <TabsTrigger value="equal" className="text-xs sm:text-sm">Equal</TabsTrigger>
-                  <TabsTrigger value="amount" className="text-xs sm:text-sm">Amount</TabsTrigger>
-                  <TabsTrigger value="weight" className="text-xs sm:text-sm">Weight</TabsTrigger>
+                <TabsList className="grid w-full grid-cols-3">
+                  <TabsTrigger value="equal">Equal Split</TabsTrigger>
+                  <TabsTrigger value="amount">Custom Amount</TabsTrigger>
+                  <TabsTrigger value="weight">By Weight</TabsTrigger>
                 </TabsList>
 
                 <TabsContent
                   value="equal"
-                  className="space-y-3 max-h-48 overflow-y-auto mt-4"
+                  className="space-y-2 max-h-48 overflow-y-auto"
                 >
                   {participants.map((participant) => (
                     <div
                       key={participant.id}
-                      className="flex items-center justify-between py-2 border-b border-border/50 last:border-0"
+                      className="flex items-center justify-between my-1"
                     >
-                      <div className="flex items-center space-x-3">
+                      <div className="flex items-center space-x-2">
                         <Checkbox
                           id={`equal-${participant.id}`}
                           checked={splitBetween.includes(participant.id)}
                           onCheckedChange={(checked) =>
                             handleSplitToggle(participant.id, !!checked)
                           }
-                          className="h-4 w-4"
                         />
                         <label
                           htmlFor={`equal-${participant.id}`}
-                          className="text-sm font-medium cursor-pointer"
+                          className="text-sm font-medium"
                         >
                           {getParticipantDisplayName(participant.id)}
                         </label>
                       </div>
                       {splitBetween.includes(participant.id) && (
-                        <span className="text-sm font-semibold text-primary">
+                        <span className="text-sm font-medium text-primary mr-6">
                           $
                           {(
                             (parseFloat(amount) || 0) / splitBetween.length
@@ -682,63 +685,60 @@ export function ExpenseTypeDialog({
 
                 <TabsContent
                   value="amount"
-                  className="space-y-3 max-h-48 overflow-y-auto mt-4"
+                  className="space-y-2 max-h-48 overflow-y-auto"
                 >
                   {participants.map((participant) => (
                     <div
                       key={participant.id}
-                      className="flex items-center justify-between gap-3 py-2 border-b border-border/50 last:border-0"
+                      className="flex items-center justify-between gap-2 my-1 mr-5"
                     >
-                      <div className="flex items-center space-x-3 flex-1 min-w-0">
+                      <div className="flex items-center space-x-2">
                         <Checkbox
                           id={`amount-${participant.id}`}
                           checked={splitBetween.includes(participant.id)}
                           onCheckedChange={(checked) =>
                             handleSplitToggle(participant.id, !!checked)
                           }
-                          className="h-4 w-4 flex-shrink-0"
                         />
                         <label
                           htmlFor={`amount-${participant.id}`}
-                          className="text-sm font-medium cursor-pointer truncate"
+                          className="text-sm font-medium"
                         >
                           {getParticipantDisplayName(participant.id)}
                         </label>
                       </div>
                       {splitBetween.includes(participant.id) && (
-                        <div className="flex items-center gap-2 flex-shrink-0">
+                        <div className="flex items-center gap-1">
                           {manuallyAdjustedAmounts.has(participant.id) && (
                             <Lock className="h-3 w-3 text-muted-foreground" />
                           )}
-                          <div className="flex items-center gap-1">
-                            <span className="text-sm">$</span>
-                            <Input
-                              type="number"
-                              min="0"
-                              value={customAmounts[participant.id] || ''}
-                              onChange={(e) =>
-                                handleCustomAmountChange(
-                                  participant.id,
-                                  e.target.value
-                                )
+                          <span className="text-sm">$</span>
+                          <Input
+                            type="number"
+                            min="0"
+                            value={customAmounts[participant.id] || ''}
+                            onChange={(e) =>
+                              handleCustomAmountChange(
+                                participant.id,
+                                e.target.value
+                              )
+                            }
+                            onKeyDown={(e) => {
+                              if (
+                                e.key === 'ArrowUp' ||
+                                e.key === 'ArrowDown'
+                              ) {
+                                e.preventDefault();
                               }
-                              onKeyDown={(e) => {
-                                if (
-                                  e.key === 'ArrowUp' ||
-                                  e.key === 'ArrowDown'
-                                ) {
-                                  e.preventDefault();
-                                }
-                              }}
-                              className="w-20 h-8 text-sm [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                              style={
-                                {
-                                  MozAppearance: 'textfield',
-                                } as React.CSSProperties
-                              }
-                              placeholder="0.00"
-                            />
-                          </div>
+                            }}
+                            className="w-20 h-8 text-sm [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                            style={
+                              {
+                                MozAppearance: 'textfield',
+                              } as React.CSSProperties
+                            }
+                            placeholder="0.00"
+                          />
                         </div>
                       )}
                     </div>
@@ -747,31 +747,30 @@ export function ExpenseTypeDialog({
 
                 <TabsContent
                   value="weight"
-                  className="space-y-3 max-h-48 overflow-y-auto mt-4"
+                  className="space-y-2 max-h-48 overflow-y-auto"
                 >
                   {participants.map((participant) => (
                     <div
                       key={participant.id}
-                      className="flex items-center justify-between gap-3 py-2 border-b border-border/50 last:border-0"
+                      className="flex items-center justify-between gap-2 my-1 mr-5"
                     >
-                      <div className="flex items-center space-x-3 flex-1 min-w-0">
+                      <div className="flex items-center space-x-2">
                         <Checkbox
                           id={`weight-${participant.id}`}
                           checked={splitBetween.includes(participant.id)}
                           onCheckedChange={(checked) =>
                             handleSplitToggle(participant.id, !!checked)
                           }
-                          className="h-4 w-4 flex-shrink-0"
                         />
                         <label
                           htmlFor={`weight-${participant.id}`}
-                          className="text-sm font-medium cursor-pointer truncate"
+                          className="text-sm font-medium"
                         >
                           {getParticipantDisplayName(participant.id)}
                         </label>
                       </div>
                       {splitBetween.includes(participant.id) && (
-                        <div className="flex items-center gap-2 flex-shrink-0">
+                        <div className="flex items-center gap-2">
                           <Input
                             type="number"
                             min="0"
@@ -787,7 +786,7 @@ export function ExpenseTypeDialog({
                             }
                             placeholder="1"
                           />
-                          <span className="text-sm font-semibold text-primary w-16 text-right">
+                          <span className="text-sm font-medium text-primary w-16 text-right">
                             $
                             {calculateWeightedAmount(participant.id).toFixed(2)}
                           </span>
@@ -801,9 +800,9 @@ export function ExpenseTypeDialog({
           )}
         </div>
 
-        <DialogFooter className="flex-col sm:flex-row gap-3 items-stretch sm:items-center pt-4 border-t border-border/50">
+        <DialogFooter className="gap-2 items-center">
           {splitMode === 'amount' && (
-            <div className="text-xs text-muted-foreground text-center sm:text-left order-3 sm:order-1">
+            <div className="text-xs text-muted-foreground text-center">
               Total: $
               {Object.values(customAmounts)
                 .reduce((sum, amt) => sum + (amt || 0), 0)
@@ -812,7 +811,7 @@ export function ExpenseTypeDialog({
             </div>
           )}
           {splitMode === 'weight' && (
-            <div className="text-xs text-muted-foreground text-center sm:text-left order-3 sm:order-1">
+            <div className="text-xs text-muted-foreground text-center">
               Total weight:{' '}
               {splitBetween.reduce((sum, id) => sum + (weights[id] || 1), 0)} •
               Total: $
@@ -821,22 +820,13 @@ export function ExpenseTypeDialog({
                 .toFixed(2)}
             </div>
           )}
-          <div className="flex gap-3 order-1 sm:order-2 sm:ml-auto">
-            <Button 
-              variant="outline" 
-              onClick={() => onOpenChange(false)}
-              className="flex-1 sm:flex-none h-10"
-            >
-              Cancel
-            </Button>
-            <Button 
-              onClick={handleSubmit}
-              className="flex-1 sm:flex-none h-10"
-            >
-              {isEditing ? 'Update' : 'Add'}{' '}
-              {type.charAt(0).toUpperCase() + type.slice(1)}
-            </Button>
-          </div>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
+            Cancel
+          </Button>
+          <Button onClick={handleSubmit}>
+            {isEditing ? 'Update' : 'Add'}{' '}
+            {type.charAt(0).toUpperCase() + type.slice(1)}
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
