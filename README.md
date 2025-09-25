@@ -1,38 +1,41 @@
-# Welcome to your Lovable project
 
-## Project info
+# Splitsy: Simple Expense Splitter
 
-**URL**: https://lovable.dev/projects/4ec1b3ab-052e-43f0-9735-993de2cbc03e
+## Why Splitsy Exists
+
+Splitsy is inspired by many popular expense splitting apps that require subscriptions or charge fees for premium features. This project was created to tackle those limitations and provide a free, open alternative—mainly for personal use. If you’re tired of paywalls and required accounts just to split expenses with friends, Splitsy is for you.
+
+Splitsy is not a commercial product and does not aim to compete for profit. It’s a personal project, built to make expense splitting simple and accessible for everyone.
+
+
+## About the App
+
+**Splitsy** is a simple expense splitter that lets you create groups, add participants, and track income and expenses. With smart debt settlement, it shows who owes whom in the easiest way possible, no login required.
+
+### Key Features
+- Create groups for any event or trip
+- Add participants and assign expenses
+- Track both income and expenses
+- See who owes whom with automatic debt settlement
+- No login or signup required
+- Modern, mobile-friendly UI
+
+---
+
+
 
 ## How can I edit this code?
 
-There are several ways of editing your application.
-
-**Use Lovable**
-
-Simply visit the [Lovable Project](https://lovable.dev/projects/4ec1b3ab-052e-43f0-9735-993de2cbc03e) and start prompting.
-
-Changes made via Lovable will be committed automatically to this repo.
+You can edit Splitsy using your preferred IDE, GitHub web editor, or GitHub Codespaces.
 
 **Use your preferred IDE**
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
+Clone the repo, install dependencies, and start the development server:
 
 ```sh
-# Step 1: Clone the repository using the project's Git URL.
 git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
 cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
 npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
 npm run dev
 ```
 
@@ -50,9 +53,8 @@ npm run dev
 - Click on "New codespace" to launch a new Codespace environment.
 - Edit files directly within the Codespace and commit and push your changes once you're done.
 
-## What technologies are used for this project?
 
-This project is built with:
+## Tech Stack
 
 - Vite
 - TypeScript
@@ -60,14 +62,3 @@ This project is built with:
 - shadcn-ui
 - Tailwind CSS
 
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/4ec1b3ab-052e-43f0-9735-993de2cbc03e) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
