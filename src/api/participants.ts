@@ -1,9 +1,9 @@
 import { supabase } from '@/integrations/supabase/client';
 
-export async function createParticipant(name: string, group_id: string) {
+export async function createParticipant(name: string, group_id: string, email?: string) {
   return await supabase
     .from('participants')
-    .insert([{ name, group_id }])
+    .insert([{ name, group_id, email }])
     .select()
     .single();
 }

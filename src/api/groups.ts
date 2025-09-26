@@ -33,7 +33,7 @@ export async function getGroupById(groupId: string) {
   return await supabase
     .from('group')
     .select(
-      'id, name, participants(id, name, group_id, created_at), description, created_at'
+      'id, name, participants(id, name, group_id, created_at, email), description, created_at'
     )
     .eq('id', groupId)
     .single();

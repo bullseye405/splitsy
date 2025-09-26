@@ -9,6 +9,7 @@ import { useNavigate } from 'react-router-dom';
 import { createGroup } from '@/api/groups';
 import { createParticipant } from '@/api/participants';
 import { getAllGroups } from '@/api/groups';
+import { supabase } from '@/integrations/supabase/client';
 
 export function HeroSection() {
   const [groupName, setGroupName] = useState('');
@@ -33,15 +34,27 @@ export function HeroSection() {
     if (!userEmail.trim()) return;
     
     try {
-      const { data } = await getAllGroups();
+      // Query participants table to find groups where this email exists
+      const { data } = await supabase
+        .from('participants')
+        .select(`
+          group_id,
+          group:group_id (
+            id,
+            name
+          )
+        `)
+        .eq('email', userEmail)
+        .limit(5);
+      
       if (data) {
-        // For now, we'll show recent groups as related groups
-        // In the future, this could be enhanced to show actual email-based groups
-        const recent = data.slice(0, 3).map(group => ({
-          id: group.id,
-          name: group.name
-        }));
-        setRelatedGroups(recent);
+        const groups = data
+          .filter(item => item.group)
+          .map(item => ({
+            id: item.group.id,
+            name: item.group.name
+          }));
+        setRelatedGroups(groups);
       }
     } catch (error) {
       console.error('Error fetching related groups:', error);
@@ -91,7 +104,8 @@ export function HeroSection() {
     } else if (data.id) {
       const { error: createParticipantError } = await createParticipant(
         participantName.trim(),
-        data.id
+        data.id,
+        email.trim() || undefined
       );
       if (createParticipantError) {
         toast({
@@ -147,18 +161,18 @@ export function HeroSection() {
           {/* Right side - Enhanced Form */}
           <div className="w-full max-w-md mx-auto lg:mx-0">
             <Card className="shadow-strong border-0 backdrop-blur-sm bg-white/95">
-              <CardContent className="p-8 space-y-6">
-                <div className="text-center mb-6">
-                  <h2 className="text-2xl font-semibold text-gray-900 mb-2">
+              <CardContent className="p-4 sm:p-6 lg:p-8 space-y-4 lg:space-y-6">
+                <div className="text-center mb-4 lg:mb-6">
+                  <h2 className="text-xl sm:text-2xl font-semibold text-gray-900 mb-2">
                     Create Your Group
                   </h2>
-                  <p className="text-gray-600">
+                  <p className="text-sm sm:text-base text-gray-600">
                     Start tracking expenses in seconds
                   </p>
                 </div>
 
-                <div className="space-y-4">
-                  <div className="space-y-2">
+                <div className="space-y-3 sm:space-y-4">
+                  <div className="space-y-1.5 sm:space-y-2">
                     <label htmlFor="groupName" className="text-sm font-medium text-gray-700">
                       Group Name *
                     </label>
@@ -168,12 +182,12 @@ export function HeroSection() {
                       onChange={(e) => setGroupName(e.target.value)}
                       onKeyPress={handleKeyPress}
                       placeholder="Trip to Paris, Dinner with friends..."
-                      className="h-12"
+                      className="h-11 sm:h-12 text-base"
                       disabled={isCreating}
                     />
                   </div>
 
-                  <div className="space-y-2">
+                  <div className="space-y-1.5 sm:space-y-2">
                     <label htmlFor="description" className="text-sm font-medium text-gray-700">
                       Description
                     </label>
@@ -183,12 +197,12 @@ export function HeroSection() {
                       onChange={(e) => setDescription(e.target.value)}
                       onKeyPress={handleKeyPress}
                       placeholder="Weekend getaway expenses..."
-                      className="h-12"
+                      className="h-11 sm:h-12 text-base"
                       disabled={isCreating}
                     />
                   </div>
 
-                  <div className="space-y-2">
+                  <div className="space-y-1.5 sm:space-y-2">
                     <label htmlFor="participantName" className="text-sm font-medium text-gray-700">
                       Your Name *
                     </label>
@@ -198,12 +212,12 @@ export function HeroSection() {
                       onChange={(e) => setParticipantName(e.target.value)}
                       onKeyPress={handleKeyPress}
                       placeholder="Enter your name"
-                      className="h-12"
+                      className="h-11 sm:h-12 text-base"
                       disabled={isCreating}
                     />
                   </div>
 
-                  <div className="space-y-2">
+                  <div className="space-y-1.5 sm:space-y-2">
                     <label htmlFor="email" className="text-sm font-medium text-gray-700">
                       Email
                     </label>
@@ -214,7 +228,7 @@ export function HeroSection() {
                       onChange={(e) => handleEmailChange(e.target.value)}
                       onKeyPress={handleKeyPress}
                       placeholder="your@email.com"
-                      className="h-12"
+                      className="h-11 sm:h-12 text-base"
                       disabled={isCreating}
                     />
                     <p className="text-xs text-gray-500">
@@ -223,16 +237,16 @@ export function HeroSection() {
                   </div>
 
                   {relatedGroups.length > 0 && (
-                    <div className="space-y-2">
+                    <div className="space-y-1.5 sm:space-y-2">
                       <label className="text-sm font-medium text-gray-700">
-                        Your Recent Groups
+                        Your Groups
                       </label>
                       <div className="flex flex-wrap gap-2">
                         {relatedGroups.map((group) => (
                           <Badge
                             key={group.id}
                             variant="secondary"
-                            className="cursor-pointer hover:bg-primary hover:text-primary-foreground transition-colors"
+                            className="cursor-pointer hover:bg-primary hover:text-primary-foreground transition-colors text-xs sm:text-sm px-2 py-1"
                             onClick={() => navigate(`/${group.id}`)}
                           >
                             {group.name}
@@ -246,7 +260,7 @@ export function HeroSection() {
                 <Button
                   onClick={handleCreateGroup}
                   disabled={isCreating}
-                  className="w-full h-12"
+                  className="w-full h-11 sm:h-12 text-base font-medium"
                   variant="gradient"
                   size="lg"
                 >
