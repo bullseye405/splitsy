@@ -132,7 +132,7 @@ export function HeroSection() {
 
   return (
     <section className="min-h-screen bg-gradient-hero flex items-center justify-center px-4 py-12">
-      <div className="container max-w-7xl mx-auto">
+      <div className="max-w-7xl mx-auto">
         <div className="grid lg:grid-cols-2 gap-12 items-center">
           {/* Left side - Content */}
           <div className="text-center lg:text-left space-y-8">
