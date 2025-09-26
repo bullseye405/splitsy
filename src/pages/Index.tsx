@@ -1,7 +1,7 @@
-import { GroupCreation } from '@/components/GroupCreation';
+import { LandingPage } from '@/components/landing/LandingPage';
 
 const Index = () => {
-  return <GroupCreation />;
+  return <LandingPage />;
 };
 
 export default Index;
