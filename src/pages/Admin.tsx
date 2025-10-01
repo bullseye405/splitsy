@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Table,
@@ -18,13 +18,25 @@ export default function Admin() {
   const [groups, setGroups] = useState<Group[]>([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+  const { year, month, day } = useParams();
 
   useEffect(() => {
+    // Validate the date matches today's date
+    const today = new Date();
+    const currentYear = today.getFullYear().toString();
+    const currentMonth = (today.getMonth() + 1).toString().padStart(2, '0');
+    const currentDay = today.getDate().toString().padStart(2, '0');
+
+    if (year !== currentYear || month !== currentMonth || day !== currentDay) {
+      navigate('/');
+      return;
+    }
+
     const password = prompt('Enter admin password:');
     if (password !== import.meta.env.VITE_ADMIN_PASS) {
       navigate('/');
     }
-  }, [navigate]);
+  }, [navigate, year, month, day]);
 
   useEffect(() => {
     const fetchGroups = async () => {
