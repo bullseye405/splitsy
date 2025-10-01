@@ -499,23 +499,14 @@ export function GroupDashboard() {
                 <div className="text-xl font-bold text-purple-600 mb-1">
                   $
                   {(() => {
+                    // Sum of all income where I received the money
                     return expenses
                       .filter(
                         (e) =>
                           e.expense_type === 'income' &&
-                          e.expense_splits.some(
-                            (split) =>
-                              split.participant_id === currentParticipant
-                          )
+                          e.paid_by === currentParticipant
                       )
-                      .reduce((sum, expense) => {
-                        const myShare =
-                          expense.expense_splits.find(
-                            (split) =>
-                              split.participant_id === currentParticipant
-                          )?.amount || 0;
-                        return sum + myShare;
-                      }, 0)
+                      .reduce((sum, expense) => sum + expense.amount, 0)
                       .toFixed(2);
                   })()}
                 </div>
@@ -533,21 +524,22 @@ export function GroupDashboard() {
                     // Calculate from expenses, transfers, and income
                     expenses.forEach((expense) => {
                       if (expense.expense_type === 'income') {
-                        // For income: receiver owes participants
+                        // For income: I received money and owe others their share
                         if (expense.paid_by === currentParticipant) {
-                          // I received income, I owe others
-                          balance -= expense.amount;
-                        }
-                        const myShare =
-                          expense.expense_splits.find(
-                            (split) => split.participant_id === currentParticipant
-                          )?.amount || 0;
-                        if (myShare > 0) {
-                          // Others owe me from income
+                          // I received income, subtract what I owe to others
+                          const totalOwedToOthers = expense.expense_splits
+                            .reduce((sum, split) => sum + (split.amount || 0), 0);
+                          balance -= totalOwedToOthers;
+                        } else {
+                          // Someone else received income, add what they owe me
+                          const myShare =
+                            expense.expense_splits.find(
+                              (split) => split.participant_id === currentParticipant
+                            )?.amount || 0;
                           balance += myShare;
                         }
                       } else {
-                        // For expenses and transfers
+                        // For expenses and transfers: I paid - my share
                         if (expense.paid_by === currentParticipant) {
                           balance += expense.amount;
                         }
@@ -559,12 +551,14 @@ export function GroupDashboard() {
                       }
                     });
 
-                    // Subtract settlements where I paid someone
+                    // Account for settlements
                     settlements.forEach((settlement) => {
                       if (settlement.from_participant_id === currentParticipant) {
+                        // I paid someone, reduce what I'm owed
                         balance -= settlement.amount;
                       }
                       if (settlement.to_participant_id === currentParticipant) {
+                        // Someone paid me, reduce what I'm owed
                         balance += settlement.amount;
                       }
                     });

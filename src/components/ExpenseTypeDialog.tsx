@@ -433,9 +433,9 @@ export function ExpenseTypeDialog({
   };
 
   const handleWeightChange = (participantId: string, value: string) => {
-    // Allow empty string temporarily for user to clear and type new value
+    // Allow empty string for clearing the input
     if (value === '') {
-      setWeights((prev) => ({ ...prev, [participantId]: 0 }));
+      setWeights((prev) => ({ ...prev, [participantId]: '' as any }));
       return;
     }
     const numValue = parseFloat(value);
@@ -446,9 +446,12 @@ export function ExpenseTypeDialog({
 
   const calculateWeightedAmount = (participantId: string) => {
     const totalAmount = parseFloat(amount) || 0;
-    const participantWeight = weights[participantId] || 1;
+    const participantWeight = typeof weights[participantId] === 'number' ? weights[participantId] : 1;
     const totalWeight = splitBetween.reduce(
-      (sum, id) => sum + (weights[id] || 1),
+      (sum, id) => {
+        const w = typeof weights[id] === 'number' ? weights[id] : 1;
+        return sum + w;
+      },
       0
     );
     return totalWeight > 0
