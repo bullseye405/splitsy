@@ -433,8 +433,15 @@ export function ExpenseTypeDialog({
   };
 
   const handleWeightChange = (participantId: string, value: string) => {
-    const numValue = parseFloat(value) || 1;
-    setWeights((prev) => ({ ...prev, [participantId]: numValue }));
+    // Allow empty string temporarily for user to clear and type new value
+    if (value === '') {
+      setWeights((prev) => ({ ...prev, [participantId]: 0 }));
+      return;
+    }
+    const numValue = parseFloat(value);
+    if (!isNaN(numValue) && numValue >= 0) {
+      setWeights((prev) => ({ ...prev, [participantId]: numValue }));
+    }
   };
 
   const calculateWeightedAmount = (participantId: string) => {
@@ -710,7 +717,21 @@ export function ExpenseTypeDialog({
                       {splitBetween.includes(participant.id) && (
                         <div className="flex items-center gap-1">
                           {manuallyAdjustedAmounts.has(participant.id) && (
-                            <Lock className="h-3 w-3 text-muted-foreground" />
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon"
+                              className="h-6 w-6 p-0"
+                              onClick={() => {
+                                setManuallyAdjustedAmounts((prev) => {
+                                  const newSet = new Set(prev);
+                                  newSet.delete(participant.id);
+                                  return newSet;
+                                });
+                              }}
+                            >
+                              <Lock className="h-3 w-3 text-muted-foreground" />
+                            </Button>
                           )}
                           <span className="text-sm">$</span>
                           <Input
@@ -774,7 +795,7 @@ export function ExpenseTypeDialog({
                           <Input
                             type="number"
                             min="0"
-                            value={weights[participant.id] || 1}
+                            value={weights[participant.id] ?? 1}
                             onChange={(e) =>
                               handleWeightChange(participant.id, e.target.value)
                             }

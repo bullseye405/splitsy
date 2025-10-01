@@ -530,16 +530,43 @@ export function GroupDashboard() {
                   {(() => {
                     let balance = 0;
 
-                    // Calculate from expenses
+                    // Calculate from expenses, transfers, and income
                     expenses.forEach((expense) => {
-                      if (expense.paid_by === currentParticipant) {
-                        balance += expense.amount;
+                      if (expense.expense_type === 'income') {
+                        // For income: receiver owes participants
+                        if (expense.paid_by === currentParticipant) {
+                          // I received income, I owe others
+                          balance -= expense.amount;
+                        }
+                        const myShare =
+                          expense.expense_splits.find(
+                            (split) => split.participant_id === currentParticipant
+                          )?.amount || 0;
+                        if (myShare > 0) {
+                          // Others owe me from income
+                          balance += myShare;
+                        }
+                      } else {
+                        // For expenses and transfers
+                        if (expense.paid_by === currentParticipant) {
+                          balance += expense.amount;
+                        }
+                        const myShare =
+                          expense.expense_splits.find(
+                            (split) => split.participant_id === currentParticipant
+                          )?.amount || 0;
+                        balance -= myShare;
                       }
-                      const myShare =
-                        expense.expense_splits.find(
-                          (split) => split.participant_id === currentParticipant
-                        )?.amount || 0;
-                      balance -= myShare;
+                    });
+
+                    // Subtract settlements where I paid someone
+                    settlements.forEach((settlement) => {
+                      if (settlement.from_participant_id === currentParticipant) {
+                        balance -= settlement.amount;
+                      }
+                      if (settlement.to_participant_id === currentParticipant) {
+                        balance += settlement.amount;
+                      }
                     });
 
                     return balance >= 0 ? balance.toFixed(2) : '0.00';
