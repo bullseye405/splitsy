@@ -146,15 +146,13 @@ export function HeroSection() {
               </p>
             </div>
 
-            {/* Visual element placeholder - you can replace with actual illustration */}
+            {/* Visual element */}
             <div className="hidden lg:block">
-              <div className="w-96 h-64 bg-white/10 rounded-2xl backdrop-blur-sm border border-white/20 flex items-center justify-center">
-                <div className="text-white/60 text-center">
-                  <div className="text-6xl mb-4">🍽️</div>
-                  <p className="text-lg">Friends dining together</p>
-                  <p className="text-sm opacity-75">Illustration placeholder</p>
-                </div>
-              </div>
+              <img 
+                src="/illustrations/dining.jpg" 
+                alt="Friends dining together and sharing expenses" 
+                className="w-96 h-64 object-cover rounded-2xl shadow-strong"
+              />
             </div>
           </div>
 
