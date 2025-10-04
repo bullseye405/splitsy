@@ -9,8 +9,8 @@ export function BillSplittingSection() {
             Quick Bill Splitter
           </h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Try our smart bill splitter right here. Adjust individual amounts, lock values, 
-            and watch the magic happen as everything balances automatically.
+            An interactive bill splitter that makes uneven contributions
+            painless
           </p>
         </div>
         <BillSplitter />

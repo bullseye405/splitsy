@@ -3,13 +3,28 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 import { Label } from '@/components/ui/label';
-import { Plus, Lock, Unlock } from 'lucide-react';
+import { Plus, Lock, Unlock, X } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 
 const PET_NAMES = [
-  'Panda', 'Tiger', 'Lion', 'Elephant', 'Giraffe', 'Zebra', 
-  'Koala', 'Penguin', 'Dolphin', 'Owl', 'Fox', 'Bear',
-  'Rabbit', 'Squirrel', 'Deer', 'Wolf', 'Eagle', 'Hawk'
+  'Panda',
+  'Tiger',
+  'Lion',
+  'Elephant',
+  'Giraffe',
+  'Zebra',
+  'Koala',
+  'Penguin',
+  'Dolphin',
+  'Owl',
+  'Fox',
+  'Bear',
+  'Rabbit',
+  'Squirrel',
+  'Deer',
+  'Wolf',
+  'Eagle',
+  'Hawk',
 ];
 
 interface Participant {
@@ -19,17 +34,22 @@ interface Participant {
   locked: boolean;
 }
 
+const initialParticipants: Participant[] = [
+  { id: '1', name: 'Alice', value: 300, locked: false },
+  { id: '2', name: 'Bob', value: 300, locked: false },
+];
+
 export function BillSplitter() {
   const [amount, setAmount] = useState<number>(600);
-  const [participants, setParticipants] = useState<Participant[]>([
-    { id: '1', name: getRandomPetName(), value: 300, locked: false },
-    { id: '2', name: getRandomPetName(), value: 300, locked: false },
-  ]);
+  const [participants, setParticipants] =
+    useState<Participant[]>(initialParticipants);
 
   function getRandomPetName() {
-    const usedNames = participants.map(p => p.name);
-    const availableNames = PET_NAMES.filter(name => !usedNames.includes(name));
-    return availableNames.length > 0 
+    const usedNames = participants?.map((p) => p.name);
+    const availableNames = PET_NAMES.filter(
+      (name) => !usedNames.includes(name)
+    );
+    return availableNames.length > 0
       ? availableNames[Math.floor(Math.random() * availableNames.length)]
       : PET_NAMES[Math.floor(Math.random() * PET_NAMES.length)];
   }
@@ -39,10 +59,13 @@ export function BillSplitter() {
     redistributeAmount(amount, participants);
   }, [amount]);
 
-  function redistributeAmount(total: number, currentParticipants: Participant[]) {
-    const locked = currentParticipants.filter(p => p.locked);
-    const unlocked = currentParticipants.filter(p => !p.locked);
-    
+  function redistributeAmount(
+    total: number,
+    currentParticipants: Participant[]
+  ) {
+    const locked = currentParticipants.filter((p) => p.locked);
+    const unlocked = currentParticipants.filter((p) => !p.locked);
+
     if (unlocked.length === 0) return;
 
     const lockedTotal = locked.reduce((sum, p) => sum + p.value, 0);
@@ -50,16 +73,17 @@ export function BillSplitter() {
 
     if (unlocked.length === 1) {
       // Single unlocked participant gets all remaining
-      const newParticipants = currentParticipants.map(p => 
+      const newParticipants = currentParticipants.map((p) =>
         p.locked ? p : { ...p, value: Math.max(0, remaining) }
       );
       setParticipants(newParticipants);
     } else {
       // Distribute proportionally among unlocked
       const unlockedTotal = unlocked.reduce((sum, p) => sum + p.value, 0);
-      const newParticipants = currentParticipants.map(p => {
+      const newParticipants = currentParticipants.map((p) => {
         if (p.locked) return p;
-        const proportion = unlockedTotal > 0 ? p.value / unlockedTotal : 1 / unlocked.length;
+        const proportion =
+          unlockedTotal > 0 ? p.value / unlockedTotal : 1 / unlocked.length;
         return { ...p, value: Math.max(0, remaining * proportion) };
       });
       setParticipants(newParticipants);
@@ -67,17 +91,17 @@ export function BillSplitter() {
   }
 
   function handleSliderChange(id: string, newValue: number) {
-    const participant = participants.find(p => p.id === id);
+    const participant = participants.find((p) => p.id === id);
     if (!participant) return;
 
     // Lock this slider
-    const updatedParticipants = participants.map(p => 
+    const updatedParticipants = participants.map((p) =>
       p.id === id ? { ...p, value: newValue, locked: true } : p
     );
 
     // Redistribute among unlocked
-    const locked = updatedParticipants.filter(p => p.locked);
-    const unlocked = updatedParticipants.filter(p => !p.locked);
+    const locked = updatedParticipants.filter((p) => p.locked);
+    const unlocked = updatedParticipants.filter((p) => !p.locked);
 
     if (unlocked.length === 0) {
       setParticipants(updatedParticipants);
@@ -88,15 +112,16 @@ export function BillSplitter() {
     const remaining = amount - lockedTotal;
 
     if (unlocked.length === 1) {
-      const finalParticipants = updatedParticipants.map(p =>
+      const finalParticipants = updatedParticipants.map((p) =>
         p.locked ? p : { ...p, value: Math.max(0, remaining) }
       );
       setParticipants(finalParticipants);
     } else {
       const unlockedTotal = unlocked.reduce((sum, p) => sum + p.value, 0);
-      const finalParticipants = updatedParticipants.map(p => {
+      const finalParticipants = updatedParticipants.map((p) => {
         if (p.locked) return p;
-        const proportion = unlockedTotal > 0 ? p.value / unlockedTotal : 1 / unlocked.length;
+        const proportion =
+          unlockedTotal > 0 ? p.value / unlockedTotal : 1 / unlocked.length;
         return { ...p, value: Math.max(0, remaining * proportion) };
       });
       setParticipants(finalParticipants);
@@ -104,10 +129,25 @@ export function BillSplitter() {
   }
 
   function toggleLock(id: string) {
-    const updatedParticipants = participants.map(p =>
+    const updatedParticipants = participants.map((p) =>
       p.id === id ? { ...p, locked: !p.locked } : p
     );
-    redistributeAmount(amount, updatedParticipants);
+
+    // If unlocking, reset the unlocked participant's value to equal split among unlocked
+    const justUnlocked = participants.find((p) => p.id === id && p.locked);
+    if (justUnlocked) {
+      const unlocked = updatedParticipants.filter((p) => !p.locked);
+      const locked = updatedParticipants.filter((p) => p.locked);
+      const lockedTotal = locked.reduce((sum, p) => sum + p.value, 0);
+      const remaining = amount - lockedTotal;
+      const equalShare = unlocked.length > 0 ? remaining / unlocked.length : 0;
+      const resetParticipants = updatedParticipants.map((p) =>
+        p.locked ? p : { ...p, value: equalShare }
+      );
+      setParticipants(resetParticipants);
+    } else {
+      redistributeAmount(amount, updatedParticipants);
+    }
   }
 
   function addParticipant() {
@@ -118,16 +158,29 @@ export function BillSplitter() {
       value: 0,
       locked: false,
     };
-    
+
     const newParticipants = [...participants, newParticipant];
     const equalShare = amount / newParticipants.length;
-    
-    const resetParticipants = newParticipants.map(p => ({
+
+    const resetParticipants = newParticipants.map((p) => ({
       ...p,
       value: equalShare,
       locked: false,
     }));
-    
+
+    setParticipants(resetParticipants);
+  }
+
+  function removeParticipant(id: string) {
+    // Prevent removing the default two participants
+    if (id === '1' || id === '2') return;
+    const filtered = participants.filter((p) => p.id !== id);
+    const equalShare = amount / filtered.length;
+    const resetParticipants = filtered.map((p) => ({
+      ...p,
+      value: equalShare,
+      locked: false,
+    }));
     setParticipants(resetParticipants);
   }
 
@@ -160,7 +213,10 @@ export function BillSplitter() {
           </div>
 
           {participants.map((participant) => (
-            <div key={participant.id} className="space-y-2 p-4 bg-muted/50 rounded-lg">
+            <div
+              key={participant.id}
+              className="space-y-2 p-4 bg-muted/50 rounded-lg"
+            >
               <div className="flex items-center justify-between">
                 <span className="font-medium">{participant.name}</span>
                 <div className="flex items-center gap-2">
@@ -179,13 +235,35 @@ export function BillSplitter() {
                       <Unlock className="w-4 h-4 text-muted-foreground" />
                     )}
                   </Button>
+                  {/* Always render a placeholder for remove button to keep layout consistent */}
+                  <span
+                    style={{
+                      width: 32,
+                      display: 'inline-block',
+                      textAlign: 'center',
+                    }}
+                  >
+                    {participant.id !== '1' && participant.id !== '2' ? (
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => removeParticipant(participant.id)}
+                        className="h-8 w-8 p-0 text-destructive"
+                        aria-label={`Remove ${participant.name}`}
+                      >
+                        <X className="w-4 h-4" />
+                      </Button>
+                    ) : null}
+                  </span>
                 </div>
               </div>
               <Slider
                 value={[participant.value]}
-                onValueChange={(values) => handleSliderChange(participant.id, values[0])}
+                onValueChange={(values) =>
+                  handleSliderChange(participant.id, values[0])
+                }
                 max={amount}
-                step={0.01}
+                step={1}
                 className="w-full"
               />
             </div>
@@ -195,7 +273,9 @@ export function BillSplitter() {
         <div className="pt-4 border-t">
           <div className="flex justify-between items-center text-lg font-semibold">
             <span>Total:</span>
-            <span className={total === amount ? 'text-primary' : 'text-destructive'}>
+            <span
+              className={total === amount ? 'text-primary' : 'text-destructive'}
+            >
               ${total.toFixed(2)} / ${amount.toFixed(2)}
             </span>
           </div>
