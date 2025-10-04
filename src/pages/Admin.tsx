@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { deleteGroup, getAllGroups } from '@/api/groups';
+import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Table,
@@ -9,11 +9,11 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Button } from '@/components/ui/button';
-import { ArrowLeft, ExternalLink, Trash2 } from 'lucide-react';
-import { getAllGroups, deleteGroup } from '@/api/groups';
-import { Group } from '@/types/group';
 import { toast } from '@/hooks/use-toast';
+import { Group } from '@/types/group';
+import { ArrowLeft, ExternalLink, Trash2 } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 
 export default function Admin() {
   const [groups, setGroups] = useState<Group[]>([]);
@@ -59,7 +59,11 @@ export default function Admin() {
   }, []);
 
   const handleDeleteGroup = async (groupId: string, groupName: string) => {
-    if (!confirm(`Are you sure you want to delete "${groupName}"? This action cannot be undone.`)) {
+    if (
+      !confirm(
+        `Are you sure you want to delete "${groupName}"? This action cannot be undone.`
+      )
+    ) {
       return;
     }
 
@@ -153,7 +157,7 @@ export default function Admin() {
                     <TableCell>{formatDate(group.created_at)}</TableCell>
                     <TableCell className="text-right">
                       <Button
-                        variant="destructive"
+                        variant="ghost"
                         size="sm"
                         onClick={() => handleDeleteGroup(group.id, group.name)}
                       >
