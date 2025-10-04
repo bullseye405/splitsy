@@ -104,7 +104,7 @@ export function GroupDashboard() {
   }, [groupId, navigate, currentParticipant]);
 
   const fetchExpenses = useCallback(async () => {
-    if (!groupId || !group) return;
+    if (!groupId || !group?.id) return;
     try {
       const data = await getExpensesByGroupId(groupId);
       setExpenses(data);
@@ -118,17 +118,17 @@ export function GroupDashboard() {
     } finally {
       setLoading(false);
     }
-  }, [group, groupId, toast]);
+  }, [group?.id, groupId, toast]);
 
   const fetchSettlements = useCallback(async () => {
-    if (!groupId || !group) return;
+    if (!groupId || group?.id) return;
     try {
       const data = await getSettlementsByGroupId(groupId);
       setSettlements(data);
     } catch (error) {
       console.error('Error fetching settlements:', error);
     }
-  }, [group, groupId]);
+  }, [group?.id, groupId]);
 
   const refreshTransactions = useCallback(async () => {
     await Promise.all([fetchExpenses(), fetchSettlements()]);
