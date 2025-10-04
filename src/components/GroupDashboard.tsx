@@ -140,18 +140,6 @@ export function GroupDashboard() {
     fetchSettlements();
   }, [fetchGroupData, fetchExpenses, fetchSettlements]);
 
-  // Update page title when group name changes
-  useEffect(() => {
-    if (group?.name) {
-      document.title = `${group.name} - Splitsy`;
-    }
-
-    // Cleanup: reset to default title when component unmounts
-    return () => {
-      document.title = 'Splitsy - Split Bills Made Easy';
-    };
-  }, [group?.name]);
-
   const handleParticipantSelect = async (participantId: string) => {
     if (!groupId) return;
 
