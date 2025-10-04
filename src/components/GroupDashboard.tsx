@@ -69,6 +69,16 @@ export function GroupDashboard() {
     }
   }, [groupId]);
 
+  useEffect(() => {
+    if (group?.name) {
+      document.title = `${group.name} - Splitsy`;
+    }
+
+    return () => {
+      document.title = 'Splitsy - Split Bills Made Easy';
+    };
+  }, [group?.name]);
+
   const fetchGroupData = useCallback(async () => {
     if (!groupId) return;
     try {
@@ -135,7 +145,7 @@ export function GroupDashboard() {
     if (group?.name) {
       document.title = `${group.name} - Splitsy`;
     }
-    
+
     // Cleanup: reset to default title when component unmounts
     return () => {
       document.title = 'Splitsy - Split Bills Made Easy';
