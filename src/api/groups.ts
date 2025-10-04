@@ -38,3 +38,10 @@ export async function getGroupById(groupId: string) {
     .eq('id', groupId)
     .single();
 }
+
+export async function deleteGroup(groupId: string) {
+  return await supabase
+    .from('group')
+    .delete()
+    .eq('id', groupId);
+}

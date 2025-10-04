@@ -10,9 +10,10 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft } from 'lucide-react';
-import { getAllGroups } from '@/api/groups';
+import { ArrowLeft, ExternalLink, Trash2 } from 'lucide-react';
+import { getAllGroups, deleteGroup } from '@/api/groups';
 import { Group } from '@/types/group';
+import { toast } from '@/hooks/use-toast';
 
 export default function Admin() {
   const [groups, setGroups] = useState<Group[]>([]);
@@ -57,8 +58,35 @@ export default function Admin() {
     fetchGroups();
   }, []);
 
-  const handleGroupClick = (groupId: string) => {
-    navigate(`/${groupId}`);
+  const handleDeleteGroup = async (groupId: string, groupName: string) => {
+    if (!confirm(`Are you sure you want to delete "${groupName}"? This action cannot be undone.`)) {
+      return;
+    }
+
+    try {
+      const { error } = await deleteGroup(groupId);
+      if (error) {
+        toast({
+          title: 'Error',
+          description: 'Failed to delete group',
+          variant: 'destructive',
+        });
+        console.error('Error deleting group:', error);
+      } else {
+        toast({
+          title: 'Success',
+          description: 'Group deleted successfully',
+        });
+        setGroups(groups.filter((g) => g.id !== groupId));
+      }
+    } catch (error) {
+      console.error('Error:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to delete group',
+        variant: 'destructive',
+      });
+    }
   };
 
   const formatDate = (dateString: string) => {
@@ -101,25 +129,37 @@ export default function Admin() {
                   <TableHead>Name</TableHead>
                   <TableHead>Description</TableHead>
                   <TableHead>Created At</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {groups.map((group) => (
                   <TableRow key={group.id}>
                     <TableCell>
-                      <Button
-                        variant="link"
-                        onClick={() => handleGroupClick(group.id)}
-                        className="p-0 h-auto text-primary hover:underline"
+                      <a
+                        href={`/${group.id}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 text-primary hover:underline"
                       >
                         {group.id}
-                      </Button>
+                        <ExternalLink className="w-3 h-3" />
+                      </a>
                     </TableCell>
                     <TableCell>{group.name}</TableCell>
                     <TableCell>
                       {group.description || 'No description'}
                     </TableCell>
                     <TableCell>{formatDate(group.created_at)}</TableCell>
+                    <TableCell className="text-right">
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        onClick={() => handleDeleteGroup(group.id, group.name)}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
