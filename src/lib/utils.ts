@@ -38,12 +38,14 @@ export function calculateDebts(
     balances[settlement.to_participant_id] -= settlement.amount;
   });
   const debtList = [];
-  const creditors = Object.entries(balances).filter(
-    ([_, amount]) => (amount as number) > 0.01
-  );
-  const debtors = Object.entries(balances).filter(
-    ([_, amount]) => (amount as number) < -0.01
-  );
+  // Sort by smallest absolute balance to largest to calculate least debts first
+  const creditors = Object.entries(balances)
+    .filter(([_, amount]) => (amount as number) > 0.01)
+    .sort((a, b) => Math.abs(a[1] as number) - Math.abs(b[1] as number));
+  const debtors = Object.entries(balances)
+    .filter(([_, amount]) => (amount as number) < -0.01)
+    .sort((a, b) => Math.abs(a[1] as number) - Math.abs(b[1] as number));
+
   debtors.forEach(([debtorId, debtAmount]) => {
     let remainingDebt = Math.abs(debtAmount as number);
     creditors.forEach(([creditorId, creditAmount]) => {

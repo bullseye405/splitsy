@@ -1,22 +1,26 @@
-import { useLocation } from "react-router-dom";
-import { useEffect } from "react";
-
 const NotFound = () => {
-  const location = useLocation();
-
-  useEffect(() => {
-    console.error(
-      "404 Error: User attempted to access non-existent route:",
-      location.pathname
-    );
-  }, [location.pathname]);
-
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="text-center">
-        <h1 className="text-4xl font-bold mb-4">404</h1>
-        <p className="text-xl text-gray-600 mb-4">Oops! Page not found</p>
-        <a href="/" className="text-blue-500 hover:text-blue-700 underline">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-100 via-purple-100 to-pink-100">
+      <div className="bg-white/80 rounded-xl shadow-2xl p-8 text-center max-w-md w-full">
+        <img
+          src="/illustrations/travel.jpg"
+          alt="Not Found Illustration"
+          className="mx-auto mb-6 w-40 h-40 object-cover rounded-lg shadow-lg border"
+        />
+        <h1 className="text-6xl font-extrabold text-purple-600 mb-2 tracking-tight drop-shadow">
+          404
+        </h1>
+        <p className="text-2xl text-gray-700 mb-4 font-semibold">
+          Oops! Page not found
+        </p>
+        <p className="text-base text-gray-500 mb-6">
+          The page you are looking for might have been removed, had its name
+          changed, or is temporarily unavailable.
+        </p>
+        <a
+          href="/"
+          className="inline-block px-6 py-3 rounded-lg bg-gradient-to-r from-blue-500 to-purple-500 text-white font-bold shadow hover:scale-105 transition-transform duration-150"
+        >
           Return to Home
         </a>
       </div>

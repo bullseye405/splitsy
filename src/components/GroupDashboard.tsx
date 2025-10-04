@@ -74,17 +74,12 @@ export function GroupDashboard() {
     try {
       const { data, error } = await getGroupById(groupId);
       if (error || !data) {
-        toast({
-          title: 'Error loading group',
-          description: error?.message || 'Group not found.',
-          variant: 'destructive',
-        });
+        navigate('/404', { replace: true });
         return;
       }
       setGroup(data);
 
       // Show participant selection modal if no participant is selected and participants exist
-
       if (
         !currentParticipant &&
         data.participants &&
@@ -94,11 +89,12 @@ export function GroupDashboard() {
       }
     } catch (error) {
       console.error('Error fetching group:', error);
+      navigate('/404', { replace: true });
     }
-  }, [groupId, toast, currentParticipant]);
+  }, [groupId, navigate, currentParticipant]);
 
   const fetchExpenses = useCallback(async () => {
-    if (!groupId) return;
+    if (!groupId || !group) return;
     try {
       const data = await getExpensesByGroupId(groupId);
       setExpenses(data);
@@ -112,17 +108,17 @@ export function GroupDashboard() {
     } finally {
       setLoading(false);
     }
-  }, [groupId, toast]);
+  }, [group, groupId, toast]);
 
   const fetchSettlements = useCallback(async () => {
-    if (!groupId) return;
+    if (!groupId || !group) return;
     try {
       const data = await getSettlementsByGroupId(groupId);
       setSettlements(data);
     } catch (error) {
       console.error('Error fetching settlements:', error);
     }
-  }, [groupId]);
+  }, [group, groupId]);
 
   const refreshTransactions = useCallback(async () => {
     await Promise.all([fetchExpenses(), fetchSettlements()]);
@@ -317,20 +313,9 @@ export function GroupDashboard() {
     );
   }
 
+  // No need to render a 'Group not found' message, as we redirect to NotFound page
   if (!group) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-4 flex items-center justify-center">
-        <div className="text-center">
-          <div className="text-6xl mb-4">🤔</div>
-          <h2 className="text-2xl font-bold text-slate-800 mb-2">
-            Group not found
-          </h2>
-          <p className="text-slate-600">
-            The group you're looking for doesn't exist or has been removed.
-          </p>
-        </div>
-      </div>
-    );
+    return null;
   }
 
   return (
@@ -389,18 +374,6 @@ export function GroupDashboard() {
                 <h1 className="w-full text-3xl md:text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent leading-none pb-1 text-center">
                   {group.name}
                 </h1>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => {
-                    setEditingName(true);
-                    setNewGroupName(group.name);
-                  }}
-                  disabled={editingName}
-                  aria-label="Edit group name and description"
-                >
-                  <Edit className="w-5 h-5 text-blue-600" />
-                </Button>
               </div>
               <p className="w-full text-slate-600 mt-1 text-center">
                 {group.description ||
@@ -424,6 +397,18 @@ export function GroupDashboard() {
                 >
                   <Share className="w-4 h-4 mr-2" />
                   Share
+                </Button>
+                <Button
+                  onClick={() => {
+                    setEditingName(true);
+                    setNewGroupName(group.name);
+                  }}
+                  variant="outline"
+                  size="sm"
+                  className="border-blue-200 hover:bg-blue-50 hover:border-blue-300 text-blue-600"
+                >
+                  <Edit className="w-4 h-4 mr-2" />
+                  Edit
                 </Button>
               </div>
             </div>
@@ -527,14 +512,18 @@ export function GroupDashboard() {
                         // For income: I received money and owe others their share
                         if (expense.paid_by === currentParticipant) {
                           // I received income, subtract what I owe to others
-                          const totalOwedToOthers = expense.expense_splits
-                            .reduce((sum, split) => sum + (split.amount || 0), 0);
+                          const totalOwedToOthers =
+                            expense.expense_splits.reduce(
+                              (sum, split) => sum + (split.amount || 0),
+                              0
+                            );
                           balance -= totalOwedToOthers;
                         } else {
                           // Someone else received income, add what they owe me
                           const myShare =
                             expense.expense_splits.find(
-                              (split) => split.participant_id === currentParticipant
+                              (split) =>
+                                split.participant_id === currentParticipant
                             )?.amount || 0;
                           balance += myShare;
                         }
@@ -545,7 +534,8 @@ export function GroupDashboard() {
                         }
                         const myShare =
                           expense.expense_splits.find(
-                            (split) => split.participant_id === currentParticipant
+                            (split) =>
+                              split.participant_id === currentParticipant
                           )?.amount || 0;
                         balance -= myShare;
                       }
@@ -553,7 +543,9 @@ export function GroupDashboard() {
 
                     // Account for settlements
                     settlements.forEach((settlement) => {
-                      if (settlement.from_participant_id === currentParticipant) {
+                      if (
+                        settlement.from_participant_id === currentParticipant
+                      ) {
                         // I paid someone, reduce what I'm owed
                         balance -= settlement.amount;
                       }
