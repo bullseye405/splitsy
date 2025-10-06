@@ -97,6 +97,11 @@ export function GroupDashboard() {
       ) {
         setShowParticipantSelection(true);
       }
+
+      // Auto-open manage participants if only one participant exists (group creator scenario)
+      if (currentParticipant && data.participants && data.participants.length === 1) {
+        setShowParticipantsModal(true);
+      }
     } catch (error) {
       console.error('Error fetching group:', error);
       navigate('/404', { replace: true });

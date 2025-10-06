@@ -51,7 +51,7 @@ export function GroupCreation() {
         variant: 'destructive',
       });
     } else if (data.id) {
-      const { error: createParticipantError } = await createParticipant(
+      const { data: participantData, error: createParticipantError } = await createParticipant(
         participantName.trim(),
         data.id
       );
@@ -61,7 +61,10 @@ export function GroupCreation() {
           description: (createParticipantError as Error).message,
           variant: 'destructive',
         });
-      } else {
+      } else if (participantData) {
+        // Automatically set the creator as the current participant
+        sessionStorage.setItem(`participant_${data.id}`, participantData.id);
+        
         toast({
           title: 'Group created!',
           description: `${groupName} is ready for expense tracking`,
