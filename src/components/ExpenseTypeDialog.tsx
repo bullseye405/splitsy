@@ -80,42 +80,24 @@ export function ExpenseTypeDialog({
   const currentParticipant =
     localStorage.getItem(`participant_${groupId}`) || null;
 
-  // Update amounts when total amount changes
+  // Only update customAmounts when amount or splitMode changes (not splitBetween)
   useEffect(() => {
     if (splitMode === 'amount' && splitBetween.length > 0) {
       const totalAmount = parseFloat(amount) || 0;
-      const newAmounts: { [key: string]: number } = {};
-
-      // Only adjust amounts for participants that haven't been manually adjusted
-      const nonManualParticipants = splitBetween.filter(
-        (id) => !manuallyAdjustedAmounts.has(id)
-      );
-      const manualParticipants = splitBetween.filter((id) =>
-        manuallyAdjustedAmounts.has(id)
-      );
-
-      // Keep manually adjusted amounts
-      manualParticipants.forEach((id) => {
-        newAmounts[id] = customAmounts[id] || 0;
-      });
-
-      // Calculate remaining amount for non-manual participants
-      const usedAmount = manualParticipants.reduce(
-        (sum, id) => sum + (customAmounts[id] || 0),
-        0
-      );
+      const manualParticipants = splitBetween.filter((id) => manuallyAdjustedAmounts.has(id));
+      const nonManualParticipants = splitBetween.filter((id) => !manuallyAdjustedAmounts.has(id));
+      const usedAmount = manualParticipants.reduce((sum, id) => sum + (customAmounts[id] || 0), 0);
       const remainingAmount = Math.max(0, totalAmount - usedAmount);
-
+      const newAmounts: { [key: string]: number } = { ...customAmounts };
       if (nonManualParticipants.length > 0) {
         const equalAmount = remainingAmount / nonManualParticipants.length;
         nonManualParticipants.forEach((id) => {
           newAmounts[id] = equalAmount;
         });
       }
-
       setCustomAmounts(newAmounts);
     }
-  }, [amount, splitMode, splitBetween, manuallyAdjustedAmounts, customAmounts]);
+  }, [amount, splitMode, customAmounts, manuallyAdjustedAmounts, splitBetween]);
 
   // Initialize defaults when dialog opens
   useEffect(() => {
@@ -460,6 +442,14 @@ export function ExpenseTypeDialog({
       : 0;
   };
 
+  const handleLabelClick = (participantId: string) => {
+    if (splitBetween.length === 1 && splitBetween[0] === participantId) {
+      setSplitBetween(participants.map((p) => p.id));
+    } else {
+      setSplitBetween([participantId]);
+    }
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-xl max-h-[90vh] overflow-y-auto">
@@ -642,17 +632,8 @@ export function ExpenseTypeDialog({
                           }
                         />
                         <label
-                          className="text-sm font-medium cursor-pointer"
-                          onClick={() => {
-                            if (
-                              splitBetween.length === 1 &&
-                              splitBetween[0] === participant.id
-                            ) {
-                              setSplitBetween(participants.map((p) => p.id));
-                            } else {
-                              setSplitBetween([participant.id]);
-                            }
-                          }}
+                          className="text-sm font-medium cursor-pointer select-none"
+                          onClick={() => handleLabelClick(participant.id)}
                         >
                           {getParticipantDisplayName(participant.id)}
                         </label>
@@ -687,17 +668,8 @@ export function ExpenseTypeDialog({
                           }
                         />
                         <label
-                          className="text-sm font-medium"
-                          onClick={() => {
-                            if (
-                              splitBetween.length === 1 &&
-                              splitBetween[0] === participant.id
-                            ) {
-                              setSplitBetween(participants.map((p) => p.id));
-                            } else {
-                              setSplitBetween([participant.id]);
-                            }
-                          }}
+                          className="text-sm font-medium cursor-pointer select-none"
+                          onClick={() => handleLabelClick(participant.id)}
                         >
                           {getParticipantDisplayName(participant.id)}
                         </label>
@@ -772,17 +744,8 @@ export function ExpenseTypeDialog({
                           }
                         />
                         <label
-                          className="text-sm font-medium cursor-pointer"
-                          onClick={() => {
-                            if (
-                              splitBetween.length === 1 &&
-                              splitBetween[0] === participant.id
-                            ) {
-                              setSplitBetween(participants.map((p) => p.id));
-                            } else {
-                              setSplitBetween([participant.id]);
-                            }
-                          }}
+                          className="text-sm font-medium cursor-pointer select-none"
+                          onClick={() => handleLabelClick(participant.id)}
                         >
                           {getParticipantDisplayName(participant.id)}
                         </label>
