@@ -516,20 +516,20 @@ export function GroupDashboard() {
         )}
 
         <div className="flex flex-wrap gap-3 justify-end mt-4 md:flex-nowrap md:gap-3 md:justify-end w-full">
-          <div className="flex flex-col w-full gap-2 md:flex-row md:w-auto md:gap-3">
+          <div className="flex  w-full flex-wrap justify-center gap-2 md:flex-row md:w-auto md:gap-3">
             <Button
               onClick={() => setShowParticipantsModal(true)}
               variant="outline"
               size="sm"
-              className="border-purple-200 hover:bg-purple-50 hover:border-purple-300 text-purple-600 w-full md:w-auto"
+              className="border-purple-200 hover:bg-purple-50 hover:border-purple-300 text-purple-600 md:w-auto"
             >
               <Users className="w-4 h-4 mr-2" />
-              Manage Participants
+              Participants
             </Button>
             <Button
               onClick={() => handleOpenDialog('expense')}
               size="sm"
-              className="bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white w-full md:w-auto"
+              className="bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white md:w-auto"
               disabled={!group.participants || group.participants.length < 2}
             >
               <Plus className="w-4 h-4 mr-2" />
@@ -538,7 +538,7 @@ export function GroupDashboard() {
             <Button
               onClick={() => handleOpenDialog('income')}
               size="sm"
-              className="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white w-full md:w-auto"
+              className="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white  md:w-auto"
               disabled={!group.participants || group.participants.length < 2}
             >
               <TrendingUp className="w-4 h-4 mr-2" />
@@ -547,7 +547,7 @@ export function GroupDashboard() {
             <Button
               onClick={() => handleOpenDialog('transfer')}
               size="sm"
-              className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white w-full md:w-auto"
+              className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white  md:w-auto"
               disabled={!group.participants || group.participants.length < 2}
             >
               <ArrowRightLeft className="w-4 h-4 mr-2" />
