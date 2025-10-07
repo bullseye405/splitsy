@@ -17,7 +17,9 @@ export function HeroSection() {
   const [description, setDescription] = useState('');
   const [email, setEmail] = useState('');
   const [isCreating, setIsCreating] = useState(false);
-  const [relatedGroups, setRelatedGroups] = useState<Array<{id: string, name: string}>>([]);
+  const [relatedGroups, setRelatedGroups] = useState<
+    Array<{ id: string; name: string }>
+  >([]);
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -32,27 +34,27 @@ export function HeroSection() {
 
   const fetchRelatedGroups = async (userEmail: string) => {
     if (!userEmail.trim()) return;
-    
     try {
       // Query participants table to find groups where this email exists
       const { data } = await supabase
         .from('participants')
-        .select(`
+        .select(
+          `
           group_id,
           group:group_id (
             id,
             name
           )
-        `)
+        `
+        )
         .eq('email', userEmail)
         .limit(5);
-      
       if (data) {
         const groups = data
-          .filter(item => item.group)
-          .map(item => ({
+          .filter((item) => item.group)
+          .map((item) => ({
             id: item.group.id,
-            name: item.group.name
+            name: item.group.name,
           }));
         setRelatedGroups(groups);
       }
@@ -64,7 +66,6 @@ export function HeroSection() {
   const handleEmailChange = (value: string) => {
     setEmail(value);
     sessionStorage.setItem('userEmail', value);
-    
     if (value.includes('@')) {
       fetchRelatedGroups(value);
     } else {
@@ -93,7 +94,10 @@ export function HeroSection() {
 
     setIsCreating(true);
 
-    const { data, error } = await createGroup(groupName.trim(), description.trim());
+    const { data, error } = await createGroup(
+      groupName.trim(),
+      description.trim()
+    );
 
     if (error) {
       toast({
@@ -102,11 +106,12 @@ export function HeroSection() {
         variant: 'destructive',
       });
     } else if (data.id) {
-      const { error: createParticipantError } = await createParticipant(
-        participantName.trim(),
-        data.id,
-        email.trim() || undefined
-      );
+      const { data: participantData, error: createParticipantError } =
+        await createParticipant(
+          participantName.trim(),
+          data.id,
+          email.trim() || undefined
+        );
       if (createParticipantError) {
         toast({
           title: 'Error adding participant',
@@ -114,6 +119,8 @@ export function HeroSection() {
           variant: 'destructive',
         });
       } else {
+        sessionStorage.setItem(`participant_${data.id}`, participantData.id);
+
         toast({
           title: 'Group created!',
           description: `${groupName} is ready for expense tracking`,
@@ -142,15 +149,16 @@ export function HeroSection() {
                 <span className="text-yellow-300">without the awkwardness</span>
               </h1>
               <p className="text-xl md:text-2xl text-white/90 font-light">
-                Track shared costs, settle debts and keep friendships stress-free
+                Track shared costs, settle debts and keep friendships
+                stress-free
               </p>
             </div>
 
             {/* Visual element */}
             <div className="hidden lg:block">
-              <img 
-                src="/illustrations/dining.jpg" 
-                alt="Friends dining together and sharing expenses" 
+              <img
+                src="/illustrations/dining.jpg"
+                alt="Friends dining together and sharing expenses"
                 className="w-96 h-64 object-cover rounded-2xl shadow-strong"
               />
             </div>
@@ -171,7 +179,10 @@ export function HeroSection() {
 
                 <div className="space-y-3 sm:space-y-4">
                   <div className="space-y-1.5 sm:space-y-2">
-                    <label htmlFor="groupName" className="text-sm font-medium text-gray-700">
+                    <label
+                      htmlFor="groupName"
+                      className="text-sm font-medium text-gray-700"
+                    >
                       Group Name *
                     </label>
                     <Input
@@ -186,7 +197,10 @@ export function HeroSection() {
                   </div>
 
                   <div className="space-y-1.5 sm:space-y-2">
-                    <label htmlFor="description" className="text-sm font-medium text-gray-700">
+                    <label
+                      htmlFor="description"
+                      className="text-sm font-medium text-gray-700"
+                    >
                       Description
                     </label>
                     <Input
@@ -201,7 +215,10 @@ export function HeroSection() {
                   </div>
 
                   <div className="space-y-1.5 sm:space-y-2">
-                    <label htmlFor="participantName" className="text-sm font-medium text-gray-700">
+                    <label
+                      htmlFor="participantName"
+                      className="text-sm font-medium text-gray-700"
+                    >
                       Your Name *
                     </label>
                     <Input
@@ -216,7 +233,10 @@ export function HeroSection() {
                   </div>
 
                   <div className="space-y-1.5 sm:space-y-2">
-                    <label htmlFor="email" className="text-sm font-medium text-gray-700">
+                    <label
+                      htmlFor="email"
+                      className="text-sm font-medium text-gray-700"
+                    >
                       Email
                     </label>
                     <Input

@@ -1,7 +1,10 @@
 import { supabase } from '@/integrations/supabase/client';
-import { GroupWithParticipants } from '@/types/group';
 
-export async function updateGroupName(groupId: string, name: string, description?: string) {
+export async function updateGroupName(
+  groupId: string,
+  name: string,
+  description?: string
+) {
   const updateFields: { name: string; description?: string } = { name };
   if (description !== undefined) {
     updateFields.description = description;
@@ -40,8 +43,5 @@ export async function getGroupById(groupId: string) {
 }
 
 export async function deleteGroup(groupId: string) {
-  return await supabase
-    .from('group')
-    .delete()
-    .eq('id', groupId);
+  return await supabase.from('group').delete().eq('id', groupId);
 }
