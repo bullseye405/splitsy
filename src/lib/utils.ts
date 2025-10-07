@@ -106,9 +106,10 @@ export function getMyCost(
 
 // Returns the total paid by a participant
 export function getIPaid(expenses: ExpenseWithSplits[], participantId: string) {
-  return expenses
+  const paid = expenses
     .filter((e) => e.paid_by === participantId)
     .reduce((sum, expense) => sum + expense.amount, 0);
+  return paid < 0 ? 0 : paid;
 }
 
 // Returns the total income received by a participant
@@ -134,7 +135,8 @@ export function getIReceived(
     .filter((s) => s.to_participant_id === participantId)
     .reduce((sum, s) => sum + s.amount, 0);
 
-  return receivedFromTransfers + settlementsReceived;
+  const received = receivedFromTransfers + settlementsReceived;
+  return received < 0 ? 0 : received;
 }
 
 // Returns the net amount owed by/to a participant
@@ -173,13 +175,15 @@ export function getOwned(
       balance -= myShare;
     }
   });
+
   settlements.forEach((settlement) => {
-    if (settlement.from_participant_id === participantId) {
+    // Both paying and receiving a settlement reduce the amount you are owed
+    if (
+      settlement.from_participant_id === participantId ||
+      settlement.to_participant_id === participantId
+    ) {
       balance -= settlement.amount;
     }
-    if (settlement.to_participant_id === participantId) {
-      balance += settlement.amount;
-    }
   });
-  return balance;
+  return balance < 0 ? 0 : balance;
 }

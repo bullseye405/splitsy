@@ -10,6 +10,7 @@ import { recordGroupView } from '@/api/groupViews';
 import { getSettlementsByGroupId } from '@/api/settlements';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
+import { getIPaid, getIReceived, getMyCost, getOwned } from '@/lib/utils';
 import { GroupWithParticipants } from '@/types/group';
 import { Settlement } from '@/types/settlements';
 import {
@@ -21,14 +22,13 @@ import {
   TrendingUp,
   Users,
 } from 'lucide-react';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { DebtSettlement } from './DebtSettlement';
 import { ExpenseTypeDialog } from './ExpenseTypeDialog';
 import { ParticipantSelectionModal } from './ParticipantSelectionModal';
 import { ParticipantsModal } from './ParticipantsModal';
 import RecentTransactions from './RecentTransactions';
-import { getIPaid, getIReceived, getMyCost, getOwned } from '@/lib/utils';
 
 export function GroupDashboard() {
   const { groupId } = useParams<{ groupId: string }>();
@@ -149,6 +149,21 @@ export function GroupDashboard() {
     fetchExpenses();
     fetchSettlements();
   }, [fetchGroupData, fetchExpenses, fetchSettlements]);
+
+  const { cost, owned, paid, received } = useMemo(() => {
+    const cost = getMyCost(expenses, currentParticipant).toFixed(2);
+    const paid = getIPaid(expenses, currentParticipant).toFixed(2);
+    const received = getIReceived(
+      expenses,
+      settlements,
+      currentParticipant
+    ).toFixed(2);
+    const owned = getOwned(expenses, settlements, currentParticipant).toFixed(
+      2
+    );
+
+    return { cost, paid, received, owned };
+  }, [currentParticipant, expenses, settlements]);
 
   const handleParticipantSelect = async (participantId: string) => {
     if (!groupId) return;
@@ -465,7 +480,7 @@ export function GroupDashboard() {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div className="text-center p-3 rounded-lg bg-orange-50 border border-orange-200">
                 <div className="text-xl font-bold text-orange-600 mb-1">
-                  ${getMyCost(expenses, currentParticipant)}
+                  ${cost}
                 </div>
                 <div className="text-xs font-medium text-orange-700">
                   My Cost
@@ -474,14 +489,14 @@ export function GroupDashboard() {
 
               <div className="text-center p-3 rounded-lg bg-blue-50 border border-blue-200">
                 <div className="text-xl font-bold text-blue-600 mb-1">
-                  ${getIPaid(expenses, currentParticipant)}
+                  ${paid}
                 </div>
                 <div className="text-xs font-medium text-blue-700">I Paid</div>
               </div>
 
               <div className="text-center p-3 rounded-lg bg-purple-50 border border-purple-200">
                 <div className="text-xl font-bold text-purple-600 mb-1">
-                  ${getIReceived(expenses, settlements, currentParticipant)}
+                  ${received}
                 </div>
                 <div className="text-xs font-medium text-purple-700">
                   I Received
@@ -490,7 +505,7 @@ export function GroupDashboard() {
 
               <div className="text-center p-3 rounded-lg bg-emerald-50 border border-emerald-200">
                 <div className="text-xl font-bold text-emerald-600 mb-1">
-                  ${getOwned(expenses, settlements, currentParticipant)}
+                  ${owned}
                 </div>
                 <div className="text-xs font-medium text-emerald-700">
                   I'm Owed
