@@ -84,9 +84,16 @@ export function ExpenseTypeDialog({
   useEffect(() => {
     if (splitMode === 'amount' && splitBetween.length > 0) {
       const totalAmount = parseFloat(amount) || 0;
-      const manualParticipants = splitBetween.filter((id) => manuallyAdjustedAmounts.has(id));
-      const nonManualParticipants = splitBetween.filter((id) => !manuallyAdjustedAmounts.has(id));
-      const usedAmount = manualParticipants.reduce((sum, id) => sum + (customAmounts[id] || 0), 0);
+      const manualParticipants = splitBetween.filter((id) =>
+        manuallyAdjustedAmounts.has(id)
+      );
+      const nonManualParticipants = splitBetween.filter(
+        (id) => !manuallyAdjustedAmounts.has(id)
+      );
+      const usedAmount = manualParticipants.reduce(
+        (sum, id) => sum + (customAmounts[id] || 0),
+        0
+      );
       const remainingAmount = Math.max(0, totalAmount - usedAmount);
       const newAmounts: { [key: string]: number } = { ...customAmounts };
       if (nonManualParticipants.length > 0) {
@@ -125,6 +132,10 @@ export function ExpenseTypeDialog({
       setDescription(expense.description || '');
       setAmount(expense.amount.toString());
       setPaidBy(expense.paid_by);
+
+      if (expense.expense_type === 'transfer') {
+        setTransferTo(expense.expense_splits[0].participant_id || '');
+      }
       setDate(
         expense.created_at
           ? new Date(expense.created_at).toISOString().split('T')[0]

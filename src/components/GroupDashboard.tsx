@@ -28,6 +28,7 @@ import { ExpenseTypeDialog } from './ExpenseTypeDialog';
 import { ParticipantSelectionModal } from './ParticipantSelectionModal';
 import { ParticipantsModal } from './ParticipantsModal';
 import RecentTransactions from './RecentTransactions';
+import { getIPaid, getIReceived, getMyCost, getOwned } from '@/lib/utils';
 
 export function GroupDashboard() {
   const { groupId } = useParams<{ groupId: string }>();
@@ -464,22 +465,7 @@ export function GroupDashboard() {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div className="text-center p-3 rounded-lg bg-orange-50 border border-orange-200">
                 <div className="text-xl font-bold text-orange-600 mb-1">
-                  $
-                  {(() => {
-                    return expenses
-                      .filter(
-                        (e) => e.expense_type === 'expense' || !e.expense_type
-                      )
-                      .reduce((sum, expense) => {
-                        const myShare =
-                          expense.expense_splits.find(
-                            (split) =>
-                              split.participant_id === currentParticipant
-                          )?.amount || 0;
-                        return sum + myShare;
-                      }, 0)
-                      .toFixed(2);
-                  })()}
+                  ${getMyCost(expenses, currentParticipant)}
                 </div>
                 <div className="text-xs font-medium text-orange-700">
                   My Cost
@@ -488,31 +474,14 @@ export function GroupDashboard() {
 
               <div className="text-center p-3 rounded-lg bg-blue-50 border border-blue-200">
                 <div className="text-xl font-bold text-blue-600 mb-1">
-                  $
-                  {(() => {
-                    return expenses
-                      .filter((e) => e.paid_by === currentParticipant)
-                      .reduce((sum, expense) => sum + expense.amount, 0)
-                      .toFixed(2);
-                  })()}
+                  ${getIPaid(expenses, currentParticipant)}
                 </div>
                 <div className="text-xs font-medium text-blue-700">I Paid</div>
               </div>
 
               <div className="text-center p-3 rounded-lg bg-purple-50 border border-purple-200">
                 <div className="text-xl font-bold text-purple-600 mb-1">
-                  $
-                  {(() => {
-                    // Sum of all income where I received the money
-                    return expenses
-                      .filter(
-                        (e) =>
-                          e.expense_type === 'income' &&
-                          e.paid_by === currentParticipant
-                      )
-                      .reduce((sum, expense) => sum + expense.amount, 0)
-                      .toFixed(2);
-                  })()}
+                  ${getIReceived(expenses, settlements, currentParticipant)}
                 </div>
                 <div className="text-xs font-medium text-purple-700">
                   I Received
@@ -521,61 +490,7 @@ export function GroupDashboard() {
 
               <div className="text-center p-3 rounded-lg bg-emerald-50 border border-emerald-200">
                 <div className="text-xl font-bold text-emerald-600 mb-1">
-                  $
-                  {(() => {
-                    let balance = 0;
-
-                    // Calculate from expenses, transfers, and income
-                    expenses.forEach((expense) => {
-                      if (expense.expense_type === 'income') {
-                        // For income: I received money and owe others their share
-                        if (expense.paid_by === currentParticipant) {
-                          // I received income, subtract what I owe to others
-                          const totalOwedToOthers =
-                            expense.expense_splits.reduce(
-                              (sum, split) => sum + (split.amount || 0),
-                              0
-                            );
-                          balance -= totalOwedToOthers;
-                        } else {
-                          // Someone else received income, add what they owe me
-                          const myShare =
-                            expense.expense_splits.find(
-                              (split) =>
-                                split.participant_id === currentParticipant
-                            )?.amount || 0;
-                          balance += myShare;
-                        }
-                      } else {
-                        // For expenses and transfers: I paid - my share
-                        if (expense.paid_by === currentParticipant) {
-                          balance += expense.amount;
-                        }
-                        const myShare =
-                          expense.expense_splits.find(
-                            (split) =>
-                              split.participant_id === currentParticipant
-                          )?.amount || 0;
-                        balance -= myShare;
-                      }
-                    });
-
-                    // Account for settlements
-                    settlements.forEach((settlement) => {
-                      if (
-                        settlement.from_participant_id === currentParticipant
-                      ) {
-                        // I paid someone, reduce what I'm owed
-                        balance -= settlement.amount;
-                      }
-                      if (settlement.to_participant_id === currentParticipant) {
-                        // Someone paid me, reduce what I'm owed
-                        balance += settlement.amount;
-                      }
-                    });
-
-                    return balance >= 0 ? balance.toFixed(2) : '0.00';
-                  })()}
+                  ${getOwned(expenses, settlements, currentParticipant)}
                 </div>
                 <div className="text-xs font-medium text-emerald-700">
                   I'm Owed
