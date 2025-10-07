@@ -3,7 +3,7 @@
 
 ## Why Splitsy Exists
 
-Splitsy is inspired by many popular expense splitting apps that require subscriptions or charge fees for premium features. This project was created to tackle those limitations and provide a free, open alternative—mainly for personal use. If you’re tired of paywalls and required accounts just to split expenses with friends, Splitsy is for you.
+Splitsy is inspired by many popular expense splitting apps that require subscriptions or charge fees for premium features. This project was created to tackle those limitations and provide a free, open alternative, mainly for personal use. If you’re tired of paywalls and required accounts just to split expenses with friends, Splitsy is for you.
 
 Splitsy is not a commercial product and does not aim to compete for profit. It’s a personal project, built to make expense splitting simple and accessible for everyone.
 
@@ -41,9 +41,9 @@ npm run dev
 
 **Edit a file directly in GitHub**
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+ Navigate to the desired file(s).
+ Click the "Edit" button (pencil icon) at the top right of the file view.
+ Make your changes and commit the changes.
 
 **Use GitHub Codespaces**
 
