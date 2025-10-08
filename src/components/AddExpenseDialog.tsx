@@ -26,6 +26,11 @@ interface Participant {
   name: string;
 }
 
+interface Payer {
+  participantId: string;
+  amount: number;
+}
+
 interface AddExpenseDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -34,6 +39,7 @@ interface AddExpenseDialogProps {
     amount: number;
     paidBy: string;
     splitBetween: string[];
+    payers?: Payer[];
   }) => void;
   participants: Participant[];
 }
@@ -57,6 +63,8 @@ export function AddExpenseDialog({
     {}
   );
   const [weights, setWeights] = useState<{ [key: string]: number }>({});
+  const [payers, setPayers] = useState<Payer[]>([]);
+  const [multiPayer, setMultiPayer] = useState(false);
   const { toast } = useToast();
 
   const handleSubmit = () => {
@@ -79,13 +87,34 @@ export function AddExpenseDialog({
       return;
     }
 
-    if (!paidBy) {
+    if (!multiPayer && !paidBy) {
       toast({
         title: 'Who paid?',
         description: 'Please select who paid for this expense',
         variant: 'destructive',
       });
       return;
+    }
+
+    if (multiPayer && payers.length === 0) {
+      toast({
+        title: 'Who paid?',
+        description: 'Please add at least one payer',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (multiPayer) {
+      const totalPaid = payers.reduce((sum, p) => sum + p.amount, 0);
+      if (Math.abs(totalPaid - amountNumber) > 0.01) {
+        toast({
+          title: 'Amount mismatch',
+          description: `Total paid (${totalPaid.toFixed(2)}) must equal expense amount (${amountNumber.toFixed(2)})`,
+          variant: 'destructive',
+        });
+        return;
+      }
     }
 
     if (splitBetween.length === 0) {
@@ -101,8 +130,9 @@ export function AddExpenseDialog({
     onAddExpense({
       description: description.trim(),
       amount: amountNumber,
-      paidBy,
+      paidBy: multiPayer ? payers[0].participantId : paidBy,
       splitBetween,
+      payers: multiPayer ? payers : undefined,
     });
 
     // Reset form
@@ -113,6 +143,8 @@ export function AddExpenseDialog({
     setSplitMode('equal');
     setCustomAmounts({});
     setWeights({});
+    setPayers([]);
+    setMultiPayer(false);
   };
 
   const handleSplitToggle = (participantId: string, checked: boolean) => {
@@ -206,9 +238,33 @@ export function AddExpenseDialog({
     } else if (splitMode === 'amount') {
       return customAmounts[participantId] || 0;
     } else {
-      return calculateWeightedAmount(participantId);
+    return calculateWeightedAmount(participantId);
     }
   };
+
+  const addPayer = () => {
+    const remainingAmount = parseFloat(amount) - payers.reduce((sum, p) => sum + p.amount, 0);
+    if (payers.length < participants.length && remainingAmount > 0) {
+      setPayers([...payers, { participantId: '', amount: remainingAmount }]);
+    }
+  };
+
+  const updatePayer = (index: number, field: 'participantId' | 'amount', value: string | number) => {
+    const newPayers = [...payers];
+    if (field === 'participantId') {
+      newPayers[index].participantId = value as string;
+    } else {
+      newPayers[index].amount = typeof value === 'number' ? value : parseFloat(value) || 0;
+    }
+    setPayers(newPayers);
+  };
+
+  const removePayer = (index: number) => {
+    setPayers(payers.filter((_, i) => i !== index));
+  };
+
+  const totalPaid = payers.reduce((sum, p) => sum + p.amount, 0);
+  const remainingToPay = parseFloat(amount) - totalPaid;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -250,19 +306,98 @@ export function AddExpenseDialog({
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-medium">Who paid?</label>
-            <Select value={paidBy} onValueChange={setPaidBy}>
-              <SelectTrigger className="h-10">
-                <SelectValue placeholder="Select who paid" />
-              </SelectTrigger>
-              <SelectContent>
-                {participants.map((participant) => (
-                  <SelectItem key={participant.id} value={participant.id}>
-                    {participant.name}
-                  </SelectItem>
+            <div className="flex items-center justify-between">
+              <label className="text-sm font-medium">Who paid?</label>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  setMultiPayer(!multiPayer);
+                  if (!multiPayer) {
+                    setPayers([{ participantId: paidBy || '', amount: parseFloat(amount) || 0 }]);
+                  } else {
+                    setPayers([]);
+                  }
+                }}
+              >
+                {multiPayer ? 'Single Payer' : 'Multiple Payers'}
+              </Button>
+            </div>
+            
+            {!multiPayer ? (
+              <Select value={paidBy} onValueChange={setPaidBy}>
+                <SelectTrigger className="h-10">
+                  <SelectValue placeholder="Select who paid" />
+                </SelectTrigger>
+                <SelectContent>
+                  {participants.map((participant) => (
+                    <SelectItem key={participant.id} value={participant.id}>
+                      {participant.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            ) : (
+              <div className="space-y-2 max-h-48 overflow-y-auto border rounded-md p-3">
+                {payers.map((payer, index) => (
+                  <div key={index} className="flex items-center gap-2">
+                    <Select
+                      value={payer.participantId}
+                      onValueChange={(value) => updatePayer(index, 'participantId', value)}
+                    >
+                      <SelectTrigger className="h-9 flex-1">
+                        <SelectValue placeholder="Select payer" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {participants.map((participant) => (
+                          <SelectItem key={participant.id} value={participant.id}>
+                            {participant.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <Input
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      value={payer.amount}
+                      onChange={(e) => updatePayer(index, 'amount', e.target.value)}
+                      className="h-9 w-24"
+                      placeholder="Amount"
+                    />
+                    {payers.length > 1 && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => removePayer(index)}
+                        className="h-9 w-9 p-0"
+                      >
+                        ×
+                      </Button>
+                    )}
+                  </div>
                 ))}
-              </SelectContent>
-            </Select>
+                <div className="flex items-center justify-between pt-2 border-t">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={addPayer}
+                    disabled={payers.length >= participants.length || remainingToPay <= 0}
+                  >
+                    + Add Payer
+                  </Button>
+                  <div className="text-sm">
+                    <span className="text-muted-foreground">Total: </span>
+                    <span className={remainingToPay !== 0 ? 'text-destructive font-medium' : 'text-primary font-medium'}>
+                      ${totalPaid.toFixed(2)} / ${parseFloat(amount) || 0}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="space-y-4">

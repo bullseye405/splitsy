@@ -220,42 +220,86 @@ export function GroupDashboard() {
     expenseType: 'expense' | 'transfer' | 'income';
     transferTo?: string;
     date: string;
+    payers?: Array<{ participantId: string; amount: number }>;
   }) => {
     if (!groupId || !group) return;
 
     try {
-      const expense = {
-        description: expenseData.description,
-        amount: expenseData.amount,
-        paid_by: expenseData.paidBy,
-        group_id: groupId,
-        split_type: expenseData.splitMode,
-        expense_type: expenseData.expenseType,
-        created_at: new Date(expenseData.date).toISOString(),
-      };
-
-      if (editingExpense) {
-        await updateExpense(editingExpense.id, expense, expenseData.splits);
+      // If multiple payers, create main expense + transfer transactions
+      if (expenseData.payers && expenseData.payers.length > 1) {
+        const mainPayer = expenseData.payers[0];
+        
+        // Create main expense with total amount paid by first payer
+        const mainExpense = {
+          description: expenseData.description,
+          amount: expenseData.amount,
+          paid_by: mainPayer.participantId,
+          group_id: groupId,
+          split_type: expenseData.splitMode as 'equal' | 'amount' | 'weight',
+          expense_type: expenseData.expenseType,
+          created_at: new Date(expenseData.date).toISOString(),
+        };
+        
+        await createExpense(mainExpense, expenseData.splits);
+        
+        // Create transfer transactions for other payers
+        for (let i = 1; i < expenseData.payers.length; i++) {
+          const payer = expenseData.payers[i];
+          const payerName = group?.participants?.find(p => p.id === payer.participantId)?.name || 'Unknown';
+          const transferExpense = {
+            description: `${expenseData.description} (${payerName} contribution)`,
+            amount: payer.amount,
+            paid_by: payer.participantId,
+            group_id: groupId,
+            split_type: 'equal' as 'equal' | 'amount' | 'weight',
+            expense_type: 'transfer',
+            created_at: new Date(expenseData.date).toISOString(),
+          };
+          
+          await createExpense(transferExpense, [
+            { participant_id: mainPayer.participantId, amount: payer.amount }
+          ]);
+        }
+        
         toast({
-          title: `${
-            expenseData.expenseType.charAt(0).toUpperCase() +
-            expenseData.expenseType.slice(1)
-          } updated`,
-          description: `$${expenseData.amount.toFixed(2)} ${
-            expenseData.expenseType
-          } has been updated`,
+          title: 'Multi-payer expense added',
+          description: `$${expenseData.amount.toFixed(2)} expense with ${expenseData.payers.length} payers recorded`,
         });
       } else {
-        await createExpense(expense, expenseData.splits);
-        toast({
-          title: `${
-            expenseData.expenseType.charAt(0).toUpperCase() +
-            expenseData.expenseType.slice(1)
-          } added`,
-          description: `$${expenseData.amount.toFixed(2)} ${
-            expenseData.expenseType
-          } has been recorded`,
-        });
+        // Standard single payer flow
+        const expense = {
+          description: expenseData.description,
+          amount: expenseData.amount,
+          paid_by: expenseData.paidBy,
+          group_id: groupId,
+          split_type: expenseData.splitMode,
+          expense_type: expenseData.expenseType,
+          created_at: new Date(expenseData.date).toISOString(),
+        };
+
+        if (editingExpense) {
+          await updateExpense(editingExpense.id, expense, expenseData.splits);
+          toast({
+            title: `${
+              expenseData.expenseType.charAt(0).toUpperCase() +
+              expenseData.expenseType.slice(1)
+            } updated`,
+            description: `$${expenseData.amount.toFixed(2)} ${
+              expenseData.expenseType
+            } has been updated`,
+          });
+        } else {
+          await createExpense(expense, expenseData.splits);
+          toast({
+            title: `${
+              expenseData.expenseType.charAt(0).toUpperCase() +
+              expenseData.expenseType.slice(1)
+            } added`,
+            description: `$${expenseData.amount.toFixed(2)} ${
+              expenseData.expenseType
+            } has been recorded`,
+          });
+        }
       }
 
       setShowExpenseDialog(false);

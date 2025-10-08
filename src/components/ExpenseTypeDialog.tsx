@@ -17,6 +17,11 @@ import { Calendar, Lock } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 
+interface Payer {
+  participantId: string;
+  amount: number;
+}
+
 interface ExpenseTypeDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -34,6 +39,7 @@ interface ExpenseTypeDialogProps {
     expenseType: 'expense' | 'transfer' | 'income';
     transferTo?: string;
     date: string;
+    payers?: Payer[];
   }) => void;
   participants: Participant[];
   expense?: ExpenseWithSplits | null;
@@ -66,6 +72,8 @@ export function ExpenseTypeDialog({
     Set<string>
   >(new Set());
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
+  const [payers, setPayers] = useState<Payer[]>([]);
+  const [multiPayer, setMultiPayer] = useState(false);
   const { toast } = useToast();
 
   const { groupId } = useParams<{ groupId: string }>();
@@ -197,7 +205,7 @@ export function ExpenseTypeDialog({
       return;
     }
 
-    if (!paidBy) {
+    if (!multiPayer && !paidBy) {
       toast({
         title: type === 'transfer' ? 'Who transferred?' : 'Who paid?',
         description: `Please select who ${
@@ -206,6 +214,27 @@ export function ExpenseTypeDialog({
         variant: 'destructive',
       });
       return;
+    }
+
+    if (multiPayer && payers.length === 0) {
+      toast({
+        title: 'Who paid?',
+        description: 'Please add at least one payer',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (multiPayer) {
+      const totalPaid = payers.reduce((sum, p) => sum + p.amount, 0);
+      if (Math.abs(totalPaid - amountNumber) > 0.01) {
+        toast({
+          title: 'Amount mismatch',
+          description: `Total paid (${totalPaid.toFixed(2)}) must equal expense amount (${amountNumber.toFixed(2)})`,
+          variant: 'destructive',
+        });
+        return;
+      }
     }
 
     if (type === 'transfer') {
@@ -278,14 +307,39 @@ export function ExpenseTypeDialog({
     onSave({
       description: description.trim(),
       amount: amountNumber,
-      paidBy,
+      paidBy: multiPayer ? payers[0].participantId : paidBy,
       splitMode,
       splits,
       expenseType: type,
       transferTo: type === 'transfer' ? transferTo : undefined,
       date: timestamp,
+      payers: multiPayer ? payers : undefined,
     });
   };
+
+  const addPayer = () => {
+    const remainingAmount = parseFloat(amount) - payers.reduce((sum, p) => sum + p.amount, 0);
+    if (payers.length < participants.length && remainingAmount > 0) {
+      setPayers([...payers, { participantId: '', amount: remainingAmount }]);
+    }
+  };
+
+  const updatePayer = (index: number, field: 'participantId' | 'amount', value: string | number) => {
+    const newPayers = [...payers];
+    if (field === 'participantId') {
+      newPayers[index].participantId = value as string;
+    } else {
+      newPayers[index].amount = typeof value === 'number' ? value : parseFloat(value) || 0;
+    }
+    setPayers(newPayers);
+  };
+
+  const removePayer = (index: number) => {
+    setPayers(payers.filter((_, i) => i !== index));
+  };
+
+  const totalPaid = payers.reduce((sum, p) => sum + p.amount, 0);
+  const remainingToPay = parseFloat(amount) - totalPaid;
 
   const handleSplitToggle = (participantId: string, checked: boolean) => {
     if (checked) {
@@ -456,29 +510,108 @@ export function ExpenseTypeDialog({
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-medium">
-              {type === 'transfer'
-                ? 'From'
-                : type === 'income'
-                ? 'Received by'
-                : 'Paid by'}
-            </label>
-            <div className="flex flex-wrap gap-2 mt-1">
-              {participants.map((participant) => (
+            <div className="flex items-center justify-between">
+              <label className="text-sm font-medium">
+                {type === 'transfer'
+                  ? 'From'
+                  : type === 'income'
+                  ? 'Received by'
+                  : 'Paid by'}
+              </label>
+              {type === 'expense' && (
                 <Button
-                  key={participant.id}
+                  type="button"
+                  variant="outline"
                   size="sm"
-                  variant={paidBy === participant.id ? 'default' : 'outline'}
-                  className="rounded-xl"
                   onClick={() => {
-                    setPaidBy(participant.id);
-                    setTransferTo(''); // Clear transferTo if payer changes
+                    setMultiPayer(!multiPayer);
+                    if (!multiPayer) {
+                      setPayers([{ participantId: paidBy || '', amount: parseFloat(amount) || 0 }]);
+                    } else {
+                      setPayers([]);
+                    }
                   }}
                 >
-                  {getParticipantDisplayName(participant.id)}
+                  {multiPayer ? 'Single Payer' : 'Multiple Payers'}
                 </Button>
-              ))}
+              )}
             </div>
+            
+            {!multiPayer ? (
+              <div className="flex flex-wrap gap-2 mt-1">
+                {participants.map((participant) => (
+                  <Button
+                    key={participant.id}
+                    size="sm"
+                    variant={paidBy === participant.id ? 'default' : 'outline'}
+                    className="rounded-xl"
+                    onClick={() => {
+                      setPaidBy(participant.id);
+                      setTransferTo(''); // Clear transferTo if payer changes
+                    }}
+                  >
+                    {getParticipantDisplayName(participant.id)}
+                  </Button>
+                ))}
+              </div>
+            ) : (
+              <div className="space-y-2 max-h-48 overflow-y-auto border rounded-md p-3">
+                {payers.map((payer, index) => (
+                  <div key={index} className="flex items-center gap-2">
+                    <div className="flex-1 flex gap-2">
+                      {participants.map((participant) => (
+                        <Button
+                          key={participant.id}
+                          size="sm"
+                          variant={payer.participantId === participant.id ? 'default' : 'outline'}
+                          className="rounded-xl flex-1"
+                          onClick={() => updatePayer(index, 'participantId', participant.id)}
+                        >
+                          {getParticipantDisplayName(participant.id)}
+                        </Button>
+                      ))}
+                    </div>
+                    <Input
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      value={payer.amount}
+                      onChange={(e) => updatePayer(index, 'amount', e.target.value)}
+                      className="h-9 w-24"
+                      placeholder="Amount"
+                    />
+                    {payers.length > 1 && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => removePayer(index)}
+                        className="h-9 w-9 p-0"
+                      >
+                        ×
+                      </Button>
+                    )}
+                  </div>
+                ))}
+                <div className="flex items-center justify-between pt-2 border-t">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={addPayer}
+                    disabled={payers.length >= participants.length || remainingToPay <= 0}
+                  >
+                    + Add Payer
+                  </Button>
+                  <div className="text-sm">
+                    <span className="text-muted-foreground">Total: </span>
+                    <span className={remainingToPay !== 0 ? 'text-destructive font-medium' : 'text-primary font-medium'}>
+                      ${totalPaid.toFixed(2)} / ${parseFloat(amount) || 0}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
           <div className="flex gap-2 ">
             <div className="flex-1">
