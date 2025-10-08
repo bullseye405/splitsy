@@ -80,25 +80,6 @@ export function ExpenseTypeDialog({
   const currentParticipant =
     localStorage.getItem(`participant_${groupId}`) || null;
 
-  // Only update customAmounts when amount or splitMode changes (not splitBetween)
-  useEffect(() => {
-    if (splitMode === 'amount' && splitBetween.length > 0) {
-      const totalAmount = parseFloat(amount) || 0;
-      const manualParticipants = splitBetween.filter((id) => manuallyAdjustedAmounts.has(id));
-      const nonManualParticipants = splitBetween.filter((id) => !manuallyAdjustedAmounts.has(id));
-      const usedAmount = manualParticipants.reduce((sum, id) => sum + (customAmounts[id] || 0), 0);
-      const remainingAmount = Math.max(0, totalAmount - usedAmount);
-      const newAmounts: { [key: string]: number } = { ...customAmounts };
-      if (nonManualParticipants.length > 0) {
-        const equalAmount = remainingAmount / nonManualParticipants.length;
-        nonManualParticipants.forEach((id) => {
-          newAmounts[id] = equalAmount;
-        });
-      }
-      setCustomAmounts(newAmounts);
-    }
-  }, [amount, splitMode, customAmounts, manuallyAdjustedAmounts, splitBetween]);
-
   // Initialize defaults when dialog opens
   useEffect(() => {
     if (open && !isEditing) {
