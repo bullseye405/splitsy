@@ -12,7 +12,7 @@ import {
   Filter,
   Trash2,
   TrendingUp,
-  X
+  X,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
