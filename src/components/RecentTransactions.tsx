@@ -492,3 +492,5 @@ const RecentTransactions = ({
     </Card>
   );
 };
+
+export default RecentTransactions;
