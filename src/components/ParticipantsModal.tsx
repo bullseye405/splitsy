@@ -1,9 +1,9 @@
+import { getGroupViews, GroupView } from '@/api/groupViews';
 import {
   createParticipant,
   deleteParticipant,
   updateParticipant,
 } from '@/api/participants';
-import { getGroupViews, GroupView } from '@/api/groupViews';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -15,7 +15,17 @@ import {
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { Participant } from '@/types/participants';
-import { Edit, Eye, EyeOff, Plus, Trash2, Users } from 'lucide-react';
+import {
+  Check,
+  Edit,
+  Eye,
+  EyeOff,
+  Plus,
+  Save,
+  Trash2,
+  Users,
+  X,
+} from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 
@@ -170,7 +180,7 @@ export function ParticipantsModal({
           </div>
 
           {/* Participants list */}
-          <div className="divide-y divide-muted max-h-80 overflow-y-auto bg-background rounded-md">
+          <div className="divide-y divide-muted max-h-90 overflow-y-auto bg-background rounded-md">
             {participants.map((participant, index) => (
               <div
                 key={participant.id}
@@ -186,11 +196,15 @@ export function ParticipantsModal({
                         e.key === 'Enter' && handleEditParticipant()
                       }
                     />
-                    <Button size="sm" onClick={cancelEditing} variant="outline">
-                      Cancel
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={handleEditParticipant}
+                    >
+                      <Save color='green'/>
                     </Button>
-                    <Button size="sm" onClick={handleEditParticipant}>
-                      Save
+                    <Button size="sm" onClick={cancelEditing} variant="ghost">
+                      <X color='red'/>
                     </Button>
                   </div>
                 ) : (
@@ -211,19 +225,19 @@ export function ParticipantsModal({
                         <>
                           <Button
                             size="sm"
-                            variant="outline"
-                            onClick={() => setConfirmDeleteId(null)}
-                          >
-                            Cancel
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="destructive"
+                            variant="ghost"
                             onClick={() =>
                               handleDeleteParticipant(participant.id)
                             }
                           >
-                            Confirm
+                            <Check color='green'/>
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => setConfirmDeleteId(null)}
+                          >
+                            <X color='red'/>
                           </Button>
                         </>
                       ) : (
@@ -233,7 +247,7 @@ export function ParticipantsModal({
                             variant="ghost"
                             onClick={() => startEditing(participant)}
                           >
-                            <Edit className="w-4 h-4" />
+                            <Edit />
                           </Button>
                           <Button
                             size="sm"
@@ -241,7 +255,7 @@ export function ParticipantsModal({
                             disabled={participants.length <= 1}
                             onClick={() => setConfirmDeleteId(participant.id)}
                           >
-                            <Trash2 className="w-4 h-4" />
+                            <Trash2 color='red' />
                           </Button>
                         </>
                       )}

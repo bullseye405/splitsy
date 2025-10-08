@@ -430,13 +430,13 @@ export function ExpenseTypeDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-xl max-h-[85vh] flex flex-col p-0">
-        <DialogHeader className="sticky top-0 z-10 bg-background border-b px-6 pt-6 pb-4">
+      <DialogContent className="sm:max-w-xl max-h-[90vh] flex flex-col p-0">
+        <DialogHeader className="sticky top-0 bg-background border-b px-6 pt-6 pb-4">
           <DialogTitle>{getTitle()}</DialogTitle>
           <DialogDescription>{getDescription()}</DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-4 overflow-y-auto px-6 py-4 flex-1">
+        <div className="space-y-4 overflow-y-auto px-6 flex-1">
           <div className="space-y-2">
             <label htmlFor="description" className="text-sm font-medium">
               What for?
@@ -453,6 +453,41 @@ export function ExpenseTypeDialog({
                   : 'Dinner, taxi, groceries...'
               }
             />
+          </div>
+
+          <div className="flex gap-2 ">
+            <div className="space-y-2">
+              <label htmlFor="amount" className="text-sm font-medium">
+                Amount ($)
+              </label>
+
+              <div className="flex gap-2 flex-col">
+                <Input
+                  id="amount"
+                  type="number"
+                  min="0"
+                  value={amount}
+                  onChange={(e) => setAmount(e.target.value)}
+                  placeholder="0.00"
+                />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <label htmlFor="date" className="text-sm font-medium">
+                Date
+              </label>
+              <div className="relative">
+                <Input
+                  id="date"
+                  type="date"
+                  value={date}
+                  onChange={(e) => setDate(e.target.value)}
+                  className="pl-10 w-full"
+                />
+
+                <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+              </div>
+            </div>
           </div>
 
           <div className="space-y-2">
@@ -478,62 +513,6 @@ export function ExpenseTypeDialog({
                   {getParticipantDisplayName(participant.id)}
                 </Button>
               ))}
-            </div>
-          </div>
-          <div className="flex gap-2 ">
-            <div className="flex-1">
-              <div className="space-y-2">
-                <label htmlFor="amount" className="text-sm font-medium">
-                  Amount ($)
-                </label>
-
-                <div className="flex gap-2 flex-col">
-                  <Input
-                    id="amount"
-                    type="number"
-                    min="0"
-                    value={amount}
-                    onChange={(e) => setAmount(e.target.value)}
-                    placeholder="0.00"
-                  />
-
-                  <div className="flex gap-2 flex-wrap">
-                    {[50, 100, 500, 1000, 5000].map((amt) => (
-                      <Button
-                        size="sm"
-                        key={amt}
-                        variant="ghost"
-                        className={
-                          parseFloat(amount) === amt
-                            ? 'border-primary text-primary'
-                            : ''
-                        }
-                        onClick={() => setAmount(amt.toString())}
-                      >
-                        ${amt}
-                      </Button>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className="space-y-2">
-                <label htmlFor="date" className="text-sm font-medium">
-                  Date
-                </label>
-                <div className="relative">
-                  <Input
-                    id="date"
-                    type="date"
-                    value={date}
-                    onChange={(e) => setDate(e.target.value)}
-                    className="pl-10 w-full"
-                  />
-
-                  <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
-                </div>
-              </div>
             </div>
           </div>
 
@@ -757,7 +736,7 @@ export function ExpenseTypeDialog({
           )}
         </div>
 
-        <DialogFooter className="sticky bottom-0 z-10 bg-background border-t px-6 py-4 gap-2 flex-col">
+        <DialogFooter className="bottom-0 z-10 bg-background border-t px-6 py-4 gap-2 flex-col">
           {splitMode === 'amount' && (
             <div className="text-xs text-muted-foreground text-center w-full">
               Total: $
@@ -778,7 +757,11 @@ export function ExpenseTypeDialog({
             </div>
           )}
           <div className="flex gap-2 w-full">
-            <Button variant="outline" onClick={() => onOpenChange(false)} className="flex-1">
+            <Button
+              variant="outline"
+              onClick={() => onOpenChange(false)}
+              className="flex-1"
+            >
               Cancel
             </Button>
             <Button onClick={handleSubmit} className="flex-1">
