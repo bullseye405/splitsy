@@ -10,13 +10,6 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { Participant } from '@/types/participants';
@@ -237,7 +230,9 @@ export function ExpenseTypeDialog({
       if (Math.abs(totalPaid - amountNumber) > 0.01) {
         toast({
           title: 'Amount mismatch',
-          description: `Total paid (${totalPaid.toFixed(2)}) must equal expense amount (${amountNumber.toFixed(2)})`,
+          description: `Total paid (${totalPaid.toFixed(
+            2
+          )}) must equal expense amount (${amountNumber.toFixed(2)})`,
           variant: 'destructive',
         });
         return;
@@ -325,18 +320,24 @@ export function ExpenseTypeDialog({
   };
 
   const addPayer = () => {
-    const remainingAmount = parseFloat(amount) - payers.reduce((sum, p) => sum + p.amount, 0);
+    const remainingAmount =
+      parseFloat(amount) - payers.reduce((sum, p) => sum + p.amount, 0);
     if (payers.length < participants.length && remainingAmount > 0) {
       setPayers([...payers, { participantId: '', amount: remainingAmount }]);
     }
   };
 
-  const updatePayer = (index: number, field: 'participantId' | 'amount', value: string | number) => {
+  const updatePayer = (
+    index: number,
+    field: 'participantId' | 'amount',
+    value: string | number
+  ) => {
     const newPayers = [...payers];
     if (field === 'participantId') {
       newPayers[index].participantId = value as string;
     } else {
-      newPayers[index].amount = typeof value === 'number' ? value : parseFloat(value) || 0;
+      newPayers[index].amount =
+        typeof value === 'number' ? value : parseFloat(value) || 0;
     }
     setPayers(newPayers);
   };
@@ -533,7 +534,12 @@ export function ExpenseTypeDialog({
                   onClick={() => {
                     setMultiPayer(!multiPayer);
                     if (!multiPayer) {
-                      setPayers([{ participantId: paidBy || '', amount: parseFloat(amount) || 0 }]);
+                      setPayers([
+                        {
+                          participantId: paidBy || '',
+                          amount: parseFloat(amount) || 0,
+                        },
+                      ]);
                     } else {
                       setPayers([]);
                     }
@@ -543,7 +549,7 @@ export function ExpenseTypeDialog({
                 </Button>
               )}
             </div>
-            
+
             {!multiPayer ? (
               <div className="flex flex-wrap gap-2 mt-1">
                 {participants.map((participant) => (
@@ -570,9 +576,15 @@ export function ExpenseTypeDialog({
                         <Button
                           key={participant.id}
                           size="sm"
-                          variant={payer.participantId === participant.id ? 'default' : 'outline'}
+                          variant={
+                            payer.participantId === participant.id
+                              ? 'default'
+                              : 'outline'
+                          }
                           className="rounded-xl flex-1"
-                          onClick={() => updatePayer(index, 'participantId', participant.id)}
+                          onClick={() =>
+                            updatePayer(index, 'participantId', participant.id)
+                          }
                         >
                           {getParticipantDisplayName(participant.id)}
                         </Button>
@@ -583,7 +595,9 @@ export function ExpenseTypeDialog({
                       step="0.01"
                       min="0"
                       value={payer.amount}
-                      onChange={(e) => updatePayer(index, 'amount', e.target.value)}
+                      onChange={(e) =>
+                        updatePayer(index, 'amount', e.target.value)
+                      }
                       className="h-9 w-24"
                       placeholder="Amount"
                     />
@@ -606,13 +620,22 @@ export function ExpenseTypeDialog({
                     variant="outline"
                     size="sm"
                     onClick={addPayer}
-                    disabled={payers.length >= participants.length || remainingToPay <= 0}
+                    disabled={
+                      payers.length >= participants.length ||
+                      remainingToPay <= 0
+                    }
                   >
                     + Add Payer
                   </Button>
                   <div className="text-sm">
                     <span className="text-muted-foreground">Total: </span>
-                    <span className={remainingToPay !== 0 ? 'text-destructive font-medium' : 'text-primary font-medium'}>
+                    <span
+                      className={
+                        remainingToPay !== 0
+                          ? 'text-destructive font-medium'
+                          : 'text-primary font-medium'
+                      }
+                    >
                       ${totalPaid.toFixed(2)} / ${parseFloat(amount) || 0}
                     </span>
                   </div>
