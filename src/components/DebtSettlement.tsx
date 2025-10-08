@@ -194,7 +194,7 @@ export function DebtSettlement({
             return (
               <div
                 key={`${debt.fromId}-${debt.toId}-${index}`}
-                className="flex flex-col md:flex-row md:items-center md:justify-between py-3 px-2 border-b border-slate-200 gap-2"
+                className="flex items-center justify-between py-3 px-2 border-b border-slate-200 gap-2"
               >
                 <div className="flex-1 text-slate-800 text-base md:text-lg break-words">
                   <span className="font-medium">{fromName}</span>
@@ -205,13 +205,13 @@ export function DebtSettlement({
                     ${debt.amount.toFixed(2)}
                   </span>
                 </div>
-                <div className="flex w-full md:w-auto justify-end">
+                <div className="flex justify-end">
                   <Button
                     size="sm"
                     onClick={() =>
                       handleSettle(debt.fromId, debt.toId, debt.amount, index)
                     }
-                    className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white w-full md:w-auto"
+                    className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white"
                   >
                     <CreditCard className="w-3 h-3 mr-1" />
                     Settle

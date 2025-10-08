@@ -10,13 +10,6 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { Participant } from '@/types/participants';
@@ -106,6 +99,10 @@ export function ExpenseTypeDialog({
       setDescription(expense.description || '');
       setAmount(expense.amount.toString());
       setPaidBy(expense.paid_by);
+
+      if (expense.expense_type === 'transfer') {
+        setTransferTo(expense.expense_splits[0].participant_id || '');
+      }
       setDate(
         expense.created_at
           ? new Date(expense.created_at).toISOString().split('T')[0]

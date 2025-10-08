@@ -10,6 +10,7 @@ import { recordGroupView } from '@/api/groupViews';
 import { getSettlementsByGroupId } from '@/api/settlements';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
+import { getIPaid, getIReceived, getMyCost, getOwned } from '@/lib/utils';
 import { GroupWithParticipants } from '@/types/group';
 import { Settlement } from '@/types/settlements';
 import {
@@ -21,7 +22,7 @@ import {
   TrendingUp,
   Users,
 } from 'lucide-react';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { DebtSettlement } from './DebtSettlement';
 import { ExpenseTypeDialog } from './ExpenseTypeDialog';
@@ -148,6 +149,21 @@ export function GroupDashboard() {
     fetchExpenses();
     fetchSettlements();
   }, [fetchGroupData, fetchExpenses, fetchSettlements]);
+
+  const { cost, owned, paid, received } = useMemo(() => {
+    const cost = getMyCost(expenses, currentParticipant).toFixed(2);
+    const paid = getIPaid(expenses, currentParticipant).toFixed(2);
+    const received = getIReceived(
+      expenses,
+      settlements,
+      currentParticipant
+    ).toFixed(2);
+    const owned = getOwned(expenses, settlements, currentParticipant).toFixed(
+      2
+    );
+
+    return { cost, paid, received, owned };
+  }, [currentParticipant, expenses, settlements]);
 
   const handleParticipantSelect = async (participantId: string) => {
     if (!groupId) return;
@@ -464,22 +480,7 @@ export function GroupDashboard() {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div className="text-center p-3 rounded-lg bg-orange-50 border border-orange-200">
                 <div className="text-xl font-bold text-orange-600 mb-1">
-                  $
-                  {(() => {
-                    return expenses
-                      .filter(
-                        (e) => e.expense_type === 'expense' || !e.expense_type
-                      )
-                      .reduce((sum, expense) => {
-                        const myShare =
-                          expense.expense_splits.find(
-                            (split) =>
-                              split.participant_id === currentParticipant
-                          )?.amount || 0;
-                        return sum + myShare;
-                      }, 0)
-                      .toFixed(2);
-                  })()}
+                  ${cost}
                 </div>
                 <div className="text-xs font-medium text-orange-700">
                   My Cost
@@ -488,31 +489,14 @@ export function GroupDashboard() {
 
               <div className="text-center p-3 rounded-lg bg-blue-50 border border-blue-200">
                 <div className="text-xl font-bold text-blue-600 mb-1">
-                  $
-                  {(() => {
-                    return expenses
-                      .filter((e) => e.paid_by === currentParticipant)
-                      .reduce((sum, expense) => sum + expense.amount, 0)
-                      .toFixed(2);
-                  })()}
+                  ${paid}
                 </div>
                 <div className="text-xs font-medium text-blue-700">I Paid</div>
               </div>
 
               <div className="text-center p-3 rounded-lg bg-purple-50 border border-purple-200">
                 <div className="text-xl font-bold text-purple-600 mb-1">
-                  $
-                  {(() => {
-                    // Sum of all income where I received the money
-                    return expenses
-                      .filter(
-                        (e) =>
-                          e.expense_type === 'income' &&
-                          e.paid_by === currentParticipant
-                      )
-                      .reduce((sum, expense) => sum + expense.amount, 0)
-                      .toFixed(2);
-                  })()}
+                  ${received}
                 </div>
                 <div className="text-xs font-medium text-purple-700">
                   I Received
@@ -521,61 +505,7 @@ export function GroupDashboard() {
 
               <div className="text-center p-3 rounded-lg bg-emerald-50 border border-emerald-200">
                 <div className="text-xl font-bold text-emerald-600 mb-1">
-                  $
-                  {(() => {
-                    let balance = 0;
-
-                    // Calculate from expenses, transfers, and income
-                    expenses.forEach((expense) => {
-                      if (expense.expense_type === 'income') {
-                        // For income: I received money and owe others their share
-                        if (expense.paid_by === currentParticipant) {
-                          // I received income, subtract what I owe to others
-                          const totalOwedToOthers =
-                            expense.expense_splits.reduce(
-                              (sum, split) => sum + (split.amount || 0),
-                              0
-                            );
-                          balance -= totalOwedToOthers;
-                        } else {
-                          // Someone else received income, add what they owe me
-                          const myShare =
-                            expense.expense_splits.find(
-                              (split) =>
-                                split.participant_id === currentParticipant
-                            )?.amount || 0;
-                          balance += myShare;
-                        }
-                      } else {
-                        // For expenses and transfers: I paid - my share
-                        if (expense.paid_by === currentParticipant) {
-                          balance += expense.amount;
-                        }
-                        const myShare =
-                          expense.expense_splits.find(
-                            (split) =>
-                              split.participant_id === currentParticipant
-                          )?.amount || 0;
-                        balance -= myShare;
-                      }
-                    });
-
-                    // Account for settlements
-                    settlements.forEach((settlement) => {
-                      if (
-                        settlement.from_participant_id === currentParticipant
-                      ) {
-                        // I paid someone, reduce what I'm owed
-                        balance -= settlement.amount;
-                      }
-                      if (settlement.to_participant_id === currentParticipant) {
-                        // Someone paid me, reduce what I'm owed
-                        balance += settlement.amount;
-                      }
-                    });
-
-                    return balance >= 0 ? balance.toFixed(2) : '0.00';
-                  })()}
+                  ${owned}
                 </div>
                 <div className="text-xs font-medium text-emerald-700">
                   I'm Owed
@@ -586,20 +516,20 @@ export function GroupDashboard() {
         )}
 
         <div className="flex flex-wrap gap-3 justify-end mt-4 md:flex-nowrap md:gap-3 md:justify-end w-full">
-          <div className="flex flex-col w-full gap-2 md:flex-row md:w-auto md:gap-3">
+          <div className="flex  w-full flex-wrap justify-center gap-2 md:flex-row md:w-auto md:gap-3">
             <Button
               onClick={() => setShowParticipantsModal(true)}
               variant="outline"
               size="sm"
-              className="border-purple-200 hover:bg-purple-50 hover:border-purple-300 text-purple-600 w-full md:w-auto"
+              className="border-purple-200 hover:bg-purple-50 hover:border-purple-300 text-purple-600 md:w-auto"
             >
               <Users className="w-4 h-4 mr-2" />
-              Manage Participants
+              Participants
             </Button>
             <Button
               onClick={() => handleOpenDialog('expense')}
               size="sm"
-              className="bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white w-full md:w-auto"
+              className="bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white md:w-auto"
               disabled={!group.participants || group.participants.length < 2}
             >
               <Plus className="w-4 h-4 mr-2" />
@@ -608,7 +538,7 @@ export function GroupDashboard() {
             <Button
               onClick={() => handleOpenDialog('income')}
               size="sm"
-              className="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white w-full md:w-auto"
+              className="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white  md:w-auto"
               disabled={!group.participants || group.participants.length < 2}
             >
               <TrendingUp className="w-4 h-4 mr-2" />
@@ -617,7 +547,7 @@ export function GroupDashboard() {
             <Button
               onClick={() => handleOpenDialog('transfer')}
               size="sm"
-              className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white w-full md:w-auto"
+              className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white  md:w-auto"
               disabled={!group.participants || group.participants.length < 2}
             >
               <ArrowRightLeft className="w-4 h-4 mr-2" />
