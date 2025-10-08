@@ -455,22 +455,20 @@ export function ExpenseTypeDialog({
             />
           </div>
 
-          <div className="flex gap-2 ">
+          <div className="flex gap-2">
             <div className="space-y-2">
               <label htmlFor="amount" className="text-sm font-medium">
                 Amount ($)
               </label>
 
-              <div className="flex gap-2 flex-col">
-                <Input
-                  id="amount"
-                  type="number"
-                  min="0"
-                  value={amount}
-                  onChange={(e) => setAmount(e.target.value)}
-                  placeholder="0.00"
-                />
-              </div>
+              <Input
+                id="amount"
+                type="number"
+                min="0"
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+                placeholder="0.00"
+              />
             </div>
             <div className="space-y-2">
               <label htmlFor="date" className="text-sm font-medium">
@@ -482,9 +480,8 @@ export function ExpenseTypeDialog({
                   type="date"
                   value={date}
                   onChange={(e) => setDate(e.target.value)}
-                  className="pl-10 w-full"
+                  className="pl-10 w-full appearance-none text-base [&::-webkit-date-and-time-value]:text-base [&::-webkit-datetime-edit]:leading-none"
                 />
-
                 <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
               </div>
             </div>
