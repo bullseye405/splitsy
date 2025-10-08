@@ -268,14 +268,14 @@ export function AddExpenseDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
+      <DialogContent className="sm:max-w-md max-h-[85vh] flex flex-col p-0">
+        <DialogHeader className="sticky top-0 z-10 bg-background border-b px-6 pt-6 pb-4">
           <DialogTitle>Add Expense</DialogTitle>
           <DialogDescription>
             Record a new expense for the group
           </DialogDescription>
         </DialogHeader>
-        <div className="space-y-4">
+        <div className="space-y-4 overflow-y-auto px-6 py-4 flex-1">
           <div className="space-y-2">
             <label htmlFor="description" className="text-sm font-medium">
               Description
@@ -558,11 +558,11 @@ export function AddExpenseDialog({
             </Tabs>
           </div>
         </div>
-        <DialogFooter className="gap-2">
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
+        <DialogFooter className="sticky bottom-0 z-10 bg-background border-t px-6 py-4 gap-2 flex-row">
+          <Button variant="outline" onClick={() => onOpenChange(false)} className="flex-1">
             Cancel
           </Button>
-          <Button onClick={handleSubmit} variant="gradient">
+          <Button onClick={handleSubmit} variant="gradient" className="flex-1">
             Add Expense
           </Button>
         </DialogFooter>
