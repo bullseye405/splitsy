@@ -61,4 +61,5 @@ npm run dev
 - React
 - shadcn-ui
 - Tailwind CSS
+- Zustand
 
