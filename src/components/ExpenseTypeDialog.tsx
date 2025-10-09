@@ -85,6 +85,11 @@ export function ExpenseTypeDialog({
   const currentParticipant =
     localStorage.getItem(`participant_${groupId}`) || null;
 
+  console.log({
+    ALLOW_MULTI_PAYER,
+    envValue: import.meta.env.VITE_ALLOW_MULTI_PAYERS,
+  });
+
   // Initialize defaults when dialog opens
   useEffect(() => {
     if (open && !isEditing) {
