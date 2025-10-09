@@ -1,4 +1,4 @@
-import { ExpenseWithSplits } from '@/api/expenses';
+import { ExpenseWithSplits } from '@/types/expense';
 import { Settlement } from '@/types/settlements';
 
 // Dummy data for all expense types and settlements

@@ -1,4 +1,4 @@
-import { ExpenseWithSplits } from '@/api/expenses';
+import { ExpenseWithSplits } from '@/types/expense';
 import { Settlement } from '@/types/settlements';
 import { generateMockData } from '../lib/transaction-mock';
 import { calculateDebts, getNetBalances } from '../lib/utils';

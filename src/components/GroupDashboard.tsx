@@ -6,7 +6,6 @@ import { useShallow } from 'zustand/react/shallow';
 import {
   createExpense,
   deleteExpense,
-  ExpenseWithSplits,
   getExpensesByGroupId,
   updateExpense,
 } from '@/api/expenses';
@@ -26,6 +25,7 @@ import { ParticipantsModal } from './ParticipantsModal';
 import RecentTransactions from './RecentTransactions';
 import Stats from './Stats';
 import Summary from './Summary';
+import { ExpenseWithSplits } from '@/types/expense';
 
 export function GroupDashboard() {
   const { groupId } = useParams<{ groupId: string }>();

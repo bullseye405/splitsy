@@ -1,4 +1,4 @@
-import { ExpenseWithSplits } from '@/api/expenses';
+import { ExpenseWithSplits } from '@/types/expense';
 import { Settlement } from '@/types/settlements';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';

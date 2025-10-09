@@ -7,3 +7,6 @@ export type ExpenseSplit =
   Database['public']['Tables']['expense_splits']['Row'];
 export type ExpenseSplitInsert =
   Database['public']['Tables']['expense_splits']['Insert'];
+export interface ExpenseWithSplits extends Expense {
+  expense_splits: ExpenseSplit[];
+}

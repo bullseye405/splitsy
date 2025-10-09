@@ -10,7 +10,6 @@ import {
 import { useState } from 'react';
 import { useShallow } from 'zustand/react/shallow';
 
-import { ExpenseWithSplits } from '@/api/expenses';
 import { deleteSettlement } from '@/api/settlements';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -18,6 +17,7 @@ import { useToast } from '@/hooks/use-toast';
 import useExpenseStore from '@/hooks/useExpense';
 import useGroup from '@/hooks/useGroup';
 import useSettlementStore from '@/hooks/useSettlement';
+import { ExpenseWithSplits } from '@/types/expense';
 import { Input } from './ui/input';
 import {
   Select,

@@ -1,4 +1,4 @@
-import { ExpenseWithSplits } from '@/api/expenses';
+import { ExpenseWithSplits } from '@/types/expense';
 import { produce } from 'immer';
 import { create } from 'zustand';
 
