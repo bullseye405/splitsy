@@ -1,3 +1,8 @@
+import { ArrowRightLeft, Plus, TrendingUp, Users } from 'lucide-react';
+import { useCallback, useEffect, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import { useShallow } from 'zustand/react/shallow';
+
 import {
   createExpense,
   deleteExpense,
@@ -10,61 +15,61 @@ import { recordGroupView } from '@/api/groupViews';
 import { getSettlementsByGroupId } from '@/api/settlements';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
+import useExpenseStore from '@/hooks/useExpense';
 import useGroup from '@/hooks/useGroup';
-import { getIPaid, getIReceived, getMyCost, getOwned } from '@/lib/utils';
-import { Settlement } from '@/types/settlements';
-import { ArrowRightLeft, Plus, TrendingUp, Users } from 'lucide-react';
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
-import { useShallow } from 'zustand/react/shallow';
+import useSettlementStore from '@/hooks/useSettlement';
 import { DebtSettlement } from './DebtSettlement';
 import { ExpenseTypeDialog } from './ExpenseTypeDialog';
-import GroupDashboardHeader from './GroupDashboardHeader';
+import Header from './Header';
 import { ParticipantSelectionModal } from './ParticipantSelectionModal';
 import { ParticipantsModal } from './ParticipantsModal';
 import RecentTransactions from './RecentTransactions';
+import Stats from './Stats';
+import Summary from './Summary';
 
 export function GroupDashboard() {
   const { groupId } = useParams<{ groupId: string }>();
   const navigate = useNavigate();
 
-  const { id, setState, participants } = useGroup(
+  const {
+    id,
+    setState,
+    participants,
+    currentParticipant,
+    setCurrentParticipant,
+  } = useGroup(
     useShallow((state) => ({
       id: state.id,
       setState: state.setState,
       participants: state.participants,
+      currentParticipant: state.currentParticipant,
+      setCurrentParticipant: state.setCurrentParticipant,
     }))
   );
 
-  const [expenses, setExpenses] = useState<ExpenseWithSplits[]>([]);
-  const [settlements, setSettlements] = useState<Settlement[]>([]);
+  const { expenses, setExpenses, loading, setLoading } = useExpenseStore();
+  const { settlements, setSettlements } = useSettlementStore();
   const [showExpenseDialog, setShowExpenseDialog] = useState(false);
   const [showParticipantsModal, setShowParticipantsModal] = useState(false);
   const [showParticipantSelection, setShowParticipantSelection] =
     useState(false);
-  const [currentParticipant, setCurrentParticipant] = useState<string | null>(
-    sessionStorage.getItem(`participant_${groupId}`) || null
-  );
 
   const [dialogType, setDialogType] = useState<
     'expense' | 'transfer' | 'income'
   >('expense');
   const [editingExpense, setEditingExpense] =
     useState<ExpenseWithSplits | null>(null);
-  const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
   // Check for existing participant selection in session storage
   useEffect(() => {
     if (groupId) {
-      const storedParticipant = sessionStorage.getItem(
-        `participant_${groupId}`
-      );
+      const storedParticipant = localStorage.getItem(`participant_${groupId}`);
       if (storedParticipant) {
         setCurrentParticipant(storedParticipant);
       }
     }
-  }, [groupId]);
+  }, [groupId, setCurrentParticipant]);
 
   const fetchGroupData = useCallback(async () => {
     if (!groupId) return;
@@ -80,29 +85,21 @@ export function GroupDashboard() {
         state.description = data.description;
         state.participants = data.participants || [];
       });
-
-      // Show participant selection modal if no participant is selected and participants exist
-      if (
-        !currentParticipant &&
-        data.participants &&
-        data.participants.length > 0
-      ) {
-        setShowParticipantSelection(true);
-      }
-
-      // Auto-open manage participants if only one participant exists (group creator scenario)
-      if (
-        currentParticipant &&
-        data.participants &&
-        data.participants.length === 1
-      ) {
-        setShowParticipantsModal(true);
-      }
     } catch (error) {
       console.error('Error fetching group:', error);
       navigate('/404', { replace: true });
     }
-  }, [groupId, setState, currentParticipant, navigate]);
+  }, [groupId, setState, navigate]);
+
+  useEffect(() => {
+    if (!currentParticipant && participants.length > 0) {
+      setShowParticipantSelection(true);
+    }
+
+    if (currentParticipant && participants.length === 1) {
+      setShowParticipantsModal(true);
+    }
+  }, [currentParticipant, participants.length]);
 
   const fetchExpenses = useCallback(async () => {
     if (!groupId || !id) return;
@@ -119,48 +116,34 @@ export function GroupDashboard() {
     } finally {
       setLoading(false);
     }
-  }, [id, groupId, toast]);
+  }, [groupId, id, setExpenses, setLoading, toast]);
 
   const fetchSettlements = useCallback(async () => {
-    if (!groupId || id) return;
+    if (!groupId || !id) return;
     try {
       const data = await getSettlementsByGroupId(groupId);
       setSettlements(data);
     } catch (error) {
       console.error('Error fetching settlements:', error);
     }
-  }, [id, groupId]);
+  }, [groupId, id, setSettlements]);
 
   const refreshTransactions = useCallback(async () => {
     await Promise.all([fetchExpenses(), fetchSettlements()]);
   }, [fetchExpenses, fetchSettlements]);
 
   useEffect(() => {
+    setLoading(true);
     fetchGroupData();
     fetchExpenses();
     fetchSettlements();
-  }, [fetchGroupData, fetchExpenses, fetchSettlements]);
-
-  const { cost, owned, paid, received } = useMemo(() => {
-    const cost = getMyCost(expenses, currentParticipant).toFixed(2);
-    const paid = getIPaid(expenses, currentParticipant).toFixed(2);
-    const received = getIReceived(
-      expenses,
-      settlements,
-      currentParticipant
-    ).toFixed(2);
-    const owned = getOwned(expenses, settlements, currentParticipant).toFixed(
-      2
-    );
-
-    return { cost, paid, received, owned };
-  }, [currentParticipant, expenses, settlements]);
+  }, [fetchGroupData, fetchExpenses, fetchSettlements, setLoading]);
 
   const handleParticipantSelect = async (participantId: string) => {
     if (!groupId) return;
 
     setCurrentParticipant(participantId);
-    sessionStorage.setItem(`participant_${groupId}`, participantId);
+    localStorage.setItem(`participant_${groupId}`, participantId);
 
     // Record group view
     try {
@@ -267,13 +250,6 @@ export function GroupDashboard() {
     }
   };
 
-  const totalExpenses = expenses
-    .filter((e) => e.expense_type === 'expense' || !e.expense_type)
-    .reduce((sum, expense) => sum + expense.amount, 0);
-  const totalIncome = expenses
-    .filter((e) => e.expense_type === 'income')
-    .reduce((sum, expense) => sum + expense.amount, 0);
-
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-4 flex items-center justify-center">
@@ -295,72 +271,11 @@ export function GroupDashboard() {
       <div className="max-w-4xl mx-auto space-y-8">
         {/* Header */}
 
-        <GroupDashboardHeader />
+        <Header />
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Stats */}
-          <div className="text-center p-4 rounded-xl bg-gradient-to-br from-red-50 to-red-100 border border-red-200">
-            <div className="text-3xl font-bold text-red-600 mb-1">
-              ${totalExpenses.toFixed(2)}
-            </div>
-            <div className="text-sm font-medium text-red-700">
-              Total Expenses
-            </div>
-          </div>
+        <Stats />
 
-          <div className="text-center p-4 rounded-xl bg-gradient-to-br from-green-50 to-green-100 border border-green-200">
-            <div className="text-3xl font-bold text-green-600 mb-1">
-              ${totalIncome.toFixed(2)}
-            </div>
-            <div className="text-sm font-medium text-green-700">
-              Total Income
-            </div>
-          </div>
-        </div>
-
-        {/* Personal Summary */}
-        {currentParticipant && (
-          <div className="bg-white/80 backdrop-blur-sm rounded-xl shadow-lg border-0 p-6">
-            <h3 className="text-lg font-bold text-slate-800 mb-4">
-              Your Summary
-            </h3>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="text-center p-3 rounded-lg bg-orange-50 border border-orange-200">
-                <div className="text-xl font-bold text-orange-600 mb-1">
-                  ${cost}
-                </div>
-                <div className="text-xs font-medium text-orange-700">
-                  My Cost
-                </div>
-              </div>
-
-              <div className="text-center p-3 rounded-lg bg-blue-50 border border-blue-200">
-                <div className="text-xl font-bold text-blue-600 mb-1">
-                  ${paid}
-                </div>
-                <div className="text-xs font-medium text-blue-700">I Paid</div>
-              </div>
-
-              <div className="text-center p-3 rounded-lg bg-purple-50 border border-purple-200">
-                <div className="text-xl font-bold text-purple-600 mb-1">
-                  ${received}
-                </div>
-                <div className="text-xs font-medium text-purple-700">
-                  I Received
-                </div>
-              </div>
-
-              <div className="text-center p-3 rounded-lg bg-emerald-50 border border-emerald-200">
-                <div className="text-xl font-bold text-emerald-600 mb-1">
-                  ${owned}
-                </div>
-                <div className="text-xs font-medium text-emerald-700">
-                  I'm Owed
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
+        <Summary />
 
         <div className="flex flex-wrap gap-3 justify-end mt-4 md:flex-nowrap md:gap-3 md:justify-end w-full">
           <div className="flex  w-full flex-wrap justify-center gap-2 md:flex-row md:w-auto md:gap-3">
@@ -406,24 +321,15 @@ export function GroupDashboard() {
         {/* Debt Settlement */}
         {expenses.length > 0 && participants && groupId && (
           <div className="bg-white/80 backdrop-blur-sm rounded-xl shadow-lg border-0 p-6">
-            <DebtSettlement
-              expenses={expenses}
-              participants={participants}
-              groupId={groupId}
-              currentParticipant={currentParticipant}
-              onTransactionChange={refreshTransactions}
-            />
+            <DebtSettlement onTransactionChange={refreshTransactions} />
           </div>
         )}
 
         {(expenses.length > 0 || settlements.length > 0) && (
           <RecentTransactions
-            expenses={expenses}
-            settlements={settlements}
             handleEditExpense={handleEditExpense}
             handleDeleteExpense={handleDeleteExpense}
             refreshTransactions={refreshTransactions}
-            // group={group}
           />
         )}
       </div>
@@ -431,7 +337,6 @@ export function GroupDashboard() {
       <ParticipantsModal
         open={showParticipantsModal}
         onOpenChange={setShowParticipantsModal}
-        participants={participants || []}
         onParticipantChange={fetchGroupData}
       />
 
@@ -448,7 +353,6 @@ export function GroupDashboard() {
           if (!open) setEditingExpense(null);
         }}
         onSave={handleSaveExpense}
-        participants={participants || []}
         expense={editingExpense}
         isEditing={!!editingExpense}
         type={dialogType}

@@ -7,7 +7,7 @@ import { useNavigate } from 'react-router-dom';
 import { useShallow } from 'zustand/react/shallow';
 import { Button } from './ui/button';
 
-const GroupDashboardHeader = () => {
+const Header = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -186,4 +186,4 @@ const GroupDashboardHeader = () => {
   );
 };
 
-export default GroupDashboardHeader;
+export default Header;

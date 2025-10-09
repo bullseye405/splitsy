@@ -1,3 +1,6 @@
+import { Users } from 'lucide-react';
+import { useState } from 'react';
+
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -8,8 +11,6 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import useGroup from '@/hooks/useGroup';
-import { Users } from 'lucide-react';
-import { useState } from 'react';
 
 interface ParticipantSelectionModalProps {
   open: boolean;

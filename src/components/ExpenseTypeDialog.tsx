@@ -12,7 +12,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
-import { Participant } from '@/types/participants';
+import useGroup from '@/hooks/useGroup';
 import { Calendar, Lock } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { useParams } from 'react-router-dom';
@@ -35,7 +35,6 @@ interface ExpenseTypeDialogProps {
     transferTo?: string;
     date: string;
   }) => void;
-  participants: Participant[];
   expense?: ExpenseWithSplits | null;
   isEditing?: boolean;
   type: 'expense' | 'transfer' | 'income';
@@ -45,11 +44,12 @@ export function ExpenseTypeDialog({
   open,
   onOpenChange,
   onSave,
-  participants,
   expense,
   isEditing = false,
   type,
 }: ExpenseTypeDialogProps) {
+  const participants = useGroup((state) => state.participants);
+
   const [description, setDescription] = useState('');
   const [amount, setAmount] = useState('');
   const [paidBy, setPaidBy] = useState('');

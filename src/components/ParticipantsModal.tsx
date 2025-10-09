@@ -14,6 +14,7 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
+import useGroup from '@/hooks/useGroup';
 import { Participant } from '@/types/participants';
 import {
   Check,
@@ -32,14 +33,12 @@ import { useParams } from 'react-router-dom';
 interface ParticipantsModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  participants: Participant[];
   onParticipantChange: () => void;
 }
 
 export function ParticipantsModal({
   open,
   onOpenChange,
-  participants,
   onParticipantChange,
 }: ParticipantsModalProps) {
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
@@ -51,6 +50,8 @@ export function ParticipantsModal({
   const [editName, setEditName] = useState('');
   const [groupViews, setGroupViews] = useState<GroupView[]>([]);
   const { toast } = useToast();
+
+  const participants = useGroup((state) => state.participants);
 
   // Fetch group views when modal opens
   useEffect(() => {
@@ -140,7 +141,7 @@ export function ParticipantsModal({
     }
   };
 
-  const currentParticipant = sessionStorage.getItem(`participant_${groupId}`);
+  const currentParticipant = localStorage.getItem(`participant_${groupId}`);
 
   const hasViewed = (participantId: string) => {
     return groupViews.some((view) => view.participant_id === participantId);
@@ -201,10 +202,10 @@ export function ParticipantsModal({
                       variant="ghost"
                       onClick={handleEditParticipant}
                     >
-                      <Save color='green'/>
+                      <Save color="green" />
                     </Button>
                     <Button size="sm" onClick={cancelEditing} variant="ghost">
-                      <X color='red'/>
+                      <X color="red" />
                     </Button>
                   </div>
                 ) : (
@@ -230,14 +231,14 @@ export function ParticipantsModal({
                               handleDeleteParticipant(participant.id)
                             }
                           >
-                            <Check color='green'/>
+                            <Check color="green" />
                           </Button>
                           <Button
                             size="sm"
                             variant="ghost"
                             onClick={() => setConfirmDeleteId(null)}
                           >
-                            <X color='red'/>
+                            <X color="red" />
                           </Button>
                         </>
                       ) : (
@@ -255,7 +256,7 @@ export function ParticipantsModal({
                             disabled={participants.length <= 1}
                             onClick={() => setConfirmDeleteId(participant.id)}
                           >
-                            <Trash2 color='red' />
+                            <Trash2 color="red" />
                           </Button>
                         </>
                       )}
