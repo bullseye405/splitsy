@@ -102,28 +102,28 @@ export function DebtSettlement({
     }
   };
 
-  const handleDeleteSettlement = async (settlementId: string) => {
-    try {
-      await deleteSettlement(settlementId);
+  // const handleDeleteSettlement = async (settlementId: string) => {
+  //   try {
+  //     await deleteSettlement(settlementId);
 
-      toast({
-        title: 'Settlement deleted',
-        description:
-          'The settlement has been removed and the debt is now outstanding again',
-      });
+  //     toast({
+  //       title: 'Settlement deleted',
+  //       description:
+  //         'The settlement has been removed and the debt is now outstanding again',
+  //     });
 
-      // Refresh settlements and transactions
-      await fetchSettlements();
-      onTransactionChange?.();
-    } catch (error) {
-      console.error('Error deleting settlement:', error);
-      toast({
-        title: 'Error',
-        description: 'Could not delete settlement. Please try again.',
-        variant: 'destructive',
-      });
-    }
-  };
+  //     // Refresh settlements and transactions
+  //     await fetchSettlements();
+  //     onTransactionChange?.();
+  //   } catch (error) {
+  //     console.error('Error deleting settlement:', error);
+  //     toast({
+  //       title: 'Error',
+  //       description: 'Could not delete settlement. Please try again.',
+  //       variant: 'destructive',
+  //     });
+  //   }
+  // };
 
   useEffect(() => {
     fetchSettlements();
@@ -224,7 +224,7 @@ export function DebtSettlement({
       </div>
 
       {/* Recently Settled Debts */}
-      {settlements.length > 0 && (
+      {/* {settlements.length > 0 && (
         <div className="space-y-3 mt-6">
           <h4 className="text-lg font-semibold text-slate-700 mb-3">
             Recently Settled
@@ -269,7 +269,7 @@ export function DebtSettlement({
             );
           })}
         </div>
-      )}
+      )} */}
     </div>
   );
 }

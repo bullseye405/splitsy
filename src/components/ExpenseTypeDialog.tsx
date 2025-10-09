@@ -13,7 +13,7 @@ import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { Participant } from '@/types/participants';
-import { Calendar, Lock, Users } from 'lucide-react';
+import { Calendar, Lock } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { useParams } from 'react-router-dom';
 
@@ -465,7 +465,7 @@ export function ExpenseTypeDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-xl max-h-[90vh] flex flex-col p-0">
+      <DialogContent className="sm:max-w-xl max-h-screen flex flex-col p-0 md:max-h-full">
         <DialogHeader className="sticky top-0 bg-background border-b px-6 pt-6 pb-4">
           <DialogTitle>{getTitle()}</DialogTitle>
           <DialogDescription>{getDescription()}</DialogDescription>
@@ -611,7 +611,7 @@ export function ExpenseTypeDialog({
                   {participants.map((participant) => (
                     <div
                       key={participant.id}
-                      className="flex items-center justify-between my-1 h-8"
+                      className="flex items-center justify-between mr-5 h-10"
                     >
                       <div className="flex items-center space-x-2">
                         <Checkbox
@@ -647,7 +647,7 @@ export function ExpenseTypeDialog({
                   {participants.map((participant) => (
                     <div
                       key={participant.id}
-                      className="flex items-center justify-between gap-2 my-1 mr-5 h-8"
+                      className="flex items-center justify-between mr-5 h-10"
                     >
                       <div className="flex items-center space-x-2">
                         <Checkbox
@@ -665,7 +665,7 @@ export function ExpenseTypeDialog({
                         </label>
                       </div>
                       {splitBetween.includes(participant.id) && (
-                        <div className="flex items-center gap-1">
+                        <div className="flex items-center gap-2">
                           {manuallyAdjustedAmounts.has(participant.id) && (
                             <Button
                               type="button"
@@ -723,7 +723,7 @@ export function ExpenseTypeDialog({
                   {participants.map((participant) => (
                     <div
                       key={participant.id}
-                      className="flex items-center justify-between gap-2 my-1 mr-5 h-8"
+                      className="flex items-center justify-between mr-5 h-10"
                     >
                       <div className="flex items-center space-x-2">
                         <Checkbox

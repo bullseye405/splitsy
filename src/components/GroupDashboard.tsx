@@ -131,7 +131,7 @@ export function GroupDashboard() {
   }, [group?.id, groupId, toast]);
 
   const fetchSettlements = useCallback(async () => {
-    if (!groupId || group?.id) return;
+    if (!groupId || !group?.id) return;
     try {
       const data = await getSettlementsByGroupId(groupId);
       setSettlements(data);
