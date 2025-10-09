@@ -85,11 +85,6 @@ export function ExpenseTypeDialog({
   const currentParticipant =
     localStorage.getItem(`participant_${groupId}`) || null;
 
-  console.log({
-    ALLOW_MULTI_PAYER,
-    envValue: import.meta.env.VITE_ALLOW_MULTI_PAYERS,
-  });
-
   // Initialize defaults when dialog opens
   useEffect(() => {
     if (open && !isEditing) {
@@ -594,6 +589,7 @@ export function ExpenseTypeDialog({
                       id="multi-payer-toggle"
                       checked={multiPayer}
                       onCheckedChange={() => setMultiPayer(!multiPayer)}
+                      className="h-4 w-7 data-[state=checked]:bg-primary"
                     />
                     <Label htmlFor="multi-payer-toggle">Multi payer</Label>
                   </div>
