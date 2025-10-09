@@ -589,7 +589,6 @@ export function ExpenseTypeDialog({
                       id="multi-payer-toggle"
                       checked={multiPayer}
                       onCheckedChange={() => setMultiPayer(!multiPayer)}
-                      className="h-4 w-7 data-[state=checked]:bg-primary"
                     />
                     <Label htmlFor="multi-payer-toggle">Multi payer</Label>
                   </div>
