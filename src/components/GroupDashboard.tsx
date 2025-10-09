@@ -5,7 +5,7 @@ import {
   getExpensesByGroupId,
   updateExpense,
 } from '@/api/expenses';
-import { getGroupById, updateGroupName } from '@/api/groups';
+import { getGroupById } from '@/api/groups';
 import { recordGroupView } from '@/api/groupViews';
 import { getSettlementsByGroupId } from '@/api/settlements';
 import { Button } from '@/components/ui/button';
@@ -13,20 +13,13 @@ import { useToast } from '@/hooks/use-toast';
 import useGroup from '@/hooks/useGroup';
 import { getIPaid, getIReceived, getMyCost, getOwned } from '@/lib/utils';
 import { Settlement } from '@/types/settlements';
-import {
-  ArrowRightLeft,
-  Edit,
-  Home,
-  Plus,
-  Share,
-  TrendingUp,
-  Users,
-} from 'lucide-react';
+import { ArrowRightLeft, Plus, TrendingUp, Users } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useShallow } from 'zustand/react/shallow';
 import { DebtSettlement } from './DebtSettlement';
 import { ExpenseTypeDialog } from './ExpenseTypeDialog';
+import GroupDashboardHeader from './GroupDashboardHeader';
 import { ParticipantSelectionModal } from './ParticipantSelectionModal';
 import { ParticipantsModal } from './ParticipantsModal';
 import RecentTransactions from './RecentTransactions';
@@ -35,20 +28,14 @@ export function GroupDashboard() {
   const { groupId } = useParams<{ groupId: string }>();
   const navigate = useNavigate();
 
-  // const [group, setGroup] = useState<GroupWithParticipants>();
-  const { id, name, description, setState, participants } = useGroup(
+  const { id, setState, participants } = useGroup(
     useShallow((state) => ({
       id: state.id,
-      name: state.name,
-      description: state.description,
       setState: state.setState,
       participants: state.participants,
     }))
   );
 
-  const [editingName, setEditingName] = useState(false);
-  const [newGroupName, setNewGroupName] = useState('');
-  const [nameLoading, setNameLoading] = useState(false);
   const [expenses, setExpenses] = useState<ExpenseWithSplits[]>([]);
   const [settlements, setSettlements] = useState<Settlement[]>([]);
   const [showExpenseDialog, setShowExpenseDialog] = useState(false);
@@ -67,8 +54,6 @@ export function GroupDashboard() {
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
-  const shareUrl = `${window.location.origin}/${groupId}`;
-
   // Check for existing participant selection in session storage
   useEffect(() => {
     if (groupId) {
@@ -80,16 +65,6 @@ export function GroupDashboard() {
       }
     }
   }, [groupId]);
-
-  useEffect(() => {
-    if (name) {
-      document.title = `${name} - Splitsy`;
-    }
-
-    return () => {
-      document.title = 'Splitsy - Split Bills Made Easy';
-    };
-  }, [name]);
 
   const fetchGroupData = useCallback(async () => {
     if (!groupId) return;
@@ -193,27 +168,6 @@ export function GroupDashboard() {
     } catch (error) {
       console.error('Error recording group view:', error);
     }
-  };
-
-  const handleShare = async () => {
-    try {
-      await navigator.clipboard.writeText(shareUrl);
-      toast({
-        title: 'Link copied!',
-        description:
-          'Share this link with your friends to add them to the group',
-      });
-    } catch (error) {
-      toast({
-        title: 'Could not copy link',
-        description: 'Please copy the URL manually',
-        variant: 'destructive',
-      });
-    }
-  };
-
-  const handleHomeClick = () => {
-    navigate('/');
   };
 
   const handleOpenDialog = (type: 'expense' | 'transfer' | 'income') => {
@@ -320,40 +274,6 @@ export function GroupDashboard() {
     .filter((e) => e.expense_type === 'income')
     .reduce((sum, expense) => sum + expense.amount, 0);
 
-  const handleSaveName = async () => {
-    if (!groupId || !newGroupName.trim()) return;
-    setNameLoading(true);
-    try {
-      const { data, error } = await updateGroupName(
-        groupId,
-        newGroupName,
-        description
-      );
-      if (error || !data) {
-        toast({
-          title: 'Error updating group name',
-          description: error?.message || 'Could not update group name.',
-          variant: 'destructive',
-        });
-        setNameLoading(false);
-        return;
-      }
-
-      setState((state) => {
-        state.name = newGroupName;
-      });
-      setEditingName(false);
-    } catch (err) {
-      toast({
-        title: 'Error updating group name',
-        description: String(err),
-        variant: 'destructive',
-      });
-    } finally {
-      setNameLoading(false);
-    }
-  };
-
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-4 flex items-center justify-center">
@@ -375,97 +295,7 @@ export function GroupDashboard() {
       <div className="max-w-4xl mx-auto space-y-8">
         {/* Header */}
 
-        <div className="w-full flex flex-col items-center justify-center py-4 px-2 gap-2 md:gap-4">
-          {editingName ? (
-            <div className="w-full max-w-xl flex flex-col items-center gap-2">
-              <input
-                className="w-full text-3xl md:text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent border-b border-blue-300 outline-none px-2 pb-1 text-center"
-                value={newGroupName}
-                onChange={(e) => setNewGroupName(e.target.value)}
-                disabled={nameLoading}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') handleSaveName();
-                  if (e.key === 'Escape') setEditingName(false);
-                }}
-                autoFocus
-              />
-              <textarea
-                className="w-full text-slate-600 text-sm border-b border-blue-300 outline-none px-2 pb-1 resize-none text-center"
-                value={description || ''}
-                placeholder="Add a description..."
-                onChange={(e) =>
-                  setState((state) => {
-                    state.description = e.target.value;
-                  })
-                }
-                disabled={nameLoading}
-                rows={2}
-              />
-              <div className="flex gap-2 mt-1">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleSaveName}
-                  disabled={nameLoading || !newGroupName.trim()}
-                >
-                  Save
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setEditingName(false)}
-                  disabled={nameLoading}
-                >
-                  Cancel
-                </Button>
-              </div>
-            </div>
-          ) : (
-            <div className="w-full max-w-xl flex flex-col items-center gap-2">
-              <div className="flex items-center justify-center gap-2 w-full">
-                <h1 className="w-full text-3xl md:text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent leading-none pb-1 text-center">
-                  {name}
-                </h1>
-              </div>
-              <p className="w-full text-slate-600 mt-1 text-center">
-                {description ||
-                  'Track expenses and settle debts with your group'}
-              </p>
-              <div className="flex gap-2 mt-1 justify-center">
-                <Button
-                  onClick={handleHomeClick}
-                  variant="outline"
-                  size="sm"
-                  className="border-blue-200 hover:bg-blue-50 hover:border-blue-300 text-blue-600"
-                >
-                  <Home className="w-4 h-4 mr-2" />
-                  Home
-                </Button>
-                <Button
-                  onClick={handleShare}
-                  variant="outline"
-                  size="sm"
-                  className="border-blue-200 hover:bg-blue-50 hover:border-blue-300 text-blue-600"
-                >
-                  <Share className="w-4 h-4 mr-2" />
-                  Share
-                </Button>
-                <Button
-                  onClick={() => {
-                    setEditingName(true);
-                    setNewGroupName(name);
-                  }}
-                  variant="outline"
-                  size="sm"
-                  className="border-blue-200 hover:bg-blue-50 hover:border-blue-300 text-blue-600"
-                >
-                  <Edit className="w-4 h-4 mr-2" />
-                  Edit
-                </Button>
-              </div>
-            </div>
-          )}
-        </div>
+        <GroupDashboardHeader />
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Stats */}
