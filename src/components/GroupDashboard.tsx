@@ -173,42 +173,88 @@ export function GroupDashboard() {
     expenseType: 'expense' | 'transfer' | 'income';
     transferTo?: string;
     date: string;
+    payers?: Record<string, number>;
   }) => {
     if (!groupId || !id) return;
 
     try {
-      const expense = {
-        description: expenseData.description,
-        amount: expenseData.amount,
-        paid_by: expenseData.paidBy,
-        group_id: groupId,
-        split_type: expenseData.splitMode,
-        expense_type: expenseData.expenseType,
-        created_at: new Date(expenseData.date).toISOString(),
-      };
+      const payers = expenseData.payers
+        ? Object.entries(expenseData.payers).sort((a, b) => b[1] - a[1])
+        : [];
+      if (payers.length > 1) {
+        const mainPayer = payers[0];
+        const mainExpense = {
+          description: expenseData.description,
+          amount: expenseData.amount,
+          paid_by: mainPayer[0],
+          group_id: groupId,
+          split_type: expenseData.splitMode as 'equal' | 'amount' | 'weight',
+          expense_type: expenseData.expenseType,
+          created_at: new Date(expenseData.date).toISOString(),
+        };
 
-      if (editingExpense) {
-        await updateExpense(editingExpense.id, expense, expenseData.splits);
+        await createExpense(mainExpense, expenseData.splits).then((data) =>
+          console.log('Created expense', data)
+        );
+
+        for (let i = 1; i < payers.length; i++) {
+          const payer = payers[i];
+          const payerName =
+            participants?.find((p) => p.id === payer[0])?.name || 'Unknown';
+          const transferExpense = {
+            description: `${expenseData.description} (${payerName} contribution)`,
+            amount: payer[1],
+            paid_by: payer[0],
+            group_id: groupId,
+            split_type: 'equal' as 'equal' | 'amount' | 'weight',
+            expense_type: 'transfer',
+            created_at: new Date(expenseData.date).toISOString(),
+          };
+
+          await createExpense(transferExpense, [
+            { participant_id: mainPayer[0], amount: payer[1] },
+          ]).then((data) => console.log('Transfer done', data));
+        }
         toast({
-          title: `${
-            expenseData.expenseType.charAt(0).toUpperCase() +
-            expenseData.expenseType.slice(1)
-          } updated`,
-          description: `$${expenseData.amount.toFixed(2)} ${
-            expenseData.expenseType
-          } has been updated`,
+          title: 'Multi-payer expense added',
+          description: `$${expenseData.amount.toFixed(2)} expense with ${
+            expenseData.payers.length
+          } payers recorded`,
         });
       } else {
-        await createExpense(expense, expenseData.splits);
-        toast({
-          title: `${
-            expenseData.expenseType.charAt(0).toUpperCase() +
-            expenseData.expenseType.slice(1)
-          } added`,
-          description: `$${expenseData.amount.toFixed(2)} ${
-            expenseData.expenseType
-          } has been recorded`,
-        });
+        const expense = {
+          description: expenseData.description,
+          amount: expenseData.amount,
+          paid_by: expenseData.paidBy,
+          group_id: groupId,
+          split_type: expenseData.splitMode,
+          expense_type: expenseData.expenseType,
+          created_at: new Date(expenseData.date).toISOString(),
+        };
+
+        if (editingExpense) {
+          await updateExpense(editingExpense.id, expense, expenseData.splits);
+          toast({
+            title: `${
+              expenseData.expenseType.charAt(0).toUpperCase() +
+              expenseData.expenseType.slice(1)
+            } updated`,
+            description: `$${expenseData.amount.toFixed(2)} ${
+              expenseData.expenseType
+            } has been updated`,
+          });
+        } else {
+          await createExpense(expense, expenseData.splits);
+          toast({
+            title: `${
+              expenseData.expenseType.charAt(0).toUpperCase() +
+              expenseData.expenseType.slice(1)
+            } added`,
+            description: `$${expenseData.amount.toFixed(2)} ${
+              expenseData.expenseType
+            } has been recorded`,
+          });
+        }
       }
 
       setShowExpenseDialog(false);
