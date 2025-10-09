@@ -25,7 +25,7 @@ export function HeroSection() {
 
   useEffect(() => {
     // Load email from session storage
-    const savedEmail = sessionStorage.getItem('userEmail');
+    const savedEmail = localStorage.getItem('userEmail');
     if (savedEmail) {
       setEmail(savedEmail);
       fetchRelatedGroups(savedEmail);
@@ -65,7 +65,7 @@ export function HeroSection() {
 
   const handleEmailChange = (value: string) => {
     setEmail(value);
-    sessionStorage.setItem('userEmail', value);
+    localStorage.setItem('userEmail', value);
     if (value.includes('@')) {
       fetchRelatedGroups(value);
     } else {
@@ -119,7 +119,7 @@ export function HeroSection() {
           variant: 'destructive',
         });
       } else {
-        sessionStorage.setItem(`participant_${data.id}`, participantData.id);
+        localStorage.setItem(`participant_${data.id}`, participantData.id);
 
         toast({
           title: 'Group created!',

@@ -1,10 +1,3 @@
-import { ExpenseWithSplits } from '@/api/expenses';
-import { deleteSettlement } from '@/api/settlements';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { useToast } from '@/hooks/use-toast';
-import { GroupWithParticipants } from '@/types/group';
-import { Settlement } from '@/types/settlements';
 import {
   ArrowRightLeft,
   DollarSign,
@@ -14,8 +7,17 @@ import {
   TrendingUp,
   X,
 } from 'lucide-react';
-import { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useState } from 'react';
+import { useShallow } from 'zustand/react/shallow';
+
+import { ExpenseWithSplits } from '@/api/expenses';
+import { deleteSettlement } from '@/api/settlements';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useToast } from '@/hooks/use-toast';
+import useExpenseStore from '@/hooks/useExpense';
+import useGroup from '@/hooks/useGroup';
+import useSettlementStore from '@/hooks/useSettlement';
 import { Input } from './ui/input';
 import {
   Select,
@@ -26,23 +28,16 @@ import {
 } from './ui/select';
 
 interface RecentTransactionProps {
-  group?: GroupWithParticipants;
-  settlements: Settlement[];
-  expenses: ExpenseWithSplits[];
   refreshTransactions: () => Promise<void>;
   handleEditExpense: (expense: ExpenseWithSplits) => void;
   handleDeleteExpense: (expenseId: string) => void;
 }
 
 const RecentTransactions = ({
-  group,
-  expenses,
-  settlements,
   refreshTransactions,
   handleEditExpense,
   handleDeleteExpense,
 }: RecentTransactionProps) => {
-  const { groupId } = useParams<{ groupId: string }>();
   const { toast } = useToast();
 
   const [filterParticipant, setFilterParticipant] = useState<string>('all');
@@ -53,20 +48,15 @@ const RecentTransactions = ({
   const [filterDateTo, setFilterDateTo] = useState<string>('');
   const [showFilters, setShowFilters] = useState(false);
 
-  const [currentParticipant, setCurrentParticipant] = useState<string | null>(
-    sessionStorage.getItem(`participant_${groupId}`) || null
+  const { currentParticipant, participants } = useGroup(
+    useShallow((state) => ({
+      participants: state.participants,
+      currentParticipant: state.currentParticipant,
+    }))
   );
 
-  useEffect(() => {
-    if (groupId) {
-      const storedParticipant = sessionStorage.getItem(
-        `participant_${groupId}`
-      );
-      if (storedParticipant) {
-        setCurrentParticipant(storedParticipant);
-      }
-    }
-  }, [groupId]);
+  const expenses = useExpenseStore((state) => state.expenses);
+  const settlements = useSettlementStore((state) => state.settlements);
 
   const hasActiveFilters =
     filterParticipant !== 'all' ||
@@ -80,10 +70,7 @@ const RecentTransactions = ({
     if (participantId === currentParticipant) {
       return 'me';
     }
-    return (
-      group?.participants?.find((p) => p.id === participantId)?.name ||
-      'Unknown'
-    );
+    return participants?.find((p) => p.id === participantId)?.name || 'Unknown';
   };
 
   const handleDeleteSettlement = async (settlementId: string) => {
@@ -163,7 +150,7 @@ const RecentTransactions = ({
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All participants</SelectItem>
-                    {group?.participants?.map((participant) => (
+                    {participants?.map((participant) => (
                       <SelectItem key={participant.id} value={participant.id}>
                         {participant.name}
                       </SelectItem>

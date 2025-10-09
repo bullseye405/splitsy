@@ -1,15 +1,13 @@
-import { ExpenseWithSplits } from '@/api/expenses';
-import {
-  createSettlement,
-  deleteSettlement,
-  getSettlementsByGroupId,
-} from '@/api/settlements';
+import { Calculator, CreditCard, TreePalm } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { useShallow } from 'zustand/react/shallow';
+
+import { createSettlement } from '@/api/settlements';
 import { useToast } from '@/hooks/use-toast';
+import useExpenseStore from '@/hooks/useExpense';
+import useGroup from '@/hooks/useGroup';
+import useSettlementStore from '@/hooks/useSettlement';
 import { calculateDebts } from '@/lib/utils';
-import { Participant } from '@/types/participants';
-import { Settlement as SettlementType } from '@/types/settlements';
-import { Calculator, CreditCard, Trash2, TreePalm } from 'lucide-react';
-import { useCallback, useEffect, useState } from 'react';
 import { DebtGraph } from './DebtGraph';
 import { Button } from './ui/button';
 import { Switch } from './ui/switch';
@@ -24,24 +22,32 @@ interface DebtItem {
 }
 
 interface DebtSettlementProps {
-  expenses: ExpenseWithSplits[];
-  participants: Participant[];
-  groupId: string;
-  currentParticipant?: string | null;
   onTransactionChange?: () => void;
 }
 
-export function DebtSettlement({
-  expenses,
-  participants,
-  groupId,
-  currentParticipant,
-  onTransactionChange,
-}: DebtSettlementProps) {
+export function DebtSettlement({ onTransactionChange }: DebtSettlementProps) {
   const [viewGraph, setViewGraph] = useState(true);
   const [debts, setDebts] = useState<DebtItem[]>([]);
-  const [settlements, setSettlements] = useState<SettlementType[]>([]);
   const { toast } = useToast();
+
+  const { currentParticipant, groupId, participants } = useGroup(
+    useShallow((state) => ({
+      currentParticipant: state.currentParticipant,
+      participants: state.participants,
+      groupId: state.id,
+    }))
+  );
+  const { expenses } = useExpenseStore(
+    useShallow((state) => ({
+      expenses: state.expenses,
+    }))
+  );
+
+  const { settlements } = useSettlementStore(
+    useShallow((state) => ({
+      settlements: state.settlements,
+    }))
+  );
 
   const getParticipantDisplayName = (participantId: string) => {
     if (participantId === currentParticipant) {
@@ -50,26 +56,7 @@ export function DebtSettlement({
     return participants.find((p) => p.id === participantId)?.name || 'Unknown';
   };
 
-  const fetchSettlements = useCallback(async () => {
-    try {
-      const settlementsData = await getSettlementsByGroupId(groupId);
-      setSettlements(settlementsData);
-    } catch (error) {
-      console.error('Error fetching settlements:', error);
-      toast({
-        title: 'Error',
-        description: 'Could not load settlements. Please try again.',
-        variant: 'destructive',
-      });
-    }
-  }, [groupId, toast]);
-
-  const handleSettle = async (
-    fromId: string,
-    toId: string,
-    amount: number,
-    index: number
-  ) => {
+  const handleSettle = async (fromId: string, toId: string, amount: number) => {
     try {
       const fromName = getParticipantDisplayName(fromId);
       const toName = getParticipantDisplayName(toId);
@@ -88,9 +75,6 @@ export function DebtSettlement({
           2
         )} settlement from ${fromName} to ${toName} has been recorded`,
       });
-
-      // Refresh settlements and transactions
-      await fetchSettlements();
       onTransactionChange?.();
     } catch (error) {
       console.error('Error creating settlement:', error);
@@ -102,32 +86,28 @@ export function DebtSettlement({
     }
   };
 
-  const handleDeleteSettlement = async (settlementId: string) => {
-    try {
-      await deleteSettlement(settlementId);
+  // const handleDeleteSettlement = async (settlementId: string) => {
+  //   try {
+  //     await deleteSettlement(settlementId);
 
-      toast({
-        title: 'Settlement deleted',
-        description:
-          'The settlement has been removed and the debt is now outstanding again',
-      });
+  //     toast({
+  //       title: 'Settlement deleted',
+  //       description:
+  //         'The settlement has been removed and the debt is now outstanding again',
+  //     });
 
-      // Refresh settlements and transactions
-      await fetchSettlements();
-      onTransactionChange?.();
-    } catch (error) {
-      console.error('Error deleting settlement:', error);
-      toast({
-        title: 'Error',
-        description: 'Could not delete settlement. Please try again.',
-        variant: 'destructive',
-      });
-    }
-  };
-
-  useEffect(() => {
-    fetchSettlements();
-  }, [fetchSettlements]);
+  //     // Refresh settlements and transactions
+  //     await fetchSettlements();
+  //     onTransactionChange?.();
+  //   } catch (error) {
+  //     console.error('Error deleting settlement:', error);
+  //     toast({
+  //       title: 'Error',
+  //       description: 'Could not delete settlement. Please try again.',
+  //       variant: 'destructive',
+  //     });
+  //   }
+  // };
 
   useEffect(() => {
     const debts = calculateDebts(expenses, participants, settlements);
@@ -209,7 +189,7 @@ export function DebtSettlement({
                   <Button
                     size="sm"
                     onClick={() =>
-                      handleSettle(debt.fromId, debt.toId, debt.amount, index)
+                      handleSettle(debt.fromId, debt.toId, debt.amount)
                     }
                     className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white"
                   >
@@ -224,7 +204,7 @@ export function DebtSettlement({
       </div>
 
       {/* Recently Settled Debts */}
-      {settlements.length > 0 && (
+      {/* {settlements.length > 0 && (
         <div className="space-y-3 mt-6">
           <h4 className="text-lg font-semibold text-slate-700 mb-3">
             Recently Settled
@@ -269,7 +249,7 @@ export function DebtSettlement({
             );
           })}
         </div>
-      )}
+      )} */}
     </div>
   );
 }
