@@ -1,3 +1,8 @@
+import { ArrowRightLeft, Plus, TrendingUp, Users } from 'lucide-react';
+import { useCallback, useEffect, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import { useShallow } from 'zustand/react/shallow';
+
 import {
   createExpense,
   deleteExpense,
@@ -5,80 +10,66 @@ import {
   getExpensesByGroupId,
   updateExpense,
 } from '@/api/expenses';
-import { getGroupById, updateGroupName } from '@/api/groups';
+import { getGroupById } from '@/api/groups';
 import { recordGroupView } from '@/api/groupViews';
 import { getSettlementsByGroupId } from '@/api/settlements';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import { getIPaid, getIReceived, getMyCost, getOwned } from '@/lib/utils';
-import { GroupWithParticipants } from '@/types/group';
-import { Settlement } from '@/types/settlements';
-import {
-  ArrowRightLeft,
-  Edit,
-  Home,
-  Plus,
-  Share,
-  TrendingUp,
-  Users,
-} from 'lucide-react';
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import useExpenseStore from '@/hooks/useExpense';
+import useGroup from '@/hooks/useGroup';
+import useSettlementStore from '@/hooks/useSettlement';
 import { DebtSettlement } from './DebtSettlement';
 import { ExpenseTypeDialog } from './ExpenseTypeDialog';
+import Header from './Header';
 import { ParticipantSelectionModal } from './ParticipantSelectionModal';
 import { ParticipantsModal } from './ParticipantsModal';
 import RecentTransactions from './RecentTransactions';
+import Stats from './Stats';
+import Summary from './Summary';
 
 export function GroupDashboard() {
   const { groupId } = useParams<{ groupId: string }>();
   const navigate = useNavigate();
 
-  const [group, setGroup] = useState<GroupWithParticipants>();
-  const [editingName, setEditingName] = useState(false);
-  const [newGroupName, setNewGroupName] = useState('');
-  const [nameLoading, setNameLoading] = useState(false);
-  const [expenses, setExpenses] = useState<ExpenseWithSplits[]>([]);
-  const [settlements, setSettlements] = useState<Settlement[]>([]);
+  const {
+    id,
+    setState,
+    participants,
+    currentParticipant,
+    setCurrentParticipant,
+  } = useGroup(
+    useShallow((state) => ({
+      id: state.id,
+      setState: state.setState,
+      participants: state.participants,
+      currentParticipant: state.currentParticipant,
+      setCurrentParticipant: state.setCurrentParticipant,
+    }))
+  );
+
+  const { expenses, setExpenses, loading, setLoading } = useExpenseStore();
+  const { settlements, setSettlements } = useSettlementStore();
   const [showExpenseDialog, setShowExpenseDialog] = useState(false);
   const [showParticipantsModal, setShowParticipantsModal] = useState(false);
   const [showParticipantSelection, setShowParticipantSelection] =
     useState(false);
-  const [currentParticipant, setCurrentParticipant] = useState<string | null>(
-    sessionStorage.getItem(`participant_${groupId}`) || null
-  );
 
   const [dialogType, setDialogType] = useState<
     'expense' | 'transfer' | 'income'
   >('expense');
   const [editingExpense, setEditingExpense] =
     useState<ExpenseWithSplits | null>(null);
-  const [loading, setLoading] = useState(true);
   const { toast } = useToast();
-
-  const shareUrl = `${window.location.origin}/${groupId}`;
 
   // Check for existing participant selection in session storage
   useEffect(() => {
     if (groupId) {
-      const storedParticipant = sessionStorage.getItem(
-        `participant_${groupId}`
-      );
+      const storedParticipant = localStorage.getItem(`participant_${groupId}`);
       if (storedParticipant) {
         setCurrentParticipant(storedParticipant);
       }
     }
-  }, [groupId]);
-
-  useEffect(() => {
-    if (group?.name) {
-      document.title = `${group.name} - Splitsy`;
-    }
-
-    return () => {
-      document.title = 'Splitsy - Split Bills Made Easy';
-    };
-  }, [group?.name]);
+  }, [groupId, setCurrentParticipant]);
 
   const fetchGroupData = useCallback(async () => {
     if (!groupId) return;
@@ -88,33 +79,30 @@ export function GroupDashboard() {
         navigate('/404', { replace: true });
         return;
       }
-      setGroup(data);
-
-      // Show participant selection modal if no participant is selected and participants exist
-      if (
-        !currentParticipant &&
-        data.participants &&
-        data.participants.length > 0
-      ) {
-        setShowParticipantSelection(true);
-      }
-
-      // Auto-open manage participants if only one participant exists (group creator scenario)
-      if (
-        currentParticipant &&
-        data.participants &&
-        data.participants.length === 1
-      ) {
-        setShowParticipantsModal(true);
-      }
+      setState((state) => {
+        state.id = data.id;
+        state.name = data.name;
+        state.description = data.description;
+        state.participants = data.participants || [];
+      });
     } catch (error) {
       console.error('Error fetching group:', error);
       navigate('/404', { replace: true });
     }
-  }, [groupId, navigate, currentParticipant]);
+  }, [groupId, setState, navigate]);
+
+  useEffect(() => {
+    if (!currentParticipant && participants.length > 0) {
+      setShowParticipantSelection(true);
+    }
+
+    if (currentParticipant && participants.length === 1) {
+      setShowParticipantsModal(true);
+    }
+  }, [currentParticipant, participants.length]);
 
   const fetchExpenses = useCallback(async () => {
-    if (!groupId || !group?.id) return;
+    if (!groupId || !id) return;
     try {
       const data = await getExpensesByGroupId(groupId);
       setExpenses(data);
@@ -128,48 +116,34 @@ export function GroupDashboard() {
     } finally {
       setLoading(false);
     }
-  }, [group?.id, groupId, toast]);
+  }, [groupId, id, setExpenses, setLoading, toast]);
 
   const fetchSettlements = useCallback(async () => {
-    if (!groupId || group?.id) return;
+    if (!groupId || !id) return;
     try {
       const data = await getSettlementsByGroupId(groupId);
       setSettlements(data);
     } catch (error) {
       console.error('Error fetching settlements:', error);
     }
-  }, [group?.id, groupId]);
+  }, [groupId, id, setSettlements]);
 
   const refreshTransactions = useCallback(async () => {
     await Promise.all([fetchExpenses(), fetchSettlements()]);
   }, [fetchExpenses, fetchSettlements]);
 
   useEffect(() => {
+    setLoading(true);
     fetchGroupData();
     fetchExpenses();
     fetchSettlements();
-  }, [fetchGroupData, fetchExpenses, fetchSettlements]);
-
-  const { cost, owned, paid, received } = useMemo(() => {
-    const cost = getMyCost(expenses, currentParticipant).toFixed(2);
-    const paid = getIPaid(expenses, currentParticipant).toFixed(2);
-    const received = getIReceived(
-      expenses,
-      settlements,
-      currentParticipant
-    ).toFixed(2);
-    const owned = getOwned(expenses, settlements, currentParticipant).toFixed(
-      2
-    );
-
-    return { cost, paid, received, owned };
-  }, [currentParticipant, expenses, settlements]);
+  }, [fetchGroupData, fetchExpenses, fetchSettlements, setLoading]);
 
   const handleParticipantSelect = async (participantId: string) => {
     if (!groupId) return;
 
     setCurrentParticipant(participantId);
-    sessionStorage.setItem(`participant_${groupId}`, participantId);
+    localStorage.setItem(`participant_${groupId}`, participantId);
 
     // Record group view
     try {
@@ -177,27 +151,6 @@ export function GroupDashboard() {
     } catch (error) {
       console.error('Error recording group view:', error);
     }
-  };
-
-  const handleShare = async () => {
-    try {
-      await navigator.clipboard.writeText(shareUrl);
-      toast({
-        title: 'Link copied!',
-        description:
-          'Share this link with your friends to add them to the group',
-      });
-    } catch (error) {
-      toast({
-        title: 'Could not copy link',
-        description: 'Please copy the URL manually',
-        variant: 'destructive',
-      });
-    }
-  };
-
-  const handleHomeClick = () => {
-    navigate('/');
   };
 
   const handleOpenDialog = (type: 'expense' | 'transfer' | 'income') => {
@@ -221,7 +174,7 @@ export function GroupDashboard() {
     transferTo?: string;
     date: string;
   }) => {
-    if (!groupId || !group) return;
+    if (!groupId || !id) return;
 
     try {
       const expense = {
@@ -297,46 +250,6 @@ export function GroupDashboard() {
     }
   };
 
-  const totalExpenses = expenses
-    .filter((e) => e.expense_type === 'expense' || !e.expense_type)
-    .reduce((sum, expense) => sum + expense.amount, 0);
-  const totalIncome = expenses
-    .filter((e) => e.expense_type === 'income')
-    .reduce((sum, expense) => sum + expense.amount, 0);
-
-  const handleSaveName = async () => {
-    if (!groupId || !newGroupName.trim()) return;
-    setNameLoading(true);
-    try {
-      const { data, error } = await updateGroupName(
-        groupId,
-        newGroupName,
-        group?.description
-      );
-      if (error || !data) {
-        toast({
-          title: 'Error updating group name',
-          description: error?.message || 'Could not update group name.',
-          variant: 'destructive',
-        });
-        setNameLoading(false);
-        return;
-      }
-      setGroup((prevGroup) =>
-        prevGroup ? { ...prevGroup, name: newGroupName } : prevGroup
-      );
-      setEditingName(false);
-    } catch (err) {
-      toast({
-        title: 'Error updating group name',
-        description: String(err),
-        variant: 'destructive',
-      });
-    } finally {
-      setNameLoading(false);
-    }
-  };
-
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-4 flex items-center justify-center">
@@ -349,7 +262,7 @@ export function GroupDashboard() {
   }
 
   // No need to render a 'Group not found' message, as we redirect to NotFound page
-  if (!group) {
+  if (!id) {
     return null;
   }
 
@@ -358,162 +271,11 @@ export function GroupDashboard() {
       <div className="max-w-4xl mx-auto space-y-8">
         {/* Header */}
 
-        <div className="w-full flex flex-col items-center justify-center py-4 px-2 gap-2 md:gap-4">
-          {editingName ? (
-            <div className="w-full max-w-xl flex flex-col items-center gap-2">
-              <input
-                className="w-full text-3xl md:text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent border-b border-blue-300 outline-none px-2 pb-1 text-center"
-                value={newGroupName}
-                onChange={(e) => setNewGroupName(e.target.value)}
-                disabled={nameLoading}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') handleSaveName();
-                  if (e.key === 'Escape') setEditingName(false);
-                }}
-                autoFocus
-              />
-              <textarea
-                className="w-full text-slate-600 text-sm border-b border-blue-300 outline-none px-2 pb-1 resize-none text-center"
-                value={group.description || ''}
-                placeholder="Add a description..."
-                onChange={(e) =>
-                  setGroup((prev) =>
-                    prev ? { ...prev, description: e.target.value } : prev
-                  )
-                }
-                disabled={nameLoading}
-                rows={2}
-              />
-              <div className="flex gap-2 mt-1">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleSaveName}
-                  disabled={nameLoading || !newGroupName.trim()}
-                >
-                  Save
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setEditingName(false)}
-                  disabled={nameLoading}
-                >
-                  Cancel
-                </Button>
-              </div>
-            </div>
-          ) : (
-            <div className="w-full max-w-xl flex flex-col items-center gap-2">
-              <div className="flex items-center justify-center gap-2 w-full">
-                <h1 className="w-full text-3xl md:text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent leading-none pb-1 text-center">
-                  {group.name}
-                </h1>
-              </div>
-              <p className="w-full text-slate-600 mt-1 text-center">
-                {group.description ||
-                  'Track expenses and settle debts with your group'}
-              </p>
-              <div className="flex gap-2 mt-1 justify-center">
-                <Button
-                  onClick={handleHomeClick}
-                  variant="outline"
-                  size="sm"
-                  className="border-blue-200 hover:bg-blue-50 hover:border-blue-300 text-blue-600"
-                >
-                  <Home className="w-4 h-4 mr-2" />
-                  Home
-                </Button>
-                <Button
-                  onClick={handleShare}
-                  variant="outline"
-                  size="sm"
-                  className="border-blue-200 hover:bg-blue-50 hover:border-blue-300 text-blue-600"
-                >
-                  <Share className="w-4 h-4 mr-2" />
-                  Share
-                </Button>
-                <Button
-                  onClick={() => {
-                    setEditingName(true);
-                    setNewGroupName(group.name);
-                  }}
-                  variant="outline"
-                  size="sm"
-                  className="border-blue-200 hover:bg-blue-50 hover:border-blue-300 text-blue-600"
-                >
-                  <Edit className="w-4 h-4 mr-2" />
-                  Edit
-                </Button>
-              </div>
-            </div>
-          )}
-        </div>
+        <Header />
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Stats */}
-          <div className="text-center p-4 rounded-xl bg-gradient-to-br from-red-50 to-red-100 border border-red-200">
-            <div className="text-3xl font-bold text-red-600 mb-1">
-              ${totalExpenses.toFixed(2)}
-            </div>
-            <div className="text-sm font-medium text-red-700">
-              Total Expenses
-            </div>
-          </div>
+        <Stats />
 
-          <div className="text-center p-4 rounded-xl bg-gradient-to-br from-green-50 to-green-100 border border-green-200">
-            <div className="text-3xl font-bold text-green-600 mb-1">
-              ${totalIncome.toFixed(2)}
-            </div>
-            <div className="text-sm font-medium text-green-700">
-              Total Income
-            </div>
-          </div>
-        </div>
-
-        {/* Personal Summary */}
-        {currentParticipant && (
-          <div className="bg-white/80 backdrop-blur-sm rounded-xl shadow-lg border-0 p-6">
-            <h3 className="text-lg font-bold text-slate-800 mb-4">
-              Your Summary
-            </h3>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="text-center p-3 rounded-lg bg-orange-50 border border-orange-200">
-                <div className="text-xl font-bold text-orange-600 mb-1">
-                  ${cost}
-                </div>
-                <div className="text-xs font-medium text-orange-700">
-                  My Cost
-                </div>
-              </div>
-
-              <div className="text-center p-3 rounded-lg bg-blue-50 border border-blue-200">
-                <div className="text-xl font-bold text-blue-600 mb-1">
-                  ${paid}
-                </div>
-                <div className="text-xs font-medium text-blue-700">I Paid</div>
-              </div>
-
-              <div className="text-center p-3 rounded-lg bg-purple-50 border border-purple-200">
-                <div className="text-xl font-bold text-purple-600 mb-1">
-                  ${received}
-                </div>
-                <div className="text-xs font-medium text-purple-700">
-                  I Received
-                </div>
-              </div>
-
-              <div className="text-center p-3 rounded-lg bg-emerald-50 border border-emerald-200">
-                <div className="text-xl font-bold text-emerald-600 mb-1">
-                  ${owned}
-                </div>
-                <div className="text-xs font-medium text-emerald-700">
-                  I'm Owed
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
+        <Summary />
 
         <div className="flex flex-wrap gap-3 justify-end mt-4 md:flex-nowrap md:gap-3 md:justify-end w-full">
           <div className="flex  w-full flex-wrap justify-center gap-2 md:flex-row md:w-auto md:gap-3">
@@ -530,7 +292,7 @@ export function GroupDashboard() {
               onClick={() => handleOpenDialog('expense')}
               size="sm"
               className="bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white md:w-auto"
-              disabled={!group.participants || group.participants.length < 2}
+              disabled={!participants || participants.length < 2}
             >
               <Plus className="w-4 h-4 mr-2" />
               Add Expense
@@ -539,7 +301,7 @@ export function GroupDashboard() {
               onClick={() => handleOpenDialog('income')}
               size="sm"
               className="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white  md:w-auto"
-              disabled={!group.participants || group.participants.length < 2}
+              disabled={!participants || participants.length < 2}
             >
               <TrendingUp className="w-4 h-4 mr-2" />
               Add Income
@@ -548,7 +310,7 @@ export function GroupDashboard() {
               onClick={() => handleOpenDialog('transfer')}
               size="sm"
               className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white  md:w-auto"
-              disabled={!group.participants || group.participants.length < 2}
+              disabled={!participants || participants.length < 2}
             >
               <ArrowRightLeft className="w-4 h-4 mr-2" />
               Add Transfer
@@ -557,26 +319,17 @@ export function GroupDashboard() {
         </div>
 
         {/* Debt Settlement */}
-        {expenses.length > 0 && group.participants && groupId && (
+        {expenses.length > 0 && participants && groupId && (
           <div className="bg-white/80 backdrop-blur-sm rounded-xl shadow-lg border-0 p-6">
-            <DebtSettlement
-              expenses={expenses}
-              participants={group.participants}
-              groupId={groupId}
-              currentParticipant={currentParticipant}
-              onTransactionChange={refreshTransactions}
-            />
+            <DebtSettlement onTransactionChange={refreshTransactions} />
           </div>
         )}
 
         {(expenses.length > 0 || settlements.length > 0) && (
           <RecentTransactions
-            expenses={expenses}
-            settlements={settlements}
             handleEditExpense={handleEditExpense}
             handleDeleteExpense={handleDeleteExpense}
             refreshTransactions={refreshTransactions}
-            group={group}
           />
         )}
       </div>
@@ -584,14 +337,12 @@ export function GroupDashboard() {
       <ParticipantsModal
         open={showParticipantsModal}
         onOpenChange={setShowParticipantsModal}
-        participants={group.participants || []}
         onParticipantChange={fetchGroupData}
       />
 
       <ParticipantSelectionModal
         open={showParticipantSelection}
         onOpenChange={setShowParticipantSelection}
-        participants={group.participants || []}
         onParticipantSelect={handleParticipantSelect}
       />
 
@@ -602,7 +353,6 @@ export function GroupDashboard() {
           if (!open) setEditingExpense(null);
         }}
         onSave={handleSaveExpense}
-        participants={group.participants || []}
         expense={editingExpense}
         isEditing={!!editingExpense}
         type={dialogType}

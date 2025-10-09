@@ -1,7 +1,7 @@
 import { supabase } from '@/integrations/supabase/client';
 import { Database } from '@/integrations/supabase/types';
+import { Settlement } from '@/types/settlements';
 
-type Settlement = Database['public']['Tables']['settlements']['Row'];
 type SettlementInsert = Database['public']['Tables']['settlements']['Insert'];
 
 export async function createSettlement(settlement: SettlementInsert) {
