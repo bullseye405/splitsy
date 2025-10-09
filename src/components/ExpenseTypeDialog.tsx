@@ -1,4 +1,3 @@
-import { ExpenseWithSplits } from '@/api/expenses';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import {
@@ -13,6 +12,7 @@ import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import useGroup from '@/hooks/useGroup';
+import { ExpenseWithSplits } from '@/types/expense';
 import { Calendar, Lock } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { useParams } from 'react-router-dom';

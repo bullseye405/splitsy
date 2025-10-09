@@ -1,15 +1,10 @@
 import { supabase } from '@/integrations/supabase/client';
 import {
-  Expense,
   ExpenseInsert,
-  ExpenseSplit,
   ExpenseSplitInsert,
   ExpenseUpdate,
+  ExpenseWithSplits,
 } from '@/types/expense';
-
-export interface ExpenseWithSplits extends Expense {
-  expense_splits: ExpenseSplit[];
-}
 
 export async function createExpense(
   expense: ExpenseInsert,
