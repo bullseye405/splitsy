@@ -13,8 +13,8 @@ import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { Participant } from '@/types/participants';
-import { Calendar, Lock } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { Calendar, Lock, Users } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
 import { useParams } from 'react-router-dom';
 
 interface ExpenseTypeDialogProps {
@@ -67,6 +67,8 @@ export function ExpenseTypeDialog({
   >(new Set());
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
   const { toast } = useToast();
+
+  const justLoaded = useRef(false);
 
   const { groupId } = useParams<{ groupId: string }>();
 
@@ -127,6 +129,7 @@ export function ExpenseTypeDialog({
       });
       setCustomAmounts(amounts);
       setWeights(weightValues);
+      justLoaded.current = true;
     } else if (!isEditing) {
       // Reset form for new entries
       setDescription('');
@@ -148,8 +151,40 @@ export function ExpenseTypeDialog({
       } else {
         setSplitBetween([]);
       }
+      justLoaded.current = false;
     }
   }, [expense, isEditing, participants, type, currentParticipant, open]);
+
+  useEffect(() => {
+    if (
+      splitMode === 'amount' &&
+      splitBetween.length > 0 &&
+      !justLoaded.current
+    ) {
+      const totalAmount = parseFloat(amount) || 0;
+      const manualParticipants = splitBetween.filter((id) =>
+        manuallyAdjustedAmounts.has(id)
+      );
+      const nonManualParticipants = splitBetween.filter(
+        (id) => !manuallyAdjustedAmounts.has(id)
+      );
+      const usedAmount = manualParticipants.reduce(
+        (sum, id) => sum + (customAmounts[id] || 0),
+        0
+      );
+      const remainingAmount = Math.max(0, totalAmount - usedAmount);
+      const newAmounts: { [key: string]: number } = { ...customAmounts };
+      if (nonManualParticipants.length > 0) {
+        const equalAmount = remainingAmount / nonManualParticipants.length;
+        nonManualParticipants.forEach((id) => {
+          newAmounts[id] = equalAmount;
+        });
+      }
+      setCustomAmounts(newAmounts);
+    }
+    justLoaded.current = false;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [amount, splitBetween, splitMode, manuallyAdjustedAmounts]);
 
   const getTitle = () => {
     if (isEditing)
@@ -546,21 +581,21 @@ export function ExpenseTypeDialog({
                   setSplitMode(value as 'equal' | 'amount' | 'weight');
 
                   // Initialize default values when switching modes
-                  if (value === 'amount' && splitBetween.length > 0) {
-                    const totalAmount = parseFloat(amount) || 0;
-                    const equalAmount = totalAmount / splitBetween.length;
-                    const newAmounts: { [key: string]: number } = {};
-                    splitBetween.forEach((id) => {
-                      newAmounts[id] = equalAmount;
-                    });
-                    setCustomAmounts(newAmounts);
-                  } else if (value === 'weight' && splitBetween.length > 0) {
-                    const newWeights: { [key: string]: number } = {};
-                    splitBetween.forEach((id) => {
-                      newWeights[id] = weights[id] || 1;
-                    });
-                    setWeights(newWeights);
-                  }
+                  // if (value === 'amount' && splitBetween.length > 0) {
+                  //   const totalAmount = parseFloat(amount) || 0;
+                  //   const equalAmount = totalAmount / splitBetween.length;
+                  //   const newAmounts: { [key: string]: number } = {};
+                  //   splitBetween.forEach((id) => {
+                  //     newAmounts[id] = equalAmount;
+                  //   });
+                  //   setCustomAmounts(newAmounts);
+                  // } else if (value === 'weight' && splitBetween.length > 0) {
+                  //   const newWeights: { [key: string]: number } = {};
+                  //   splitBetween.forEach((id) => {
+                  //     newWeights[id] = weights[id] || 1;
+                  //   });
+                  //   setWeights(newWeights);
+                  // }
                 }}
               >
                 <TabsList className="grid w-full grid-cols-3">
@@ -736,7 +771,7 @@ export function ExpenseTypeDialog({
           )}
         </div>
 
-        <DialogFooter className="bottom-0 z-10 bg-background border-t px-6 py-4 gap-2 flex-col">
+        <DialogFooter className="bottom-0 z-10 bg-background border-t px-6 py-4 gap-2 flex-col items-center">
           {splitMode === 'amount' && (
             <div className="text-xs text-muted-foreground text-center w-full">
               Total: $
@@ -756,7 +791,7 @@ export function ExpenseTypeDialog({
                 .toFixed(2)}
             </div>
           )}
-          <div className="flex gap-2 w-full">
+          <div className="flex gap-2">
             <Button
               variant="outline"
               onClick={() => onOpenChange(false)}
