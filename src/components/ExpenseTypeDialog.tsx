@@ -19,7 +19,7 @@ import { useParams } from 'react-router-dom';
 import { Switch } from './ui/switch';
 import { Label } from './ui/label';
 
-const ALLOW_MULTI_PAYER = import.meta.env.VITE_ALLOW_MULTI_PAYERS;
+const ALLOW_MULTI_PAYER = import.meta.env.VITE_ALLOW_MULTI_PAYERS === 'true';
 
 type Payers = Record<string, number>;
 
