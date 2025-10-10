@@ -498,7 +498,7 @@ export function ExpenseTypeDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-2xl max-h-screen flex flex-col p-0 md:max-h-full">
+      <DialogContent className="max-h-[90vh] overflow-y-auto flex flex-col p-0 ">
         <DialogHeader className="sticky top-0 bg-background border-b px-6 pt-6 pb-4">
           <DialogTitle>{getTitle()}</DialogTitle>
           <DialogDescription>{getDescription()}</DialogDescription>

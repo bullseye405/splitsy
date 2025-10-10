@@ -68,7 +68,7 @@ const RecentTransactions = ({
 
   const getParticipantDisplayName = (participantId: string) => {
     if (participantId === currentParticipant) {
-      return 'me';
+      return 'Me';
     }
     return participants?.find((p) => p.id === participantId)?.name || 'Unknown';
   };

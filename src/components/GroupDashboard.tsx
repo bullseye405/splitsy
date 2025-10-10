@@ -64,12 +64,26 @@ export function GroupDashboard() {
   // Check for existing participant selection in session storage
   useEffect(() => {
     if (groupId) {
-      const storedParticipant = localStorage.getItem(`participant_${groupId}`);
-      if (storedParticipant) {
-        setCurrentParticipant(storedParticipant);
+      const storedParticipantId = localStorage.getItem(
+        `participant_${groupId}`
+      );
+      if (storedParticipantId) {
+        setCurrentParticipant(storedParticipantId);
+      }
+
+      const storedParticipantEmail = localStorage.getItem('userEmail');
+      if (storedParticipantEmail) {
+        const participantId = participants.find(
+          (p) => p.email === storedParticipantEmail
+        )?.id;
+
+        if (participantId) {
+          localStorage.setItem(`participant_${groupId}`, participantId);
+          setCurrentParticipant(participantId);
+        }
       }
     }
-  }, [groupId, setCurrentParticipant]);
+  }, [groupId, participants, setCurrentParticipant]);
 
   const fetchGroupData = useCallback(async () => {
     if (!groupId) return;
@@ -98,6 +112,10 @@ export function GroupDashboard() {
 
     if (currentParticipant && participants.length === 1) {
       setShowParticipantsModal(true);
+    }
+
+    if (currentParticipant) {
+      setShowParticipantSelection(false);
     }
   }, [currentParticipant, participants.length]);
 
@@ -144,6 +162,10 @@ export function GroupDashboard() {
 
     setCurrentParticipant(participantId);
     localStorage.setItem(`participant_${groupId}`, participantId);
+    const email = participants.find((p) => p.id === participantId)?.email;
+    if (email) {
+      localStorage.setItem(`userEmail`, email);
+    }
 
     // Record group view
     try {
@@ -329,7 +351,7 @@ export function GroupDashboard() {
               onClick={() => setShowParticipantsModal(true)}
               variant="outline"
               size="sm"
-              className="border-purple-200 hover:bg-purple-50 hover:border-purple-300 text-purple-600 md:w-auto"
+              className="flex-1 border-purple-200 hover:bg-purple-50 hover:border-purple-300 text-purple-600 md:w-auto"
             >
               <Users className="w-4 h-4 mr-2" />
               Participants
@@ -337,7 +359,7 @@ export function GroupDashboard() {
             <Button
               onClick={() => handleOpenDialog('expense')}
               size="sm"
-              className="bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white md:w-auto"
+              className="flex-1 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white md:w-auto"
               disabled={!participants || participants.length < 2}
             >
               <Plus className="w-4 h-4 mr-2" />
@@ -346,7 +368,7 @@ export function GroupDashboard() {
             <Button
               onClick={() => handleOpenDialog('income')}
               size="sm"
-              className="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white  md:w-auto"
+              className="flex-1 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white  md:w-auto"
               disabled={!participants || participants.length < 2}
             >
               <TrendingUp className="w-4 h-4 mr-2" />
@@ -355,7 +377,7 @@ export function GroupDashboard() {
             <Button
               onClick={() => handleOpenDialog('transfer')}
               size="sm"
-              className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white  md:w-auto"
+              className="flex-1 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white  md:w-auto"
               disabled={!participants || participants.length < 2}
             >
               <ArrowRightLeft className="w-4 h-4 mr-2" />

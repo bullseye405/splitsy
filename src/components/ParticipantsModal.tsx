@@ -54,6 +54,9 @@ export function ParticipantsModal({
   const { toast } = useToast();
 
   const participants = useGroup((state) => state.participants);
+  const sortedParticipants = [...participants].sort((a, b) =>
+    a.name.localeCompare(b.name)
+  );
 
   // Fetch group views when modal opens
   useEffect(() => {
@@ -80,7 +83,10 @@ export function ParticipantsModal({
     if (!newParticipantName.trim() || !groupId) return;
 
     // Basic email validation if provided
-    if (newParticipantEmail.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(newParticipantEmail.trim())) {
+    if (
+      newParticipantEmail.trim() &&
+      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(newParticipantEmail.trim())
+    ) {
       toast({
         title: 'Invalid email',
         description: 'Please enter a valid email address',
@@ -91,8 +97,8 @@ export function ParticipantsModal({
 
     try {
       await createParticipant(
-        newParticipantName.trim(), 
-        groupId, 
+        newParticipantName.trim(),
+        groupId,
         newParticipantEmail.trim() || undefined
       );
       setNewParticipantName('');
@@ -127,7 +133,10 @@ export function ParticipantsModal({
     if (!editName.trim() || !editingParticipant || !groupId) return;
 
     // Basic email validation if provided
-    if (editEmail.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(editEmail.trim())) {
+    if (
+      editEmail.trim() &&
+      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(editEmail.trim())
+    ) {
       toast({
         title: 'Invalid email',
         description: 'Please enter a valid email address',
@@ -138,8 +147,8 @@ export function ParticipantsModal({
 
     try {
       await updateParticipant(
-        editingParticipant, 
-        editName.trim(), 
+        editingParticipant,
+        editName.trim(),
         groupId,
         editEmail.trim() || undefined
       );
@@ -187,7 +196,7 @@ export function ParticipantsModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md bg-background p-0">
+      <DialogContent className="max-h-[90vh] overflow-auto sm:max-w-md bg-background p-0">
         <DialogHeader className="border-b px-6 pt-6 pb-4">
           <DialogTitle className="flex items-center gap-2 text-lg font-semibold">
             <Users className="w-5 h-5 text-primary" />
@@ -205,7 +214,9 @@ export function ParticipantsModal({
               value={newParticipantName}
               onChange={(e) => setNewParticipantName(e.target.value)}
               placeholder="Name *"
-              onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && handleAddParticipant()}
+              onKeyDown={(e) =>
+                e.key === 'Enter' && !e.shiftKey && handleAddParticipant()
+              }
               className="h-9 text-sm"
             />
             <Input
@@ -213,7 +224,9 @@ export function ParticipantsModal({
               value={newParticipantEmail}
               onChange={(e) => setNewParticipantEmail(e.target.value)}
               placeholder="Email (optional)"
-              onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && handleAddParticipant()}
+              onKeyDown={(e) =>
+                e.key === 'Enter' && !e.shiftKey && handleAddParticipant()
+              }
               className="h-9 text-sm"
             />
             <Button
@@ -229,7 +242,7 @@ export function ParticipantsModal({
 
           {/* Participants list */}
           <div className="divide-y divide-muted max-h-90 overflow-y-auto bg-background rounded-md">
-            {participants.map((participant, index) => (
+            {sortedParticipants.map((participant) => (
               <div
                 key={participant.id}
                 className="py-3 px-2 hover:bg-muted/50 transition-all"
@@ -242,7 +255,9 @@ export function ParticipantsModal({
                       placeholder="Name *"
                       className="h-8 text-sm"
                       onKeyDown={(e) =>
-                        e.key === 'Enter' && !e.shiftKey && handleEditParticipant()
+                        e.key === 'Enter' &&
+                        !e.shiftKey &&
+                        handleEditParticipant()
                       }
                     />
                     <Input
@@ -252,7 +267,9 @@ export function ParticipantsModal({
                       placeholder="Email (optional)"
                       className="h-8 text-sm"
                       onKeyDown={(e) =>
-                        e.key === 'Enter' && !e.shiftKey && handleEditParticipant()
+                        e.key === 'Enter' &&
+                        !e.shiftKey &&
+                        handleEditParticipant()
                       }
                     />
                     <div className="flex gap-2">
@@ -265,9 +282,9 @@ export function ParticipantsModal({
                         <Save className="w-4 h-4 mr-2" />
                         Save
                       </Button>
-                      <Button 
-                        size="sm" 
-                        onClick={cancelEditing} 
+                      <Button
+                        size="sm"
+                        onClick={cancelEditing}
                         variant="outline"
                         className="flex-1"
                       >
@@ -282,7 +299,7 @@ export function ParticipantsModal({
                       <div className="flex items-center gap-2">
                         <span className="font-medium text-sm text-foreground truncate">
                           {participant.name}
-                          {participant.id === currentParticipant ? ' (me)' : ''}
+                          {participant.id === currentParticipant ? ' (Me)' : ''}
                         </span>
                         {hasViewed(participant.id) ? (
                           <Eye className="w-4 h-4 text-primary flex-shrink-0" />

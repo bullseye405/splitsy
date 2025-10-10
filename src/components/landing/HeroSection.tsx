@@ -1,15 +1,14 @@
-import { useState, useEffect } from 'react';
-import { Plus } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
-import { Card, CardContent } from '@/components/ui/card';
-import { useToast } from '@/hooks/use-toast';
-import { useNavigate } from 'react-router-dom';
 import { createGroup } from '@/api/groups';
 import { createParticipant } from '@/api/participants';
-import { getAllGroups } from '@/api/groups';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { Plus } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 export function HeroSection() {
   const [groupName, setGroupName] = useState('');
@@ -24,10 +23,8 @@ export function HeroSection() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Load email from session storage
     const savedEmail = localStorage.getItem('userEmail');
     if (savedEmail) {
-      setEmail(savedEmail);
       fetchRelatedGroups(savedEmail);
     }
   }, []);
@@ -65,7 +62,6 @@ export function HeroSection() {
 
   const handleEmailChange = (value: string) => {
     setEmail(value);
-    localStorage.setItem('userEmail', value);
     if (value.includes('@')) {
       fetchRelatedGroups(value);
     } else {
@@ -120,6 +116,7 @@ export function HeroSection() {
         });
       } else {
         localStorage.setItem(`participant_${data.id}`, participantData.id);
+        localStorage.setItem('userEmail', email.trim());
 
         toast({
           title: 'Group created!',
@@ -135,6 +132,13 @@ export function HeroSection() {
     if (e.key === 'Enter') {
       handleCreateGroup();
     }
+  };
+
+  const handleGroupSelect = (groupId: string) => {
+    if (email) {
+      localStorage.setItem('userEmail', email);
+    }
+    navigate(`/${groupId}`);
   };
 
   return (
@@ -265,7 +269,7 @@ export function HeroSection() {
                             key={group.id}
                             variant="secondary"
                             className="cursor-pointer hover:bg-primary hover:text-primary-foreground transition-colors text-xs sm:text-sm px-2 py-1"
-                            onClick={() => navigate(`/${group.id}`)}
+                            onClick={() => handleGroupSelect(group.id)}
                           >
                             {group.name}
                           </Badge>

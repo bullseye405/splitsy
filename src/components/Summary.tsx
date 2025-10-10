@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { useShallow } from 'zustand/react/shallow';
 
 import useExpenseStore from '@/hooks/useExpense';
 import useGroup from '@/hooks/useGroup';
@@ -6,7 +7,12 @@ import useSettlementStore from '@/hooks/useSettlement';
 import { getIPaid, getIReceived, getMyCost, getOwned } from '@/lib/utils';
 
 const Summary = () => {
-  const currentParticipant = useGroup((state) => state.currentParticipant);
+  const { currentParticipant, participants } = useGroup(
+    useShallow((state) => ({
+      currentParticipant: state.currentParticipant,
+      participants: state.participants,
+    }))
+  );
   const expenses = useExpenseStore((state) => state.expenses);
   const settlements = useSettlementStore((state) => state.settlements);
 
@@ -25,9 +31,13 @@ const Summary = () => {
     return { cost, paid, received, owned };
   }, [currentParticipant, expenses, settlements]);
 
+  const name = participants.find((p) => p.id === currentParticipant)?.name;
+
   return (
     <div className="bg-white/80 backdrop-blur-sm rounded-xl shadow-lg border-0 p-6">
-      <h3 className="text-lg font-bold text-slate-800 mb-4">Your Summary</h3>
+      <h3 className="text-lg font-bold text-slate-800 mb-4">
+        {name ? `Hi, ${name}` : 'Your Summary'}
+      </h3>
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <div className="text-center p-3 rounded-lg bg-orange-50 border border-orange-200">
           <div className="text-xl font-bold text-orange-600 mb-1">${cost}</div>
