@@ -11,11 +11,12 @@ export async function createParticipant(name: string, group_id: string, email?: 
 export async function updateParticipant(
   participantId: string,
   name: string,
-  group_id: string
+  group_id: string,
+  email?: string
 ) {
   return await supabase
     .from('participants')
-    .update({ name })
+    .update({ name, email })
     .eq('id', participantId)
     .eq('group_id', group_id)
     .select()
